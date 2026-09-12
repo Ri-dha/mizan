@@ -1,0 +1,115 @@
+[
+  {
+    "name": "monthly salary lands once on its pay day",
+    "input": {
+      "window": { "from": "2026-09-01", "toExclusive": "2026-10-01" },
+      "sources": [
+        { "baseAmount": 1500000, "frequency": "MONTHLY", "payDay": 25, "anchorDate": null, "activeFrom": "2026-01-01", "activeTo": null }
+      ]
+    },
+    "expected": { "total": 1500000, "occurrences": [ { "sourceIndex": 0, "date": "2026-09-25", "amount": 1500000 } ] }
+  },
+  {
+    "name": "monthly pay day inside a salary-aligned window falls in the second calendar month",
+    "input": {
+      "window": { "from": "2026-09-25", "toExclusive": "2026-10-25" },
+      "sources": [
+        { "baseAmount": 1500000, "frequency": "MONTHLY", "payDay": 5, "anchorDate": null, "activeFrom": "2026-01-01", "activeTo": null }
+      ]
+    },
+    "expected": { "total": 1500000, "occurrences": [ { "sourceIndex": 0, "date": "2026-10-05", "amount": 1500000 } ] }
+  },
+  {
+    "name": "pay day 31 clamps to the last day of a short month",
+    "input": {
+      "window": { "from": "2026-09-01", "toExclusive": "2026-10-01" },
+      "sources": [
+        { "baseAmount": 100, "frequency": "MONTHLY", "payDay": 31, "anchorDate": null, "activeFrom": "2026-01-01", "activeTo": null }
+      ]
+    },
+    "expected": { "total": 100, "occurrences": [ { "sourceIndex": 0, "date": "2026-09-30", "amount": 100 } ] }
+  },
+  {
+    "name": "weekly wage counted every seven days from its anchor",
+    "input": {
+      "window": { "from": "2026-09-01", "toExclusive": "2026-10-01" },
+      "sources": [
+        { "baseAmount": 200000, "frequency": "WEEKLY", "payDay": null, "anchorDate": "2026-08-27", "activeFrom": "2026-08-27", "activeTo": null }
+      ]
+    },
+    "expected": {
+      "total": 800000,
+      "occurrences": [
+        { "sourceIndex": 0, "date": "2026-09-03", "amount": 200000 },
+        { "sourceIndex": 0, "date": "2026-09-10", "amount": 200000 },
+        { "sourceIndex": 0, "date": "2026-09-17", "amount": 200000 },
+        { "sourceIndex": 0, "date": "2026-09-24", "amount": 200000 }
+      ]
+    }
+  },
+  {
+    "name": "bi-weekly wage can land three times in a long window",
+    "input": {
+      "window": { "from": "2026-09-01", "toExclusive": "2026-10-01" },
+      "sources": [
+        { "baseAmount": 500000, "frequency": "BIWEEKLY", "payDay": null, "anchorDate": "2026-09-02", "activeFrom": "2026-09-02", "activeTo": null }
+      ]
+    },
+    "expected": {
+      "total": 1500000,
+      "occurrences": [
+        { "sourceIndex": 0, "date": "2026-09-02", "amount": 500000 },
+        { "sourceIndex": 0, "date": "2026-09-16", "amount": 500000 },
+        { "sourceIndex": 0, "date": "2026-09-30", "amount": 500000 }
+      ]
+    }
+  },
+  {
+    "name": "one-off bonus counts only in its own window",
+    "input": {
+      "window": { "from": "2026-09-01", "toExclusive": "2026-10-01" },
+      "sources": [
+        { "baseAmount": 300000, "frequency": "ONE_OFF", "payDay": null, "anchorDate": "2026-09-15", "activeFrom": "2026-09-15", "activeTo": "2026-09-15" },
+        { "baseAmount": 999, "frequency": "ONE_OFF", "payDay": null, "anchorDate": "2026-10-15", "activeFrom": "2026-10-15", "activeTo": "2026-10-15" }
+      ]
+    },
+    "expected": { "total": 300000, "occurrences": [ { "sourceIndex": 0, "date": "2026-09-15", "amount": 300000 } ] }
+  },
+  {
+    "name": "a source that ended before the pay day contributes nothing",
+    "input": {
+      "window": { "from": "2026-09-01", "toExclusive": "2026-10-01" },
+      "sources": [
+        { "baseAmount": 1500000, "frequency": "MONTHLY", "payDay": 25, "anchorDate": null, "activeFrom": "2026-01-01", "activeTo": "2026-09-10" }
+      ]
+    },
+    "expected": { "total": 0, "occurrences": [] }
+  },
+  {
+    "name": "a source that starts after the pay day waits for next month",
+    "input": {
+      "window": { "from": "2026-09-01", "toExclusive": "2026-10-01" },
+      "sources": [
+        { "baseAmount": 1500000, "frequency": "MONTHLY", "payDay": 10, "anchorDate": null, "activeFrom": "2026-09-20", "activeTo": null }
+      ]
+    },
+    "expected": { "total": 0, "occurrences": [] }
+  },
+  {
+    "name": "two sources sum and list in date order",
+    "input": {
+      "window": { "from": "2026-09-25", "toExclusive": "2026-10-25" },
+      "sources": [
+        { "baseAmount": 1500000, "frequency": "MONTHLY", "payDay": 25, "anchorDate": null, "activeFrom": "2026-01-01", "activeTo": null },
+        { "baseAmount": 400000, "frequency": "MONTHLY", "payDay": 1, "anchorDate": null, "activeFrom": "2026-01-01", "activeTo": null }
+      ]
+    },
+    "expected": {
+      "total": 1900000,
+      "occurrences": [
+        { "sourceIndex": 0, "date": "2026-09-25", "amount": 1500000 },
+        { "sourceIndex": 1, "date": "2026-10-01", "amount": 400000 }
+      ]
+    }
+  }
+]

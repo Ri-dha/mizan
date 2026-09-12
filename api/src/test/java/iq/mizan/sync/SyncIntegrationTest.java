@@ -47,8 +47,9 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
 
         JsonNode pull = api.body(api.get("/api/v1/sync/pull?deviceId=" + tablet + "&since=0", owner));
 
-        assertThat(pull.get("records")).hasSize(1);
-        JsonNode record = pull.get("records").get(0);
+        List<JsonNode> accounts = cashAccounts(pull);
+        assertThat(accounts).hasSize(1);
+        JsonNode record = accounts.getFirst();
         assertThat(record.get("table").asString()).isEqualTo(TABLE);
         assertThat(record.get("rowId").asString()).isEqualTo(rowId.toString());
         assertThat(record.get("fields").get("balance").asLong()).isEqualTo(250000);
@@ -98,11 +99,12 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void pullPagesThroughTheFeedInOrder() {
+        long afterSeeding = api.body(api.get("/api/v1/sync/pull?deviceId=" + tablet + "&since=0", owner)).get("nextSeq").asLong();
         for (int i = 0; i < 3; i++) {
             push(owner, phone, op(UUID.randomUUID(), Map.of("name", "Account " + i, "kind", "BANK", "currency", "IQD"), clock(i)));
         }
 
-        JsonNode first = api.body(api.get("/api/v1/sync/pull?deviceId=" + tablet + "&since=0&limit=2", owner));
+        JsonNode first = api.body(api.get("/api/v1/sync/pull?deviceId=" + tablet + "&since=" + afterSeeding + "&limit=2", owner));
         assertThat(first.get("records")).hasSize(2);
         assertThat(first.get("hasMore").asBoolean()).isTrue();
 
@@ -121,7 +123,7 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
         String otherDevice = registerDevice(other, "Other phone");
 
         JsonNode pull = api.body(api.get("/api/v1/sync/pull?deviceId=" + otherDevice + "&since=0", other));
-        assertThat(pull.get("records")).isEmpty();
+        assertThat(cashAccounts(pull)).isEmpty();
 
         MvcTestResult hijack = api.post("/api/v1/sync/push", other, Map.of("deviceId", otherDevice,
                 "ops", List.of(new SyncOpBuilder(rowId).field("name", "Mine now", clock(9)).build())));
@@ -165,9 +167,18 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
     }
 
     private JsonNode pullSingle(String token, String deviceId) {
-        JsonNode pull = api.body(api.get("/api/v1/sync/pull?deviceId=" + deviceId + "&since=0", token));
-        assertThat(pull.get("records")).hasSize(1);
-        return pull.get("records").get(0);
+        List<JsonNode> accounts = cashAccounts(api.body(api.get("/api/v1/sync/pull?deviceId=" + deviceId + "&since=0", token)));
+        assertThat(accounts).hasSize(1);
+        return accounts.getFirst();
+    }
+
+    /** The feed also carries the seeded default plan; these tests are about cash accounts only. */
+    private static List<JsonNode> cashAccounts(JsonNode pull) {
+        List<JsonNode> accounts = new java.util.ArrayList<>();
+        for (JsonNode record : pull.get("records")) {
+            if (TABLE.equals(record.get("table").asString())) accounts.add(record);
+        }
+        return accounts;
     }
 
     private static Map<String, Object> op(UUID rowId, Map<String, Object> fields, String clock) {

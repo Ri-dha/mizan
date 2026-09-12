@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router"
 import { toast } from "sonner"
 
 import { logout, updateHousehold, useSession } from "@/api/auth"
@@ -110,6 +111,7 @@ export function SettingsPage() {
       <Card>
         <CardHeader><CardTitle>{t("settings.account")}</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-2">
+          <Button variant="neutral" asChild><Link to="/sync">{t("sync.title")}</Link></Button>
           {canPromptInstall() && <Button variant="neutral" onClick={() => void promptInstall()}>{t("settings.install")}</Button>}
           <Button variant="neutral" onClick={() => void signOut()}>{t("auth.logout")}</Button>
         </CardContent>

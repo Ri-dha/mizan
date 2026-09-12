@@ -66,6 +66,15 @@ mizan:
     default-currency: IQD
     default-month-start-day: 1
 
+  # FR-PLN-02: the split a new household starts with. Shares are basis points (5500 = 55.0%).
+  plan:
+    default-buckets:
+      - { name: Essentials, colour: "#88aaee", share-basis-points: 5500 }
+      - { name: Guilt-free, colour: "#ffdc58", share-basis-points: 500 }
+      - { name: Debt & invest, colour: "#ff6b6b", share-basis-points: 1000 }
+      - { name: Short-term savings, colour: "#a3e635", share-basis-points: 1500 }
+      - { name: Investing, colour: "#c4a1ff", share-basis-points: 1500 }
+
   sync:
     pull-page-size: 500
     max-push-ops: 500

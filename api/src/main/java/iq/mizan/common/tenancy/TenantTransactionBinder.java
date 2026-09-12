@@ -31,6 +31,7 @@ public class TenantTransactionBinder {
 
     private final CurrentUserAccessor currentUserAccessor;
     private final JdbcClient jdbcClient;
+    private final TenantSession tenantSession;
 
     @Before("within(iq.mizan..*) && (@within(org.springframework.transaction.annotation.Transactional)"
             + " || @annotation(org.springframework.transaction.annotation.Transactional))")
@@ -44,10 +45,7 @@ public class TenantTransactionBinder {
 
     private void bind(CurrentUser user) {
         jdbcClient.sql("set local role " + APP_ROLE).update();
-        jdbcClient.sql("select set_config('app.user_id', ?, true), set_config('app.household_id', ?, true)")
-                .param(user.userId().toString())
-                .param(user.householdId().toString())
-                .query().singleRow();
+        tenantSession.bind(user.userId(), user.householdId());
 
         TransactionSynchronizationManager.bindResource(BOUND_MARKER, Boolean.TRUE);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

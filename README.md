@@ -83,9 +83,11 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/login`, `/register`, `/reset` | Sign in, create account, password reset |
 | `/` | Home: greeting, cash on hand, verification prompt |
 | `/verify` | Enter the 6-digit contact verification code |
+| `/plan` | Buckets for the selected month with allocated, committed, spent and free; edit shares with the over/under warning and rebalance |
+| `/income` | Income sources, this month's expected pay dates, mark received, irregular receipts |
 | `/accounts` | Cash accounts: add, edit, soft-delete with undo |
 | `/sync` | Sync status, sync now, overridden edits (conflict log) |
-| `/settings` | Language, theme, lock timeout, PIN, household settings, install, sign out |
+| `/settings` | Language, theme, lock timeout, PIN, household settings, sync page, install, sign out |
 
 A PIN screen appears after first sign-in and whenever the app has been in the background longer
 than the configured timeout (30 seconds by default).

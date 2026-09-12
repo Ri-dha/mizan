@@ -1,6 +1,6 @@
-import { Banknote, House, RefreshCw, Settings } from "lucide-react"
+import { Banknote, House, PieChart, Settings, Wallet } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { NavLink, Outlet } from "react-router"
+import { Link, NavLink, Outlet } from "react-router"
 
 import { useSession } from "@/api/auth"
 import { Badge } from "@/components/ui/badge"
@@ -13,8 +13,9 @@ export function AppShell() {
 
   const items = [
     { to: "/", label: t("nav.home"), icon: House, end: true },
+    { to: "/plan", label: t("nav.plan"), icon: PieChart },
+    { to: "/income", label: t("nav.income"), icon: Wallet },
     { to: "/accounts", label: t("nav.accounts"), icon: Banknote },
-    { to: "/sync", label: t("nav.sync"), icon: RefreshCw },
     { to: "/settings", label: t("nav.settings"), icon: Settings },
   ]
 
@@ -52,7 +53,7 @@ export function AppShell() {
         <Outlet />
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 grid grid-cols-4 border-t-4 border-border bg-secondary-background md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 grid grid-cols-5 border-t-4 border-border bg-secondary-background md:hidden">
         {items.map((item) => (
           <NavLink
             key={item.to}
@@ -79,8 +80,10 @@ function SyncBadge() {
       ? t("sync.status.pending", { count: status.pending })
       : t(`sync.status.${status.phase}`)
   return (
-    <Badge variant={status.phase === "error" ? "default" : "neutral"} className="max-w-40 truncate">
-      {label}
-    </Badge>
+    <Link to="/sync">
+      <Badge variant={status.phase === "error" ? "default" : "neutral"} className="max-w-40 truncate">
+        {label}
+      </Badge>
+    </Link>
   )
 }

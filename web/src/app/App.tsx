@@ -15,6 +15,8 @@ import { ResetPasswordPage } from "@/features/auth/ResetPasswordPage"
 import { VerifyPage } from "@/features/auth/VerifyPage"
 import { HomePage } from "@/features/home/HomePage"
 import { AccountsPage } from "@/features/accounts/AccountsPage"
+import { IncomePage } from "@/features/income/IncomePage"
+import { PlanPage } from "@/features/plan/PlanPage"
 import { SyncPage } from "@/features/sync/SyncPage"
 import { SettingsPage } from "@/features/settings/SettingsPage"
 
@@ -37,6 +39,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "verify", element: <VerifyPage /> },
+      { path: "plan", element: <PlanPage /> },
+      { path: "income", element: <IncomePage /> },
       { path: "accounts", element: <AccountsPage /> },
       { path: "sync", element: <SyncPage /> },
       { path: "settings", element: <SettingsPage /> },

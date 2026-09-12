@@ -1,0 +1,37 @@
+[
+  {
+    "name": "calendar month when the month starts on the 1st",
+    "input": { "key": "2026-09", "startDay": 1 },
+    "expected": { "from": "2026-09-01", "toExclusive": "2026-10-01" }
+  },
+  {
+    "name": "salary-aligned month runs from the 25th to the 24th",
+    "input": { "key": "2026-09", "startDay": 25 },
+    "expected": { "from": "2026-09-25", "toExclusive": "2026-10-25" }
+  },
+  {
+    "name": "december rolls into the next year",
+    "input": { "key": "2026-12", "startDay": 25 },
+    "expected": { "from": "2026-12-25", "toExclusive": "2027-01-25" }
+  },
+  {
+    "name": "key for a date before the start day belongs to the previous month",
+    "input": { "date": "2026-10-10", "startDay": 25 },
+    "expected": { "key": "2026-09" }
+  },
+  {
+    "name": "key for the start day itself opens the new month",
+    "input": { "date": "2026-10-25", "startDay": 25 },
+    "expected": { "key": "2026-10" }
+  },
+  {
+    "name": "key on the first with a calendar month",
+    "input": { "date": "2026-01-01", "startDay": 1 },
+    "expected": { "key": "2026-01" }
+  },
+  {
+    "name": "key in january before the start day belongs to december of last year",
+    "input": { "date": "2027-01-03", "startDay": 10 },
+    "expected": { "key": "2026-12" }
+  }
+]

@@ -15,11 +15,13 @@ import iq.mizan.household.dto.UpdateHouseholdRequest;
 import iq.mizan.household.entity.Household;
 import iq.mizan.household.entity.Membership;
 import iq.mizan.household.entity.MembershipStatus;
+import iq.mizan.household.event.HouseholdCreated;
 import iq.mizan.household.mapper.HouseholdMapper;
 import iq.mizan.household.repository.HouseholdRepository;
 import iq.mizan.household.repository.MembershipRepository;
 
 import lombok.AllArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,13 +34,15 @@ public class HouseholdService {
     private final HouseholdMapper householdMapper;
     private final AuditService auditService;
     private final HouseholdProperties properties;
+    private final ApplicationEventPublisher events;
 
     /** FR-ACC-04: every account starts as Owner of its own household. */
     @Transactional
     public HouseholdSummary createForOwner(UUID userId, String ownerDisplayName) {
-        Household household = householdRepository.save(Household.create(
+        Household household = householdRepository.saveAndFlush(Household.create(
                 ownerDisplayName, properties.defaultCurrency(), properties.defaultMonthStartDay()));
         Membership membership = membershipRepository.save(Membership.owner(household.getId(), userId));
+        events.publishEvent(new HouseholdCreated(household.getId(), userId, household.getMonthStartDay()));
         return householdMapper.toSummary(household, membership);
     }
 

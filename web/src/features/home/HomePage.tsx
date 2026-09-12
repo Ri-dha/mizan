@@ -8,12 +8,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { liveCashAccounts, totalsByCurrency } from "@/db/cashAccounts"
 import { formatMoney } from "@/domain/money/format"
+import { currentMonthKey } from "@/app/month"
+import { useMonthView } from "@/features/plan/useMonthFigures"
 
 export function HomePage() {
   const { t, i18n } = useTranslation()
   const session = useSession()
   const accounts = useLiveQuery(liveCashAccounts, [], [])
   const totals = totalsByCurrency(accounts)
+  const startDay = session?.monthStartDay ?? 1
+  const base = session?.baseCurrency ?? "IQD"
+  const month = useMonthView(currentMonthKey(startDay), startDay)
 
   return (
     <div className="flex flex-col gap-6">
@@ -27,6 +32,30 @@ export function HomePage() {
           </AlertDescription>
         </Alert>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("home.planTitle")}</CardTitle>
+          <CardDescription>
+            {t("home.incomePlanned")}: {formatMoney(month.income.planned, base, i18n.language)} · {t("home.incomeReceived")}: {formatMoney(month.income.received, base, i18n.language)}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          {month.figures.buckets.map((figure) => {
+            const bucket = month.buckets.find((b) => b.id === figure.id)!
+            return (
+              <div key={figure.id} className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <span className="size-3 rounded-base border-2 border-border" style={{ background: bucket.colour }} />
+                  {bucket.name}
+                </span>
+                <span className="tabular-nums">{formatMoney(figure.free, base, i18n.language)} <span className="text-xs opacity-70">{t("home.free")}</span></span>
+              </div>
+            )
+          })}
+          <Button asChild variant="neutral" className="self-start"><Link to="/plan">{t("home.viewPlan")}</Link></Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -7,7 +7,9 @@
     "home": "Home",
     "accounts": "Cash",
     "sync": "Sync",
-    "settings": "Settings"
+    "settings": "Settings",
+    "income": "Income",
+    "plan": "Plan"
   },
   "auth": {
     "identifier": "Email or phone",
@@ -56,7 +58,12 @@
     "accounts_other": "{{count}} accounts",
     "noAccounts": "No cash accounts yet. Add your wallet, bank and cash at home to start.",
     "addAccount": "Add cash account",
-    "comingSoon": "Income, plan, bills and gold arrive in the next milestones."
+    "comingSoon": "Bills, transactions, debts, goals and gold arrive in the next milestones.",
+    "planTitle": "This month",
+    "incomePlanned": "Planned",
+    "incomeReceived": "Received",
+    "free": "free",
+    "viewPlan": "Open plan"
   },
   "accounts": {
     "title": "Cash accounts",
@@ -103,7 +110,11 @@
     "title": "Settings",
     "language": "Language",
     "theme": "Theme",
-    "themes": { "system": "System", "light": "Light", "dark": "Dark" },
+    "themes": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
     "security": "Security",
     "lockAfter": "Lock after leaving for",
     "seconds": "{{count}} seconds",
@@ -134,5 +145,72 @@
     "RATE_LIMIT_EXCEEDED": "Too many attempts. Please wait and try again.",
     "VALIDATION_FAILED": "Please check the form",
     "NETWORK": "Can't reach the server"
+  },
+  "month": {
+    "previous": "Previous month",
+    "next": "Next month"
+  },
+  "income": {
+    "title": "Income",
+    "thisMonth": "This month",
+    "planned": "Planned",
+    "received": "Received",
+    "nothingPlanned": "Nothing planned this month. Add an income source or an irregular receipt.",
+    "expectedOn": "Expected {{date}}",
+    "receivedOn": "Received {{date}}",
+    "markReceived": "Mark received",
+    "overdue": "Not received yet",
+    "addIrregular": "Add irregular income",
+    "irregular": "Irregular income",
+    "sources": "Income sources",
+    "addSource": "Add source",
+    "editSource": "Edit source",
+    "noSources": "No income sources yet.",
+    "name": "Name",
+    "amount": "Amount",
+    "fxRate": "Rate: 1 {{from}} in {{to}}",
+    "fxRateHint": "Used for planning; each receipt records its own rate.",
+    "frequency": "Frequency",
+    "frequencies": {
+      "MONTHLY": "Monthly",
+      "BIWEEKLY": "Every two weeks",
+      "WEEKLY": "Weekly",
+      "ONE_OFF": "One-off"
+    },
+    "payDay": "Pay day of the month",
+    "payDayShort": "day {{day}}",
+    "anchorDate": "A recent pay date",
+    "anchorHint": "Later pay dates count from this one.",
+    "paidOn": "Paid on",
+    "activeFrom": "Starts",
+    "activeTo": "Ends (optional)",
+    "endsOn": "ends {{date}}",
+    "endSource": "End this source",
+    "receivedOnLabel": "Received on",
+    "note": "Note"
+  },
+  "plan": {
+    "title": "Plan",
+    "figures": "Buckets this month",
+    "buckets": "Allocation",
+    "noBuckets": "No buckets in this month's plan.",
+    "noPlan": "No plan yet. Save buckets to start one from this month.",
+    "versionNote": "This version applies from {{from}}. Saving in a later month starts a new version; earlier months keep theirs.",
+    "allocated": "Allocated",
+    "committed": "Committed",
+    "spent": "Spent",
+    "free": "Free",
+    "unallocated": "Unallocated: {{amount}}",
+    "name": "Bucket name",
+    "share": "Share",
+    "colour": "Colour",
+    "remove": "Remove bucket",
+    "addBucket": "Add bucket",
+    "rebalance": "Rebalance to 100%",
+    "balanced": "Shares add up to 100%.",
+    "over": "Over by {{percent}}%: that is {{amount}} more than this month's planned income.",
+    "under": "Under by {{percent}}%: {{amount}} of this month's planned income has no bucket.",
+    "save": "Save plan",
+    "saved": "Plan saved"
   }
 }
