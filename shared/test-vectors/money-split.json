@@ -1,0 +1,37 @@
+[
+  {
+    "name": "default plan splits a round salary exactly",
+    "input": { "total": 1500000, "sharesBasisPoints": [5500, 500, 1000, 1500, 1500] },
+    "expected": [825000, 75000, 150000, 225000, 225000]
+  },
+  {
+    "name": "remainder goes to the largest share",
+    "input": { "total": 1000001, "sharesBasisPoints": [5500, 500, 1000, 1500, 1500] },
+    "expected": [550001, 50000, 100000, 150000, 150000]
+  },
+  {
+    "name": "thirds of one hundred leave a remainder of one",
+    "input": { "total": 100, "sharesBasisPoints": [3334, 3333, 3333] },
+    "expected": [34, 33, 33]
+  },
+  {
+    "name": "one-decimal percentages on an odd salary",
+    "input": { "total": 1234567, "sharesBasisPoints": [3330, 3330, 3340] },
+    "expected": [411110, 411110, 412347]
+  },
+  {
+    "name": "zero total splits to zeros",
+    "input": { "total": 0, "sharesBasisPoints": [5000, 5000] },
+    "expected": [0, 0]
+  },
+  {
+    "name": "a single bucket takes everything",
+    "input": { "total": 987654, "sharesBasisPoints": [10000] },
+    "expected": [987654]
+  },
+  {
+    "name": "first of two equal shares receives the odd dinar",
+    "input": { "total": 7, "sharesBasisPoints": [5000, 5000] },
+    "expected": [4, 3]
+  }
+]

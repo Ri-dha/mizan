@@ -1,0 +1,16 @@
+package iq.mizan.common.audit;
+
+public enum AuditAction {
+    REGISTERED,
+    CONTACT_VERIFIED,
+    LOGIN_SUCCEEDED,
+    LOGIN_FAILED,
+    ACCOUNT_LOCKED,
+    TOKEN_REFRESHED,
+    TOKEN_REUSE_DETECTED,
+    LOGOUT,
+    PASSWORD_RESET,
+    HOUSEHOLD_UPDATED,
+    SYNC_INSERTED,
+    SYNC_UPDATED
+}

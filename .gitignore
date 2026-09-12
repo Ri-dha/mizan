@@ -1,0 +1,31 @@
+# --- Java / Maven (api/) ---
+api/target/
+api/.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# --- IDEs ---
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+
+# --- Web (web/) ---
+web/node_modules/
+web/dist/
+web/dev-dist/
+web/.env.local
+
+
+
+# --- Local environment ---
+.env
+.remember/
+.DS_Store
+/PLAN.md
+/CLAUDE.md

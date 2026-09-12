@@ -1,0 +1,83 @@
+spring:
+  application:
+    name: mizan
+  profiles:
+    active: "${SPRING_PROFILES_ACTIVE:dev}"
+  threads:
+    virtual:
+      enabled: true
+  jpa:
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks that the mapping agrees with it.
+      ddl-auto: validate
+    open-in-view: false
+  cache:
+    type: caffeine
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  swagger-ui:
+    enabled: "${SWAGGER_UI_ENABLED:false}"
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+  api-docs:
+    enabled: "${OPENAPI_DOCS_ENABLED:true}"
+
+mizan:
+  api:
+    problem:
+      base-uri: "${MIZAN_PROBLEM_BASE_URI:https://api.mizan.iq/problems/}"
+
+  security:
+    jwt:
+      secret: "${MIZAN_JWT_SECRET:dev-only-secret-change-me-in-every-real-environment}"
+      issuer: "${MIZAN_JWT_ISSUER:mizan}"
+      access-token-ttl: 15m
+      refresh-token-ttl: 30d
+    # Pepper for HMAC lookups of refresh tokens and verification codes. Dev default only.
+    hash-pepper: "${MIZAN_HASH_PEPPER:dev-only-pepper-change-me}"
+
+  auth:
+    # Local numbers written as 07xx are normalised to E.164 with this prefix.
+    default-country-code: "+964"
+    lockout:
+      max-attempts: 5
+      duration: 15m
+    verification:
+      code-length: 6
+      ttl: 10m
+      max-attempts: 5
+      resend-cooldown: 60s
+    password-reset:
+      # FR-ACC-02: single use, 30 minutes.
+      ttl: 30m
+    rate-limit:
+      # Per client address on the unauthenticated auth endpoints (NFR-04).
+      capacity: 20
+      refill-period: 1m
+
+  household:
+    default-currency: IQD
+    default-month-start-day: 1
+
+  sync:
+    pull-page-size: 500
+    max-push-ops: 500
+
+  storage:
+    bucket: "${MIZAN_STORAGE_BUCKET:mizan-attachments}"
+    endpoint: "${MIZAN_STORAGE_ENDPOINT:http://localhost:9000}"
+    region: "${MIZAN_STORAGE_REGION:us-east-1}"
+    access-key: "${MIZAN_STORAGE_ACCESS_KEY:mizan}"
+    secret-key: "${MIZAN_STORAGE_SECRET_KEY:mizan-dev-secret}"
+    path-style: true
+    create-bucket-on-startup: "${MIZAN_STORAGE_CREATE_BUCKET:true}"
+
+  web:
+    allowed-origins: "${MIZAN_ALLOWED_ORIGINS:}"

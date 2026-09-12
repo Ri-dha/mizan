@@ -1,0 +1,67 @@
+# Local stack. `./mvnw spring-boot:run` in api/ starts postgres and minio through
+# spring-boot-docker-compose; `docker compose --profile full up` also builds and runs the API.
+#
+# Ports are pinned so they match api/src/main/resources/application-dev.yml. Credentials are
+# dev-only and applied when a volume is first created — after changing one, `docker compose
+# down -v` forces a rebuild.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mizan}
+      POSTGRES_USER: ${POSTGRES_USER:-mizan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mizan}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mizan} -d ${POSTGRES_DB:-mizan}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # S3-compatible object storage for receipt and asset photos. The API creates its bucket on
+  # startup. Console on 9001.
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mizan}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mizan-dev-secret}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./api
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-mizan}
+      DB_USERNAME: ${POSTGRES_USER:-mizan}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-mizan}
+      MIZAN_STORAGE_ENDPOINT: http://minio:9000
+      MIZAN_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-mizan}
+      MIZAN_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-mizan-dev-secret}
+      MIZAN_JWT_SECRET: ${MIZAN_JWT_SECRET:-dev-only-secret-change-me-in-every-real-environment}
+      MIZAN_HASH_PEPPER: ${MIZAN_HASH_PEPPER:-dev-only-pepper-change-me}
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
+  miniodata:

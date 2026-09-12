@@ -1,0 +1,23 @@
+# Local development. Every value has a localhost default matching docker-compose.yml; with
+# spring-boot-docker-compose on the classpath the compose stack is started automatically.
+spring:
+  docker:
+    compose:
+      file: ../docker-compose.yml
+      lifecycle-management: start_only
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mizan}
+    username: ${DB_USERNAME:mizan}
+    password: ${DB_PASSWORD:mizan}
+    hikari:
+      pool-name: mizan-pool
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+
+springdoc:
+  swagger-ui:
+    enabled: true
+
+mizan:
+  web:
+    allowed-origins: ${MIZAN_ALLOWED_ORIGINS:http://localhost:5173}

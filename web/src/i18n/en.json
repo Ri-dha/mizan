@@ -1,0 +1,138 @@
+{
+  "app": {
+    "name": "Mizan",
+    "tagline": "One number for what you're worth, and a plan that keeps it growing."
+  },
+  "nav": {
+    "home": "Home",
+    "accounts": "Cash",
+    "sync": "Sync",
+    "settings": "Settings"
+  },
+  "auth": {
+    "identifier": "Email or phone",
+    "identifierHint": "07xx numbers are saved as +964",
+    "password": "Password",
+    "displayName": "Your name",
+    "register": "Create account",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "haveAccount": "Already have an account?",
+    "noAccount": "New here?",
+    "forgot": "Forgot password?",
+    "verifyTitle": "Confirm it's you",
+    "verifyBody": "Enter the 6-digit code we sent to {{contact}}.",
+    "verify": "Confirm",
+    "resend": "Send a new code",
+    "codeSent": "Code sent",
+    "verified": "Contact confirmed",
+    "skipForNow": "Later",
+    "resetTitle": "Reset password",
+    "resetRequested": "If that account exists, a code is on its way.",
+    "resetCode": "Reset code",
+    "newPassword": "New password",
+    "resetDone": "Password changed. Sign in again.",
+    "offlineNeedsSession": "Sign in once while online; after that Mizan works offline."
+  },
+  "lock": {
+    "title": "Locked",
+    "enterPin": "Enter your PIN",
+    "unlock": "Unlock",
+    "biometric": "Use biometrics",
+    "wrongPin": "That PIN is not right",
+    "setTitle": "Set a PIN",
+    "setBody": "Mizan locks when you leave it. A PIN keeps your numbers off the task switcher.",
+    "pin": "PIN (4 to 8 digits)",
+    "confirmPin": "Repeat PIN",
+    "pinMismatch": "PINs do not match",
+    "save": "Save PIN",
+    "enrollBiometric": "Also allow biometrics on this device",
+    "remove": "Remove PIN"
+  },
+  "home": {
+    "greeting": "Hello, {{name}}",
+    "cashTotal": "Cash on hand",
+    "accounts_one": "{{count}} account",
+    "accounts_other": "{{count}} accounts",
+    "noAccounts": "No cash accounts yet. Add your wallet, bank and cash at home to start.",
+    "addAccount": "Add cash account",
+    "comingSoon": "Income, plan, bills and gold arrive in the next milestones."
+  },
+  "accounts": {
+    "title": "Cash accounts",
+    "add": "Add account",
+    "edit": "Edit account",
+    "name": "Name",
+    "kind": "Type",
+    "institution": "Bank or wallet",
+    "balance": "Balance",
+    "currency": "Currency",
+    "private": "Private to me",
+    "save": "Save",
+    "delete": "Delete",
+    "deleted": "Account deleted",
+    "restore": "Undo",
+    "kinds": {
+      "WALLET": "Wallet",
+      "BANK": "Bank",
+      "CASH_AT_HOME": "Cash at home",
+      "OTHER": "Other"
+    }
+  },
+  "sync": {
+    "title": "Sync",
+    "status": {
+      "idle": "Up to date",
+      "offline": "Offline. Changes will sync when you're back.",
+      "syncing": "Syncing…",
+      "error": "Sync failed. Will retry.",
+      "pending_one": "{{count}} change waiting",
+      "pending_other": "{{count}} changes waiting"
+    },
+    "syncNow": "Sync now",
+    "lastSync": "Last synced {{when}}",
+    "never": "Never synced",
+    "conflictsTitle": "Overridden edits",
+    "conflictsBody": "These edits lost to a newer change from another device. Nothing was lost silently.",
+    "noConflicts": "No overridden edits.",
+    "yours": "Yours",
+    "kept": "Kept",
+    "dismiss": "Dismiss"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "themes": { "system": "System", "light": "Light", "dark": "Dark" },
+    "security": "Security",
+    "lockAfter": "Lock after leaving for",
+    "seconds": "{{count}} seconds",
+    "household": "Household",
+    "householdName": "Household name",
+    "monthStartDay": "Month starts on day",
+    "saved": "Saved",
+    "install": "Install Mizan on this device",
+    "account": "Account"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "loading": "Loading…",
+    "update": "A new version is ready",
+    "reload": "Reload",
+    "required": "Required"
+  },
+  "errors": {
+    "INVALID_CREDENTIALS": "Email, phone or password is incorrect",
+    "IDENTIFIER_ALREADY_REGISTERED": "An account with this email or phone already exists",
+    "INVALID_IDENTIFIER": "Enter a valid email address or phone number",
+    "ACCOUNT_LOCKED": "Too many failed attempts. Try again in a few minutes.",
+    "INVALID_VERIFICATION_CODE": "The code is wrong or has expired",
+    "VERIFICATION_ATTEMPTS_EXHAUSTED": "Too many wrong codes. Request a new one.",
+    "VERIFICATION_RESEND_TOO_SOON": "Please wait before requesting another code",
+    "RATE_LIMIT_EXCEEDED": "Too many attempts. Please wait and try again.",
+    "VALIDATION_FAILED": "Please check the form",
+    "NETWORK": "Can't reach the server"
+  }
+}
