@@ -1,0 +1,104 @@
+[
+  {
+    "name": "contribution known: months to target rounds up",
+    "input": {
+      "targetAmount": 3000000,
+      "saved": 500000,
+      "monthlyContribution": 400000,
+      "targetDate": null,
+      "today": "2026-09-13"
+    },
+    "expected": {
+      "remaining": 2500000,
+      "percent": 16.7,
+      "monthsToTarget": 7,
+      "projectedDate": "2027-04-13",
+      "requiredMonthly": null
+    }
+  },
+  {
+    "name": "target date known: required monthly contribution",
+    "input": {
+      "targetAmount": 3000000,
+      "saved": 500000,
+      "monthlyContribution": null,
+      "targetDate": "2027-03-13",
+      "today": "2026-09-13"
+    },
+    "expected": {
+      "remaining": 2500000,
+      "percent": 16.7,
+      "monthsToTarget": null,
+      "projectedDate": null,
+      "requiredMonthly": 416667
+    }
+  },
+  {
+    "name": "already complete",
+    "input": {
+      "targetAmount": 1000000,
+      "saved": 1000000,
+      "monthlyContribution": 100000,
+      "targetDate": null,
+      "today": "2026-09-13"
+    },
+    "expected": {
+      "remaining": 0,
+      "percent": 100.0,
+      "monthsToTarget": 0,
+      "projectedDate": "2026-09-13",
+      "requiredMonthly": null
+    }
+  },
+  {
+    "name": "over-saved caps at one hundred percent",
+    "input": {
+      "targetAmount": 1000000,
+      "saved": 1250000,
+      "monthlyContribution": null,
+      "targetDate": null,
+      "today": "2026-09-13"
+    },
+    "expected": {
+      "remaining": 0,
+      "percent": 100.0,
+      "monthsToTarget": null,
+      "projectedDate": null,
+      "requiredMonthly": null
+    }
+  },
+  {
+    "name": "target date in the past asks for everything now",
+    "input": {
+      "targetAmount": 1000000,
+      "saved": 200000,
+      "monthlyContribution": null,
+      "targetDate": "2026-08-01",
+      "today": "2026-09-13"
+    },
+    "expected": {
+      "remaining": 800000,
+      "percent": 20.0,
+      "monthsToTarget": null,
+      "projectedDate": null,
+      "requiredMonthly": 800000
+    }
+  },
+  {
+    "name": "no contribution and no date gives no projection",
+    "input": {
+      "targetAmount": 1000000,
+      "saved": 0,
+      "monthlyContribution": 0,
+      "targetDate": null,
+      "today": "2026-09-13"
+    },
+    "expected": {
+      "remaining": 1000000,
+      "percent": 0.0,
+      "monthsToTarget": null,
+      "projectedDate": null,
+      "requiredMonthly": null
+    }
+  }
+]

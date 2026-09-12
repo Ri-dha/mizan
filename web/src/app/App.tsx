@@ -17,6 +17,11 @@ import { HomePage } from "@/features/home/HomePage"
 import { AccountsPage } from "@/features/accounts/AccountsPage"
 import { IncomePage } from "@/features/income/IncomePage"
 import { PlanPage } from "@/features/plan/PlanPage"
+import { TransactionsPage } from "@/features/transactions/TransactionsPage"
+import { BillsPage } from "@/features/bills/BillsPage"
+import { DebtsPage } from "@/features/debts/DebtsPage"
+import { GoalsPage } from "@/features/goals/GoalsPage"
+import { MorePage } from "@/features/more/MorePage"
 import { SyncPage } from "@/features/sync/SyncPage"
 import { SettingsPage } from "@/features/settings/SettingsPage"
 
@@ -39,7 +44,12 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "verify", element: <VerifyPage /> },
+      { path: "transactions", element: <TransactionsPage /> },
       { path: "plan", element: <PlanPage /> },
+      { path: "bills", element: <BillsPage /> },
+      { path: "debts", element: <DebtsPage /> },
+      { path: "goals", element: <GoalsPage /> },
+      { path: "more", element: <MorePage /> },
       { path: "income", element: <IncomePage /> },
       { path: "accounts", element: <AccountsPage /> },
       { path: "sync", element: <SyncPage /> },

@@ -11,6 +11,8 @@ export interface MonthFiguresInput {
   buckets: BucketShare[]
   committed: Record<string, number>
   spent: Record<string, number>
+  transfersIn: Record<string, number>
+  transfersOut: Record<string, number>
 }
 
 export interface BucketFigures {
@@ -19,6 +21,8 @@ export interface BucketFigures {
   allocated: number
   committed: number
   spent: number
+  transfersIn: number
+  transfersOut: number
   free: number
 }
 
@@ -31,7 +35,8 @@ export interface MonthFiguresResult {
 
 /**
  * The per-bucket view of a month (FR-PLN-05): what each bucket was allocated from planned and
- * from received income, what it has committed and spent, and what is free.
+ * from received income, what it has committed, spent and transferred, and what is free.
+ * Transfers are never spending (BR-04) but they do move money out of a bucket.
  */
 export function monthFigures(input: MonthFiguresInput): MonthFiguresResult {
   const shares = input.buckets.map((b) => b.shareBasisPoints)
@@ -41,8 +46,13 @@ export function monthFigures(input: MonthFiguresInput): MonthFiguresResult {
   const buckets = input.buckets.map((bucket, i) => {
     const committed = input.committed[bucket.id] ?? 0
     const spent = input.spent[bucket.id] ?? 0
+    const transfersIn = input.transfersIn[bucket.id] ?? 0
+    const transfersOut = input.transfersOut[bucket.id] ?? 0
     const allocated = received[i]
-    return { id: bucket.id, plannedAllocated: planned[i], allocated, committed, spent, free: allocated - committed - spent }
+    return {
+      id: bucket.id, plannedAllocated: planned[i], allocated, committed, spent, transfersIn, transfersOut,
+      free: allocated + transfersIn - committed - spent - transfersOut,
+    }
   })
 
   const sum = (values: number[]) => values.reduce((total, value) => total + value, 0)

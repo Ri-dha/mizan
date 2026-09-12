@@ -71,6 +71,8 @@ environments override them with `MIZAN_*`, `DB_*` and `MINIO_*` environment vari
 | POST | `/api/v1/sync/push` | bearer, `RECORD_WRITE` | Push local changes; per-field last-write-wins |
 | GET | `/api/v1/sync/pull?deviceId&since&limit` | bearer | Pull the change feed after a sequence number |
 | GET | `/api/v1/sync/conflicts?deviceId` | bearer | Edits from this device that lost to newer values |
+| POST | `/api/v1/attachments/{id}/upload-url` | bearer, `RECORD_WRITE` | Presigned PUT for the encrypted bytes of a synced attachment row |
+| GET | `/api/v1/attachments/{id}/download-url` | bearer | Presigned GET for the same |
 
 The access token goes in `Authorization: Bearer <token>` and lives 15 minutes. The refresh token
 is a 30-day httpOnly cookie scoped to `/api/v1/auth`, and is also returned in the body for
@@ -85,6 +87,11 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/verify` | Enter the 6-digit contact verification code |
 | `/plan` | Buckets for the selected month with allocated, committed, spent and free; edit shares with the over/under warning and rebalance |
 | `/income` | Income sources, this month's expected pay dates, mark received, irregular receipts |
+| `/transactions` | The ledger for the selected month: search and filters, edit, recycle bin; the + button anywhere opens quick add |
+| `/bills` | Recurring bills, this month's due dates, mark paid with the actual amount, undo |
+| `/debts` | Debts owed and owing, balance from the payment ledger, payoff and what-if extra payments |
+| `/goals` | Savings goals with deposits, withdrawals, progress and projection |
+| `/more` | Links to the less frequent screens |
 | `/accounts` | Cash accounts: add, edit, soft-delete with undo |
 | `/sync` | Sync status, sync now, overridden edits (conflict log) |
 | `/settings` | Language, theme, lock timeout, PIN, household settings, sync page, install, sign out |

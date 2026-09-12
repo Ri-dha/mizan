@@ -10,5 +10,6 @@ public record StorageProperties(
         String accessKey,
         String secretKey,
         boolean pathStyle,
-        boolean createBucketOnStartup) {
+        boolean createBucketOnStartup,
+        java.time.Duration urlTtl) {
 }

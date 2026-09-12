@@ -1,0 +1,100 @@
+[
+  {
+    "name": "interest-free family loan clears in whole months",
+    "input": {
+      "balance": 1200000,
+      "annualRateBasisPoints": 0,
+      "monthlyPayment": 100000
+    },
+    "expected": {
+      "neverClears": false,
+      "months": 12,
+      "totalPaid": 1200000,
+      "totalInterest": 0
+    }
+  },
+  {
+    "name": "interest-free loan with an uneven last payment",
+    "input": {
+      "balance": 1000000,
+      "annualRateBasisPoints": 0,
+      "monthlyPayment": 300000
+    },
+    "expected": {
+      "neverClears": false,
+      "months": 4,
+      "totalPaid": 1000000,
+      "totalInterest": 0
+    }
+  },
+  {
+    "name": "twelve percent a year with a fixed payment",
+    "input": {
+      "balance": 1000000,
+      "annualRateBasisPoints": 1200,
+      "monthlyPayment": 105000
+    },
+    "expected": {
+      "neverClears": false,
+      "months": 11,
+      "totalPaid": 1056152,
+      "totalInterest": 56152
+    }
+  },
+  {
+    "name": "payment equal to the monthly interest never clears",
+    "input": {
+      "balance": 1000000,
+      "annualRateBasisPoints": 1200,
+      "monthlyPayment": 10000
+    },
+    "expected": {
+      "neverClears": true,
+      "months": 0,
+      "totalPaid": 0,
+      "totalInterest": 0
+    }
+  },
+  {
+    "name": "payment below the monthly interest never clears",
+    "input": {
+      "balance": 1000000,
+      "annualRateBasisPoints": 2400,
+      "monthlyPayment": 15000
+    },
+    "expected": {
+      "neverClears": true,
+      "months": 0,
+      "totalPaid": 0,
+      "totalInterest": 0
+    }
+  },
+  {
+    "name": "zero balance needs no payments",
+    "input": {
+      "balance": 0,
+      "annualRateBasisPoints": 1200,
+      "monthlyPayment": 50000
+    },
+    "expected": {
+      "neverClears": false,
+      "months": 0,
+      "totalPaid": 0,
+      "totalInterest": 0
+    }
+  },
+  {
+    "name": "zero payment on a positive balance never clears",
+    "input": {
+      "balance": 500,
+      "annualRateBasisPoints": 0,
+      "monthlyPayment": 0
+    },
+    "expected": {
+      "neverClears": true,
+      "months": 0,
+      "totalPaid": 0,
+      "totalInterest": 0
+    }
+  }
+]

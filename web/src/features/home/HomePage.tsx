@@ -59,6 +59,22 @@ export function HomePage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>{t("home.upcomingBills")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          {month.bills.filter((b) => !b.occurrence).slice(0, 5).map((bill) => (
+            <div key={`${bill.expense.id}-${bill.dueDate}`} className="flex items-center justify-between gap-2">
+              <span className="truncate">{bill.expense.name} <span className="text-xs opacity-70">{bill.dueDate.slice(5)}</span></span>
+              <span className="tabular-nums">{formatMoney(bill.expectedAmount, base, i18n.language)}</span>
+            </div>
+          ))}
+          {month.bills.every((b) => b.occurrence) && <p className="opacity-70">{t("home.noUpcoming")}</p>}
+          <Button asChild variant="neutral" className="self-start"><Link to="/bills">{t("nav.bills")}</Link></Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>{t("home.cashTotal")}</CardTitle>
           <CardDescription>{t("home.accounts", { count: accounts.length })}</CardDescription>
         </CardHeader>

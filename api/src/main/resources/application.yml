@@ -78,6 +78,9 @@ mizan:
   sync:
     pull-page-size: 500
     max-push-ops: 500
+    # BR-15: how long a soft-deleted record can still be restored.
+    recycle-bin-retention: 30d
+    purge-cron: "0 30 3 * * *"
 
   storage:
     bucket: "${MIZAN_STORAGE_BUCKET:mizan-attachments}"
@@ -87,6 +90,8 @@ mizan:
     secret-key: "${MIZAN_STORAGE_SECRET_KEY:mizan-dev-secret}"
     path-style: true
     create-bucket-on-startup: "${MIZAN_STORAGE_CREATE_BUCKET:true}"
+    # How long a presigned upload or download URL stays valid.
+    url-ttl: 15m
 
   web:
     allowed-origins: "${MIZAN_ALLOWED_ORIGINS:}"

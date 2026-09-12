@@ -189,6 +189,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attachments/{id}/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A URL to PUT the encrypted bytes of a synced attachment */
+        post: operations["uploadUrl"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/households/current": {
         parameters: {
             query?: never;
@@ -250,6 +267,23 @@ export interface paths {
         };
         /** The signed-in account and its household */
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attachments/{id}/download-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A URL to GET the encrypted bytes of a synced attachment */
+        get: operations["downloadUrl"];
         put?: never;
         post?: never;
         delete?: never;
@@ -339,6 +373,12 @@ export interface components {
         LoginRequest: {
             identifier: string;
             password: string;
+        };
+        PresignedUrlResponse: {
+            url?: string;
+            method?: string;
+            /** Format: date-time */
+            expiresAt?: string;
         };
         UpdateHouseholdRequest: {
             name?: string;
@@ -621,6 +661,28 @@ export interface operations {
             };
         };
     };
+    uploadUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PresignedUrlResponse"];
+                };
+            };
+        };
+    };
     current: {
         parameters: {
             query?: never;
@@ -727,6 +789,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CurrentUserResponse"];
+                };
+            };
+        };
+    };
+    downloadUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PresignedUrlResponse"];
                 };
             };
         };
