@@ -13,6 +13,10 @@ Mizan fetches the world spot price in dollars per troy ounce and a dollar rate, 
 
 Every price carries its source and time. After 24 hours without a refresh it is marked stale.
 
+## The local market's own price
+
+Where the service has a local dealer feed, the valuation settings offer **Local market quote** as the price source. The dealer's price per gram of pure metal then replaces world spot and the dollar rate for every value on the screen and in net worth, and the source is named. A price you enter yourself still wins over it.
+
 ## Entering today's price
 
 Local prices differ from world prices. **Enter today's price** takes what the market quotes, for example per mithqal of 21k, converts it to a price per gram of pure metal, and uses it instead of the feed until you enter a newer one. Screens then say the price is yours.

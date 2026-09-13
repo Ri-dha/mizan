@@ -43,7 +43,7 @@ class MarketIntegrationTest extends PostgresIntegrationTest {
     void quotesCarrySourceAndFreshnessForEveryInstrument() {
         JsonNode quotes = api.body(api.get("/api/v1/market/quotes", token));
 
-        assertThat(quotes).hasSize(4);
+        assertThat(quotes).hasSize(6);
         for (JsonNode quote : quotes) {
             assertThat(quote.get("source").asString()).isEqualTo("stub");
             assertThat(quote.get("stale").asBoolean()).isFalse();

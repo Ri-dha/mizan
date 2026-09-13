@@ -57,6 +57,13 @@ scheduled jobs are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 Every credential above is a dev default from `.env.example` and `application.yml`. Deployed
 environments override them with `MIZAN_*`, `DB_*` and `MINIO_*` environment variables.
 
+### Receipt reading
+
+Receipt OCR runs on the device with Tesseract. `npm run ocr:assets` (also run before `dev` and
+`build`) copies the worker and core from `node_modules` and downloads the fast English and Arabic
+models into `web/public/ocr/`, which is not committed. Without network the script warns and the
+"Read the receipt" button reports that the reader is unavailable.
+
 ### Price feeds
 
 Locally the API serves fixed stub prices (see `application-dev.yml`). To use real providers set
@@ -101,6 +108,7 @@ order every hour; the parallel-market dollar rate comes from `MIZAN_PARALLEL_RAT
 | POST/DELETE | `/api/v1/households/current/deletion-request` | bearer, `HOUSEHOLD_DELETE` | Request (with password) or cancel household deletion; purged after 7 days |
 | GET | `/api/v1/invitations/{token}` | public | Preview an invitation |
 | POST | `/api/v1/invitations/{token}/accept` | bearer | Join the household behind the link |
+| GET | `/api/v1/market/quotes` (instruments `XAU_LOCAL`, `XAG_LOCAL`) | bearer | The local market's quote per gram of pure metal, when a dealer feed is configured |
 | GET | `/api/v1/reports/annual?year` | bearer, `REPORTS_VIEW` | Income, spending, saving rate and closing net worth per month over shared records |
 | GET | `/api/v1/notifications/vapid-key` | bearer | The server's VAPID public key for subscribing a browser |
 | GET/POST/DELETE | `/api/v1/notifications/subscriptions` | bearer | This account's push subscriptions; register or remove one |

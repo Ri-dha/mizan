@@ -22,6 +22,8 @@ import { liveBucketsOf, livePlans, planFor } from "@/db/plan"
 import type { Bucket, CounterpartyType, LedgerTransaction, TransactionType } from "@/db/schema"
 import { createSplit, createTransaction, deleteTransaction, knownCategories, liveTransactionsFor, updateTransaction } from "@/db/transactions"
 import { liveAssets } from "@/db/assets"
+import { suggestCategory } from "@/domain/categorise"
+import { db } from "@/db/schema"
 import { isMonthClosed, liveMonthCloses } from "@/db/networth"
 import { formatMonthKey } from "@/app/month"
 import { monthKeyFor, todayIso } from "@/domain/calendar/month"
@@ -64,6 +66,9 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
   const [parts, setParts] = useState<{ bucketId: string; amount: string }[]>([])
   const [assetId, setAssetId] = useState<string>("")
   const assets = useLiveQuery(liveAssets, [], [])
+  const history = useLiveQuery(() => db.transactions.filter((x) => x.deletedAt === null && x.type === "EXPENSE").reverse().limit(2000).toArray(), [], [])
+  const [suggested, setSuggested] = useState<string | null>(null)
+  const [reading, setReading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -140,6 +145,39 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
 
   const splitTotal = parts.reduce((s, p) => s + (p.amount ? toMinorUnits(p.amount, currency) : 0), 0)
   const splitRemainder = toMinorUnits(amount || "0", currency) - splitTotal
+
+  // Phase 4: the payee alone usually says what this is; fill the category and bucket only while they are still empty.
+  useEffect(() => {
+    if (transaction || type !== "EXPENSE" || !payee.trim() || category.trim()) return
+    const timer = setTimeout(() => {
+      const suggestion = suggestCategory(payee, note, history)
+      if (!suggestion) return
+      setCategory(suggestion.category)
+      setSuggested(suggestion.category)
+      if (!bucketId && suggestion.bucketId && buckets.some((b) => b.id === suggestion.bucketId)) setBucketId(suggestion.bucketId)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [payee, note, type, transaction, category, bucketId, buckets, history])
+
+  async function readPhoto() {
+    if (!attachmentId) return
+    setReading(true)
+    try {
+      const { attachmentBlob } = await import("@/attachments/store")
+      const { readReceipt } = await import("@/ocr/receipt")
+      const blob = await attachmentBlob(attachmentId)
+      if (!blob) return
+      const reading = await readReceipt(blob)
+      if (reading.total !== null && !amount) setAmount(fromMinorUnits(toMinorUnits(String(reading.total), currency), currency))
+      if (reading.date && !transaction) setOccurredOn(reading.date)
+      if (reading.merchant && !payee) setPayee(reading.merchant)
+      toast(reading.total !== null ? t("ocr.read", { total: reading.total, date: reading.date ?? "—" }) : t("ocr.nothing"))
+    } catch (e) {
+      toast(t("ocr.failed", { reason: e instanceof Error ? e.message : String(e) }))
+    } finally {
+      setReading(false)
+    }
+  }
 
   async function pickPhoto(file: File | undefined) {
     if (!file) return
@@ -253,7 +291,7 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
           <Field id="payee" label={t("transactions.payee")}>
             <Input id="payee" value={payee} onChange={(e) => setPayee(e.target.value)} maxLength={80} />
           </Field>
-          <Field id="category" label={t("transactions.category")}>
+          <Field id="category" label={t("transactions.category")} hint={suggested && suggested === category ? t("transactions.suggested") : undefined}>
             <Input id="category" list="categories" value={category} onChange={(e) => setCategory(e.target.value)} maxLength={40} />
             <datalist id="categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
           </Field>
@@ -279,6 +317,7 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
             {preview ? (
               <div className="relative w-fit">
                 <img src={preview} alt="" className="max-h-40 rounded-base border-2 border-border" />
+                <Button type="button" variant="neutral" size="sm" className="mt-2" disabled={reading} onClick={() => void readPhoto()}>{reading ? t("ocr.reading") : t("ocr.read_button")}</Button>
                 <Button type="button" size="icon" variant="neutral" className="absolute -end-2 -top-2 size-7" onClick={() => { if (attachmentId) void removeAttachment(attachmentId); setAttachmentId(null) }}>
                   <X />
                 </Button>

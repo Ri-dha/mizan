@@ -2,6 +2,17 @@ import type { LedgerTransaction, TransactionType } from "@/db/schema"
 
 export type CsvField = "date" | "amount" | "payee" | "category" | "note" | "type" | "ignore"
 
+/** Phase 4: a remembered mapping for a statement format, recalled by its header row. */
+export interface CsvProfile {
+  name: string
+  signature: string
+  mapping: CsvField[]
+  positiveIs: TransactionType
+  bucketId: string | null
+}
+
+export const headerSignature = (headers: string[]) => headers.map((h) => h.trim().toLowerCase()).join("|")
+
 export interface CsvTable {
   headers: string[]
   rows: string[][]

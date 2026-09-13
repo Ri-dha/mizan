@@ -3,6 +3,7 @@ package iq.mizan.notification;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,7 +48,8 @@ class NotificationRulesIntegrationTest extends PostgresIntegrationTest {
 
     private String token;
     private String device;
-    private final LocalDate today = LocalDate.now();
+    /** The job evaluates in the configured zone (UTC in tests), so the fixtures must too. */
+    private final LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
     @BeforeEach
     void subscribeAndSeed() {

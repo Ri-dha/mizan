@@ -318,7 +318,8 @@
     "splitBadge": "Split",
     "partOfSplit": "Part of a split purchase; edit each part on its own.",
     "relatedAsset": "Running cost of",
-    "relatedAssetHint": "Fuel, repairs or insurance for an asset count towards its total cost of ownership."
+    "relatedAssetHint": "Fuel, repairs or insurance for an asset count towards its total cost of ownership.",
+    "suggested": "Suggested from your history; change it if it is wrong."
   },
   "bills": {
     "title": "Bills",
@@ -524,12 +525,19 @@
       "purity": "{{purity}} purity factor: × {{factor}}.",
       "premium": "Local premium {{percent}}%: {{amount}} per gram.",
       "mithqal": "One mithqal (5 g) of 21k = {{amount}}.",
-      "overrideActive": "A price you entered is currently in use instead of the feed."
+      "overrideActive": "A price you entered is currently in use instead of the feed.",
+      "localActive": "The local market quote ({{source}}) replaces steps 1 to 3."
     },
     "buybackBasis": "Value holdings at what a dealer would pay",
     "buybackSpread": "{{metal}} buy-back spread (%)",
     "buybackHint": "How far below the market price a dealer buys, typically 2 to 5%.",
-    "buybackBadge": "dealer buy-back"
+    "buybackBadge": "dealer buy-back",
+    "priceSource": "Price source",
+    "priceSourceHint": "World: spot in dollars converted at your rate. Local: the local market's own quote per gram, when the server has one.",
+    "priceSources": {
+      "WORLD": "World spot × dollar rate",
+      "LOCAL": "Local market quote"
+    }
   },
   "networth": {
     "title": "Net worth",
@@ -1064,11 +1072,22 @@
     "import_one": "Import {{count}} row",
     "import_other": "Import {{count}} rows",
     "imported_one": "{{count}} transaction imported",
-    "imported_other": "{{count}} transactions imported"
+    "imported_other": "{{count}} transactions imported",
+    "recalled": "Mapping recalled from \"{{name}}\".",
+    "remember": "Remember this mapping as",
+    "rememberHint": "Next time a file with the same columns opens, the mapping is applied for you.",
+    "rememberPlaceholder": "e.g. Qi Card statement"
   },
   "advisor": {
     "nav": "Report",
     "title": "{{household}}: annual report",
     "body": "You see totals over the household's shared records for the period you were given access. Individual transactions are never shown."
+  },
+  "ocr": {
+    "read_button": "Read the receipt",
+    "reading": "Reading…",
+    "read": "Read a total of {{total}} dated {{date}}. Check before saving.",
+    "nothing": "No total could be read from this receipt.",
+    "failed": "Could not read the receipt: {{reason}}"
   }
 }

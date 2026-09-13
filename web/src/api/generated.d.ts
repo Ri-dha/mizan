@@ -934,7 +934,7 @@ export interface components {
         };
         QuoteResponse: {
             /** @enum {string} */
-            instrument?: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL";
+            instrument?: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL";
             /** Format: int64 */
             priceMicros?: number;
             source?: string;
@@ -1836,7 +1836,7 @@ export interface operations {
     history: {
         parameters: {
             query: {
-                instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL";
+                instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL";
                 from?: string;
                 to?: string;
             };

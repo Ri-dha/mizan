@@ -15,7 +15,11 @@ public record MarketProperties(
         Stub stub) {
 
     public record Feeds(MetalsDev metalsDev, GoldApi goldApi, OpenExchangeRates openExchangeRates, ExchangeRateApi exchangeRateApi,
-                        long parallelRateIqdMicros) {
+                        long parallelRateIqdMicros, LocalDealer localDealer) {
+    }
+
+    /** A JSON endpoint with the local market's prices; paths are dot-separated, units name a weight of a purity. */
+    public record LocalDealer(String url, String goldPath, String goldUnit, String silverPath, String silverUnit) {
     }
 
     public record MetalsDev(String url, String apiKey) {

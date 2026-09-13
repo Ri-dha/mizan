@@ -5,7 +5,7 @@ import { writeFields } from "@/db/write"
 import { todayIso } from "@/domain/calendar/month"
 
 export interface Quote {
-  instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL"
+  instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL"
   priceMicros: number
   source: string
   quotedAt: string
@@ -39,6 +39,7 @@ export const DEFAULT_SETTING: Omit<MarketSetting, keyof import("@/db/schema").Sy
   valuationBasis: "MARKET",
   goldBuybackBasisPoints: 0,
   silverBuybackBasisPoints: 0,
+  priceSource: "WORLD",
 }
 
 export async function liveSetting(): Promise<MarketSetting | undefined> {
@@ -69,7 +70,7 @@ export async function setOverride(instrument: MarketInstrument, priceMicros: num
 }
 
 export interface PriceSource {
-  kind: "override" | "feed" | "none"
+  kind: "override" | "feed" | "local" | "none"
   label: string
   at: string | null
   stale: boolean
@@ -95,10 +96,12 @@ export function resolvePrices(quotes: Quote[], overrides: MarketOverride[], sett
   const metal = (m: Metal) => {
     const quote = quotes.find((q) => q.instrument === (m === "GOLD" ? "XAU" : "XAG"))
     const override = activeOverride(overrides, m === "GOLD" ? "XAU" : "XAG")
+    // Phase 4: the local market's quote per gram of pure metal stands in for spot × rate when chosen; a user's price still wins.
+    const local = setting?.priceSource === "LOCAL" ? quotes.find((q) => q.instrument === (m === "GOLD" ? "XAU_LOCAL" : "XAG_LOCAL")) : undefined
     return {
       spotUsdPerOzMicros: quote?.priceMicros ?? 0,
-      perGram24kOverrideMicros: override?.priceMicros ?? null,
-      source: describe(override, quote),
+      perGram24kOverrideMicros: override?.priceMicros ?? local?.priceMicros ?? null,
+      source: override ? describe(override, quote) : local ? { kind: "local" as const, label: `local:${local.source}`, at: local.fetchedAt, stale: isStale(local) } : describe(undefined, quote),
     }
   }
   return { usdIqdMicros, rateKind, rateSource: describe(rateOverride, rateQuote), spot: { GOLD: metal("GOLD"), SILVER: metal("SILVER") } }

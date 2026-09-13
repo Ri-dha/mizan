@@ -9,7 +9,10 @@ import { Field } from "@/components/Field"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { guessMapping, guessPositiveIs, mapRows, parseCsv, type CsvField, type CsvTable, type ImportedRow } from "@/data/csvImport"
+import { guessMapping, guessPositiveIs, headerSignature, mapRows, parseCsv, type CsvField, type CsvProfile, type CsvTable, type ImportedRow } from "@/data/csvImport"
+import { META_KEYS, readMeta, writeMeta } from "@/db/meta"
+import { suggestCategory } from "@/domain/categorise"
+import { Input } from "@/components/ui/input"
 import { liveBucketsOf, livePlans, planFor } from "@/db/plan"
 import { db, type TransactionType } from "@/db/schema"
 import { createTransaction } from "@/db/transactions"
@@ -32,16 +35,27 @@ export function CsvImportDialog({ file, onClose }: { file: File | null; onClose:
   const [bucketId, setBucketId] = useState(NONE)
   const [skipDuplicates, setSkipDuplicates] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [profileName, setProfileName] = useState("")
+  const [recalled, setRecalled] = useState<string | null>(null)
   const buckets = useLiveQuery(async () => liveBucketsOf(planFor(await livePlans(), currentMonthKey(startDay))?.id), [startDay], [])
   const existing = useLiveQuery(() => db.transactions.filter((x) => x.deletedAt === null).toArray(), [], [])
 
   if (file && !table) {
-    void file.text().then((text) => {
+    void file.text().then(async (text) => {
       const parsed = parseCsv(text)
-      const guessed = guessMapping(parsed.headers)
+      const profiles = (await readMeta<CsvProfile[]>(META_KEYS.csvProfiles)) ?? []
+      const known = profiles.find((p) => p.signature === headerSignature(parsed.headers))
       setTable(parsed)
-      setMapping(guessed)
-      setPositiveIs(guessPositiveIs(parsed, guessed))
+      if (known) {
+        setMapping(known.mapping)
+        setPositiveIs(known.positiveIs)
+        setBucketId(known.bucketId ?? NONE)
+        setRecalled(known.name)
+      } else {
+        const guessed = guessMapping(parsed.headers)
+        setMapping(guessed)
+        setPositiveIs(guessPositiveIs(parsed, guessed))
+      }
     })
   }
 
@@ -52,11 +66,16 @@ export function CsvImportDialog({ file, onClose }: { file: File | null; onClose:
   async function commit() {
     setBusy(true)
     try {
+      if (table && profileName.trim()) {
+        const profiles = ((await readMeta<CsvProfile[]>(META_KEYS.csvProfiles)) ?? []).filter((p) => p.signature !== headerSignature(table.headers))
+        await writeMeta(META_KEYS.csvProfiles, [...profiles, { name: profileName.trim(), signature: headerSignature(table.headers), mapping, positiveIs, bucketId: bucketId === NONE ? null : bucketId }])
+      }
       await db.transaction("rw", db.tables, async () => {
         for (const row of importable) {
+          const suggestion = row.type === "EXPENSE" && !row.category ? suggestCategory(row.payee ?? "", row.note ?? "", existing) : null
           await createTransaction({
             type: row.type, occurredOn: row.occurredOn, monthKey: monthKeyFor(row.occurredOn, startDay), amount: row.amount, currency: base, fxRateMicros: 1_000_000,
-            bucketId: row.type === "INCOME" ? null : bucketId === NONE ? null : bucketId, category: row.category, payee: row.payee, note: row.note,
+            bucketId: row.type === "INCOME" ? null : bucketId !== NONE ? bucketId : suggestion?.bucketId ?? null, category: row.category ?? suggestion?.category ?? null, payee: row.payee, note: row.note,
             counterpartyType: null, counterpartyId: null, attachmentId: null, visibility: "SHARED",
           })
         }
@@ -71,6 +90,8 @@ export function CsvImportDialog({ file, onClose }: { file: File | null; onClose:
   function close() {
     setTable(null)
     setMapping([])
+    setRecalled(null)
+    setProfileName("")
     onClose()
   }
 
@@ -128,6 +149,11 @@ export function CsvImportDialog({ file, onClose }: { file: File | null; onClose:
             </div>
             <p className="text-sm">{t("csv.summary", { total: rows.length, ok: importable.length, duplicates: rows.filter((r) => r.duplicate).length, errors: rows.filter((r) => r.error).length })}</p>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={skipDuplicates} onChange={(e) => setSkipDuplicates(e.target.checked)} />{t("csv.skipDuplicates")}</label>
+            {recalled ? <p className="text-sm opacity-70">{t("csv.recalled", { name: recalled })}</p> : (
+              <Field id="profileName" label={t("csv.remember")} hint={t("csv.rememberHint")}>
+                <Input id="profileName" value={profileName} onChange={(e) => setProfileName(e.target.value)} maxLength={40} placeholder={t("csv.rememberPlaceholder")} />
+              </Field>
+            )}
             <DialogFooter>
               <Button variant="neutral" type="button" onClick={close}>{t("settings.cancel")}</Button>
               <Button type="button" disabled={!ready || importable.length === 0 || busy} onClick={() => void commit()}>{t("csv.import", { count: importable.length })}</Button>

@@ -139,6 +139,14 @@ mizan:
       exchange-rate-api:
         url: "${MIZAN_EXCHANGE_RATE_API_URL:}"
       parallel-rate-iqd-micros: "${MIZAN_PARALLEL_RATE_IQD_MICROS:0}"
+      # Phase 4: the local market's own quote. Any JSON endpoint; e.g. {"gold21": 547000} with
+      # gold-path=gold21 and gold-unit=MITHQAL_21K. Registered only when the URL is set.
+      local-dealer:
+        url: "${MIZAN_LOCAL_DEALER_URL:}"
+        gold-path: "${MIZAN_LOCAL_DEALER_GOLD_PATH:gold}"
+        gold-unit: "${MIZAN_LOCAL_DEALER_GOLD_UNIT:MITHQAL_21K}"
+        silver-path: "${MIZAN_LOCAL_DEALER_SILVER_PATH:}"
+        silver-unit: "${MIZAN_LOCAL_DEALER_SILVER_UNIT:GRAM_999}"
     stub:
       enabled: false
       prices-micros: {}

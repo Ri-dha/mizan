@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from "workbox-precaching"
 import { NavigationRoute, registerRoute } from "workbox-routing"
-import { NetworkOnly } from "workbox-strategies"
+import { CacheFirst, NetworkOnly } from "workbox-strategies"
 
 declare let self: ServiceWorkerGlobalScope
 
@@ -16,6 +16,8 @@ precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
 registerRoute(({ url }) => url.pathname.startsWith("/api/"), new NetworkOnly())
+// Phase 4: the OCR worker and models are large and change rarely; keep them once fetched.
+registerRoute(({ url }) => url.pathname.startsWith("/ocr/"), new CacheFirst({ cacheName: "ocr-assets" }))
 registerRoute(new NavigationRoute(createHandlerBoundToURL("index.html"), { denylist: [/^\/api\//, /^\/docs\//] }))
 
 self.addEventListener("message", (event) => {

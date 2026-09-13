@@ -219,6 +219,7 @@ export type DisposalMethod = "FIFO" | "SPECIFIC" | "WEIGHTED_AVERAGE"
 export type MarketInstrument = "XAU" | "XAG" | "USDIQD"
 export type RateKind = "OFFICIAL" | "PARALLEL"
 export type ValuationBasis = "MARKET" | "BUYBACK"
+export type PriceSource = "WORLD" | "LOCAL"
 
 export interface MetalLot extends Syncable {
   visibility: Visibility
@@ -284,6 +285,7 @@ export interface MarketSetting extends Syncable {
   valuationBasis: ValuationBasis
   goldBuybackBasisPoints: number
   silverBuybackBasisPoints: number
+  priceSource: PriceSource
 }
 
 export interface CashAdjustment extends Syncable {

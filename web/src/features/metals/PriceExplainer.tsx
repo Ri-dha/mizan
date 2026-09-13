@@ -33,7 +33,8 @@ export function PriceExplainer({ open, view, onClose }: { open: boolean; view: M
           <li>{t("metals.explain.premium", { percent: premium / 100, amount: money(result.perGramMicros) })}</li>
           <li className="font-heading">{t("metals.explain.mithqal", { amount: formatMoney(result.value, base, i18n.language) })}</li>
         </ol>
-        {gold.perGram24kOverrideMicros !== null && <p className="text-sm opacity-70">{t("metals.explain.overrideActive")}</p>}
+        {gold.source.kind === "local" && <p className="text-sm opacity-70">{t("metals.explain.localActive", { source: gold.source.label })}</p>}
+        {gold.source.kind === "override" && <p className="text-sm opacity-70">{t("metals.explain.overrideActive")}</p>}
       </DialogContent>
     </Dialog>
   )

@@ -50,6 +50,30 @@ only when its key is set, so swapping providers is a `.env` change and a restart
 provider fails, the last quote stays and turns `stale` after 24 hours; the app labels it and
 users can enter today's price themselves, which wins over the feed.
 
+## Local dealer price feed
+
+Any JSON endpoint can supply the local market's price. Set `MIZAN_LOCAL_DEALER_URL` and the
+dot-separated paths and units, for example a file you maintain at
+`https://example.iq/prices.json` containing `{"gold21": 547000, "silver": 1480}`:
+
+```bash
+MIZAN_LOCAL_DEALER_URL=https://example.iq/prices.json
+MIZAN_LOCAL_DEALER_GOLD_PATH=gold21
+MIZAN_LOCAL_DEALER_GOLD_UNIT=MITHQAL_21K
+MIZAN_LOCAL_DEALER_SILVER_PATH=silver
+MIZAN_LOCAL_DEALER_SILVER_UNIT=GRAM_999
+```
+
+Units: `GRAM_24K`, `GRAM_22K`, `GRAM_21K`, `GRAM_18K`, `MITHQAL_*` of the same purities,
+`GRAM_999`, `GRAM_925`. The quote is stored as `XAU_LOCAL`/`XAG_LOCAL` in IQD per gram of pure
+metal and refreshed with the other feeds. Households opt in under valuation settings.
+
+## Receipt OCR assets
+
+The web build fetches Tesseract models from GitHub; set `MIZAN_TESSDATA_URL` to a mirror when
+the build host cannot reach it. The files live in `web/public/ocr/` and are served as static
+assets; nothing about a receipt reaches the server.
+
 ## Push notifications
 
 Web Push needs a VAPID key pair that identifies this server to Apple, Google and Mozilla. Without

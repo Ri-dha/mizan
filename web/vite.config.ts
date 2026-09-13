@@ -33,6 +33,8 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        // The OCR worker, core and models are fetched on first use and kept by a runtime cache.
+        globIgnores: ["**/ocr/**"],
       },
     }),
   ],

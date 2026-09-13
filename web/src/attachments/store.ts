@@ -27,6 +27,14 @@ export async function removeAttachment(id: string) {
   })
 }
 
+/** The decrypted bytes of an attachment held on this device, for on-device processing such as OCR. */
+export async function attachmentBlob(id: string): Promise<Blob | null> {
+  const attachment = await db.attachments.get(id)
+  const blob = await db.blobs.get(id)
+  if (!attachment || !blob) return null
+  return new Blob([await decryptBytes(blob.bytes, attachment.iv)], { type: attachment.mimeType })
+}
+
 /** A decrypted object URL for display; fetches from storage when this device has no copy. */
 export async function attachmentObjectUrl(id: string): Promise<string | null> {
   const attachment = await db.attachments.get(id)

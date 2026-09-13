@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { DisposalMethod, MarketSetting, RateKind, ValuationBasis } from "@/db/schema"
+import type { DisposalMethod, MarketSetting, PriceSource, RateKind, ValuationBasis } from "@/db/schema"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { DEFAULT_SETTING, saveSetting } from "@/market/store"
@@ -21,6 +21,7 @@ export function MarketSettingsDialog({ open, setting, onClose }: { open: boolean
   const [goldMethod, setGoldMethod] = useState<DisposalMethod>("FIFO")
   const [silverMethod, setSilverMethod] = useState<DisposalMethod>("FIFO")
   const [basis, setBasis] = useState<ValuationBasis>("MARKET")
+  const [priceSource, setPriceSource] = useState<PriceSource>("WORLD")
   const [goldBuyback, setGoldBuyback] = useState("0")
   const [silverBuyback, setSilverBuyback] = useState("0")
 
@@ -32,6 +33,7 @@ export function MarketSettingsDialog({ open, setting, onClose }: { open: boolean
     setGoldMethod(setting?.goldMethod ?? "FIFO")
     setSilverMethod(setting?.silverMethod ?? "FIFO")
     setBasis(setting?.valuationBasis ?? "MARKET")
+    setPriceSource(setting?.priceSource ?? "WORLD")
     setGoldBuyback(String((setting?.goldBuybackBasisPoints ?? 0) / 100))
     setSilverBuyback(String((setting?.silverBuybackBasisPoints ?? 0) / 100))
   }, [open, setting])
@@ -45,6 +47,7 @@ export function MarketSettingsDialog({ open, setting, onClose }: { open: boolean
       goldMethod,
       silverMethod,
       valuationBasis: basis,
+      priceSource,
       goldBuybackBasisPoints: Math.round(Number(goldBuyback) * 100),
       silverBuybackBasisPoints: Math.round(Number(silverBuyback) * 100),
     })
@@ -60,6 +63,12 @@ export function MarketSettingsDialog({ open, setting, onClose }: { open: boolean
             <Select value={rateKind} onValueChange={(v) => setRateKind(v as RateKind)}>
               <SelectTrigger id="rateKind"><SelectValue /></SelectTrigger>
               <SelectContent>{(["PARALLEL", "OFFICIAL"] as const).map((k) => <SelectItem key={k} value={k}>{t(`metals.rateKinds.${k}`)}</SelectItem>)}</SelectContent>
+            </Select>
+          </Field>
+          <Field id="priceSource" label={t("metals.priceSource")} hint={t("metals.priceSourceHint")}>
+            <Select value={priceSource} onValueChange={(v) => setPriceSource(v as PriceSource)}>
+              <SelectTrigger id="priceSource"><SelectValue /></SelectTrigger>
+              <SelectContent>{(["WORLD", "LOCAL"] as const).map((k) => <SelectItem key={k} value={k}>{t(`metals.priceSources.${k}`)}</SelectItem>)}</SelectContent>
             </Select>
           </Field>
           <div className="grid grid-cols-2 gap-2">
