@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 
+import { usePrivacyDefaults } from "@/db/privacy"
+
 import { useSession } from "@/api/auth"
 import { Field } from "@/components/Field"
 import { Button } from "@/components/ui/button"
@@ -26,6 +28,7 @@ interface Props {
 
 export function AccountSheet({ open, account, onClose, onDelete }: Props) {
   const { t, i18n } = useTranslation()
+  const privacy = usePrivacyDefaults()
   const session = useSession()
   const [name, setName] = useState("")
   const [adjustmentNote, setAdjustmentNote] = useState("")
@@ -43,9 +46,9 @@ export function AccountSheet({ open, account, onClose, onDelete }: Props) {
     setInstitution(account?.institution ?? "")
     setCurrency(account?.currency ?? session?.baseCurrency ?? "IQD")
     setBalance(account ? fromMinorUnits(account.balance, account.currency) : "0")
-    setIsPrivate(account?.visibility === "PRIVATE")
+    setIsPrivate(account ? account.visibility === "PRIVATE" : privacy.accounts === "PRIVATE")
     setAdjustmentNote("")
-  }, [open, account, session])
+  }, [open, account, session, privacy])
 
   async function submit(event: FormEvent) {
     event.preventDefault()

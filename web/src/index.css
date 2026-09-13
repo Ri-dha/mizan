@@ -114,3 +114,10 @@ body.privacy-blur #root {
 .manual th, .manual td { @apply border-2 border-border px-2 py-1 text-start; }
 .manual code { @apply rounded-base bg-secondary-background px-1; }
 .manual blockquote { @apply my-3 border-s-4 border-border ps-3 opacity-80; }
+
+/* FR-RPT-02: "Save as PDF" is the browser's print; the chrome goes, the cards stay. */
+@media print {
+  body { background: #fff; color: #000; }
+  main { padding: 0 !important; max-width: none !important; }
+  [data-sonner-toaster] { display: none !important; }
+}

@@ -1,6 +1,8 @@
 import { Camera, X } from "lucide-react"
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
+
+import { usePrivacyDefaults } from "@/db/privacy"
 import { toast } from "sonner"
 
 import { useSession } from "@/api/auth"
@@ -41,6 +43,7 @@ interface Props {
  */
 export function QuickAddSheet({ open, transaction, onClose }: Props) {
   const { t, i18n } = useTranslation()
+  const privacy = usePrivacyDefaults()
   const session = useSession()
   const base = session?.baseCurrency ?? "IQD"
   const startDay = session?.monthStartDay ?? 1
@@ -77,9 +80,9 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
     setPayee(transaction?.payee ?? "")
     setCategory(transaction?.category ?? "")
     setNote(transaction?.note ?? "")
-    setIsPrivate(transaction?.visibility === "PRIVATE")
+    setIsPrivate(transaction ? transaction.visibility === "PRIVATE" : privacy.transactions === "PRIVATE")
     setAttachmentId(transaction?.attachmentId ?? null)
-  }, [open, transaction, base])
+  }, [open, transaction, base, privacy])
 
   useEffect(() => {
     let revoked: string | null = null

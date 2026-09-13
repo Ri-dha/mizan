@@ -1,4 +1,4 @@
-import { Banknote, BarChart3, BookOpen, Gem, HandCoins, PiggyBank, Receipt, RefreshCw, Scale, Settings, Wallet } from "lucide-react"
+import { Banknote, BarChart3, BookOpen, Car, Gem, Users, HandCoins, PiggyBank, Receipt, RefreshCw, Scale, Settings, Wallet } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 
@@ -11,8 +11,10 @@ export const MORE_LINKS = [
   { to: "/bills", key: "nav.bills", icon: Receipt },
   { to: "/metals", key: "nav.metals", icon: Gem },
   { to: "/accounts", key: "nav.accounts", icon: Banknote },
+  { to: "/assets", key: "nav.assets", icon: Car },
   { to: "/debts", key: "nav.debts", icon: HandCoins },
   { to: "/goals", key: "nav.goals", icon: PiggyBank },
+  { to: "/household", key: "household.title", icon: Users },
   { to: "/help", key: "help.title", icon: BookOpen },
   { to: "/sync", key: "nav.sync", icon: RefreshCw },
   { to: "/settings", key: "nav.settings", icon: Settings },

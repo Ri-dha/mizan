@@ -36,18 +36,24 @@ class ReconciliationProperties {
     @Property
     void allocatedPlusUnallocatedIsTheIncomeAndFreeIsTheIdentity(
             @ForAll("totals") long planned, @ForAll("totals") long received, @ForAll("anyShares") List<Integer> shares,
-            @ForAll("amountMaps") Map<Integer, Long> committed, @ForAll("amountMaps") Map<Integer, Long> spent) {
+            @ForAll("amountMaps") Map<Integer, Long> committed, @ForAll("amountMaps") Map<Integer, Long> spent,
+            @ForAll("amountMaps") Map<Integer, Long> fixed, @ForAll("amountMaps") Map<Integer, Long> carried) {
         List<MonthFigures.Bucket> buckets = IntStream.range(0, shares.size())
-                .mapToObj(i -> new MonthFigures.Bucket("b" + i, shares.get(i))).toList();
+                .mapToObj(i -> new MonthFigures.Bucket("b" + i, shares.get(i), fixed.get(i))).toList();
         MonthFigures.Result result = MonthFigures.compute(new MonthFigures.Input(planned, received, buckets,
-                byId(committed), byId(spent), Map.of(), Map.of()));
+                byId(carried), byId(committed), byId(spent), Map.of(), Map.of()));
 
         long allocated = result.buckets().stream().mapToLong(MonthFigures.BucketFigures::allocated).sum();
         long plannedAllocated = result.buckets().stream().mapToLong(MonthFigures.BucketFigures::plannedAllocated).sum();
         assertThat(allocated + result.unallocatedReceived()).isEqualTo(received);
         assertThat(plannedAllocated + result.unallocatedPlanned()).isEqualTo(planned);
-        for (MonthFigures.BucketFigures figures : result.buckets()) {
-            assertThat(figures.free()).isEqualTo(figures.allocated() + figures.transfersIn() - figures.committed() - figures.spent() - figures.transfersOut());
+        for (int i = 0; i < buckets.size(); i++) {
+            MonthFigures.BucketFigures figures = result.buckets().get(i);
+            assertThat(figures.allocated()).isGreaterThanOrEqualTo(0);
+            if (buckets.get(i).fixedAmount() != null) {
+                assertThat(figures.allocated()).isLessThanOrEqualTo(buckets.get(i).fixedAmount());
+            }
+            assertThat(figures.free()).isEqualTo(figures.allocated() + figures.carriedIn() + figures.transfersIn() - figures.committed() - figures.spent() - figures.transfersOut());
         }
     }
 
@@ -74,9 +80,12 @@ class ReconciliationProperties {
 
     @Property
     void netWorthIsAssetsMinusLiabilitiesAndSharesCoverTheAssets(
-            @ForAll("totals") long cash, @ForAll("totals") long metals, @ForAll("totals") long receivables, @ForAll("totals") long liabilities) {
-        NetWorth.Result result = NetWorth.compute(new NetWorth.Input(cash, metals, receivables, liabilities));
-        assertThat(result.totalAssets()).isEqualTo(cash + metals + receivables);
+            @ForAll("totals") long cash, @ForAll("totals") long metals, @ForAll("totals") long receivables,
+            @ForAll("totals") long vehicles, @ForAll("totals") long property, @ForAll("totals") long liabilities) {
+        long illiquid = Math.min(vehicles, property);
+        NetWorth.Result result = NetWorth.compute(new NetWorth.Input(cash, metals, receivables, vehicles, property, 0, illiquid, liabilities));
+        assertThat(result.totalAssets()).isEqualTo(cash + metals + receivables + vehicles + property);
+        assertThat(result.liquidAssets() + result.illiquidAssets()).isEqualTo(result.totalAssets());
         assertThat(result.netWorth()).isEqualTo(result.totalAssets() - result.totalLiabilities());
         assertThat(result.composition().stream().mapToLong(NetWorth.Share::amount).sum()).isEqualTo(result.totalAssets());
         if (result.totalAssets() > 0) {

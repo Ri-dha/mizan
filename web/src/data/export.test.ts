@@ -4,7 +4,7 @@ import { createCashAccount } from "@/db/cashAccounts"
 import { db } from "@/db/schema"
 import { applyImport, buildExport, EXPORT_FORMAT, EXPORT_VERSION, ImportError, validateImport } from "./export"
 
-const SESSION = { userId: "u", householdId: "h", householdName: "Home", displayName: "R", contact: "", locale: "en", verified: true, role: "OWNER", baseCurrency: "IQD", monthStartDay: 1, deletionRequestedAt: null }
+const SESSION = { userId: "u", householdId: "h", householdName: "Home", displayName: "R", contact: "", locale: "en", verified: true, role: "OWNER", baseCurrency: "IQD", monthStartDay: 1, deletionRequestedAt: null, householdDeletionRequestedAt: null }
 
 describe("export and import", () => {
   beforeEach(async () => {

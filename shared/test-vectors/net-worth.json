@@ -5,12 +5,18 @@
       "cash": 1250000,
       "metals": 1095877,
       "receivables": 0,
+      "vehicles": 0,
+      "property": 0,
+      "otherAssets": 0,
+      "illiquid": 0,
       "liabilities": 4800000
     },
     "expected": {
       "totalAssets": 2345877,
       "totalLiabilities": 4800000,
       "netWorth": -2454123,
+      "liquidAssets": 2345877,
+      "illiquidAssets": 0,
       "composition": [
         {
           "assetClass": "CASH",
@@ -26,6 +32,21 @@
           "assetClass": "RECEIVABLES",
           "amount": 0,
           "percent": 0.0
+        },
+        {
+          "assetClass": "VEHICLES",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "PROPERTY",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "OTHER_ASSETS",
+          "amount": 0,
+          "percent": 0.0
         }
       ]
     }
@@ -36,12 +57,18 @@
       "cash": 500000,
       "metals": 0,
       "receivables": 300000,
+      "vehicles": 0,
+      "property": 0,
+      "otherAssets": 0,
+      "illiquid": 0,
       "liabilities": 0
     },
     "expected": {
       "totalAssets": 800000,
       "totalLiabilities": 0,
       "netWorth": 800000,
+      "liquidAssets": 800000,
+      "illiquidAssets": 0,
       "composition": [
         {
           "assetClass": "CASH",
@@ -57,6 +84,21 @@
           "assetClass": "RECEIVABLES",
           "amount": 300000,
           "percent": 37.5
+        },
+        {
+          "assetClass": "VEHICLES",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "PROPERTY",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "OTHER_ASSETS",
+          "amount": 0,
+          "percent": 0.0
         }
       ]
     }
@@ -67,12 +109,18 @@
       "cash": 0,
       "metals": 0,
       "receivables": 0,
+      "vehicles": 0,
+      "property": 0,
+      "otherAssets": 0,
+      "illiquid": 0,
       "liabilities": 0
     },
     "expected": {
       "totalAssets": 0,
       "totalLiabilities": 0,
       "netWorth": 0,
+      "liquidAssets": 0,
+      "illiquidAssets": 0,
       "composition": [
         {
           "assetClass": "CASH",
@@ -88,6 +136,21 @@
           "assetClass": "RECEIVABLES",
           "amount": 0,
           "percent": 0.0
+        },
+        {
+          "assetClass": "VEHICLES",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "PROPERTY",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "OTHER_ASSETS",
+          "amount": 0,
+          "percent": 0.0
         }
       ]
     }
@@ -98,12 +161,18 @@
       "cash": 100000,
       "metals": 0,
       "receivables": 0,
+      "vehicles": 0,
+      "property": 0,
+      "otherAssets": 0,
+      "illiquid": 0,
       "liabilities": 900000
     },
     "expected": {
       "totalAssets": 100000,
       "totalLiabilities": 900000,
       "netWorth": -800000,
+      "liquidAssets": 100000,
+      "illiquidAssets": 0,
       "composition": [
         {
           "assetClass": "CASH",
@@ -119,6 +188,21 @@
           "assetClass": "RECEIVABLES",
           "amount": 0,
           "percent": 0.0
+        },
+        {
+          "assetClass": "VEHICLES",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "PROPERTY",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "OTHER_ASSETS",
+          "amount": 0,
+          "percent": 0.0
         }
       ]
     }
@@ -129,12 +213,18 @@
       "cash": 333333,
       "metals": 333333,
       "receivables": 333334,
+      "vehicles": 0,
+      "property": 0,
+      "otherAssets": 0,
+      "illiquid": 0,
       "liabilities": 0
     },
     "expected": {
       "totalAssets": 1000000,
       "totalLiabilities": 0,
       "netWorth": 1000000,
+      "liquidAssets": 1000000,
+      "illiquidAssets": 0,
       "composition": [
         {
           "assetClass": "CASH",
@@ -150,6 +240,125 @@
           "assetClass": "RECEIVABLES",
           "amount": 333334,
           "percent": 33.3
+        },
+        {
+          "assetClass": "VEHICLES",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "PROPERTY",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "OTHER_ASSETS",
+          "amount": 0,
+          "percent": 0.0
+        }
+      ]
+    }
+  },
+  {
+    "name": "a car and a house count by class, the house is illiquid (FR-NET-02, FR-NET-06)",
+    "input": {
+      "cash": 1000000,
+      "metals": 0,
+      "receivables": 0,
+      "vehicles": 15000000,
+      "property": 120000000,
+      "otherAssets": 400000,
+      "illiquid": 120000000,
+      "liabilities": 30000000
+    },
+    "expected": {
+      "totalAssets": 136400000,
+      "totalLiabilities": 30000000,
+      "netWorth": 106400000,
+      "liquidAssets": 16400000,
+      "illiquidAssets": 120000000,
+      "composition": [
+        {
+          "assetClass": "CASH",
+          "amount": 1000000,
+          "percent": 0.7
+        },
+        {
+          "assetClass": "METALS",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "RECEIVABLES",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "VEHICLES",
+          "amount": 15000000,
+          "percent": 11.0
+        },
+        {
+          "assetClass": "PROPERTY",
+          "amount": 120000000,
+          "percent": 88.0
+        },
+        {
+          "assetClass": "OTHER_ASSETS",
+          "amount": 400000,
+          "percent": 0.3
+        }
+      ]
+    }
+  },
+  {
+    "name": "a receivable and a vehicle are liquid, a property is not",
+    "input": {
+      "cash": 0,
+      "metals": 2000000,
+      "receivables": 1000000,
+      "vehicles": 7000000,
+      "property": 90000000,
+      "otherAssets": 0,
+      "illiquid": 90000000,
+      "liabilities": 0
+    },
+    "expected": {
+      "totalAssets": 100000000,
+      "totalLiabilities": 0,
+      "netWorth": 100000000,
+      "liquidAssets": 10000000,
+      "illiquidAssets": 90000000,
+      "composition": [
+        {
+          "assetClass": "CASH",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "METALS",
+          "amount": 2000000,
+          "percent": 2.0
+        },
+        {
+          "assetClass": "RECEIVABLES",
+          "amount": 1000000,
+          "percent": 1.0
+        },
+        {
+          "assetClass": "VEHICLES",
+          "amount": 7000000,
+          "percent": 7.0
+        },
+        {
+          "assetClass": "PROPERTY",
+          "amount": 90000000,
+          "percent": 90.0
+        },
+        {
+          "assetClass": "OTHER_ASSETS",
+          "amount": 0,
+          "percent": 0.0
         }
       ]
     }

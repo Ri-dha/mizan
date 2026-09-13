@@ -37,6 +37,12 @@ public class Household {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "deletion_requested_at")
+    private Instant deletionRequestedAt;
+
+    @Column(name = "deletion_requested_by")
+    private UUID deletionRequestedBy;
+
     public static Household create(String name, String baseCurrency, int monthStartDay) {
         Household household = new Household();
         household.id = UUID.randomUUID();
@@ -54,6 +60,16 @@ public class Household {
 
     public void changeMonthStartDay(int monthStartDay) {
         this.monthStartDay = monthStartDay;
+    }
+
+    public void requestDeletion(UUID byUserId, Instant now) {
+        this.deletionRequestedAt = now;
+        this.deletionRequestedBy = byUserId;
+    }
+
+    public void cancelDeletion() {
+        this.deletionRequestedAt = null;
+        this.deletionRequestedBy = null;
     }
 
     @PreUpdate

@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 
+import { usePrivacyDefaults } from "@/db/privacy"
+
 import { useSession } from "@/api/auth"
 import { Field } from "@/components/Field"
 import { Button } from "@/components/ui/button"
@@ -22,6 +24,7 @@ const CURRENCIES = ["IQD", "USD"]
 
 export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot | null; onClose: () => void }) {
   const { t } = useTranslation()
+  const privacy = usePrivacyDefaults()
   const session = useSession()
   const base = session?.baseCurrency ?? "IQD"
   const [metal, setMetal] = useState<Metal>("GOLD")
@@ -58,8 +61,8 @@ export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot 
     setLocation(lot?.location ?? "")
     setSerial(lot?.serial ?? "")
     setHeldFor(lot?.heldFor ?? "")
-    setIsPrivate(lot?.visibility === "PRIVATE")
-  }, [open, lot, base])
+    setIsPrivate(lot ? lot.visibility === "PRIVATE" : privacy.metals === "PRIVATE")
+  }, [open, lot, base, privacy])
 
   const purities = Object.values(PURITIES).filter((p) => p.metal === metal)
   const weightMg = toMilligrams(Number(quantity) || 0, unit)

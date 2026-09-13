@@ -30,7 +30,7 @@ public abstract class PostgresIntegrationTest {
 
     /** TRUNCATE skips row triggers, which is what lets the append-only audit table be cleared. */
     protected void resetTransactionalData() {
-        jdbcTemplate.execute("truncate table month_close, net_worth_snapshot, cash_adjustment, market_setting, market_override, metal_disposal_lot, metal_disposal, metal_lot, goal_deposit, goal, debt_payment, debt, attachment, ledger_transaction, expense_occurrence, recurring_expense, bucket, plan, income_receipt, income_source_amount, income_source, cash_account, sync_conflict, sync_op_receipt, sync_log, "
+        jdbcTemplate.execute("truncate table notification_log, push_subscription, notification_setting, privacy_setting, household_invitation, bucket_move, asset_valuation, asset, month_close, net_worth_snapshot, cash_adjustment, market_setting, market_override, metal_disposal_lot, metal_disposal, metal_lot, goal_deposit, goal, debt_payment, debt, attachment, ledger_transaction, expense_occurrence, recurring_expense, bucket, plan, income_receipt, income_source_amount, income_source, cash_account, sync_conflict, sync_op_receipt, sync_log, "
                 + "sync_device, audit_entry, refresh_token, verification_code, membership, household, "
                 + "app_user cascade");
     }

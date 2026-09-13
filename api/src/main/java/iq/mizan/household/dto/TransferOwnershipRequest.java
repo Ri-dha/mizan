@@ -1,0 +1,8 @@
+package iq.mizan.household.dto;
+
+import java.util.UUID;
+
+import jakarta.validation.constraints.NotNull;
+
+public record TransferOwnershipRequest(@NotNull UUID userId) {
+}

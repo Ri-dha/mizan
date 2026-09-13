@@ -10,6 +10,7 @@ export interface GoalInput {
   targetDate: string | null
   monthlyContribution: number | null
   bucketId: string | null
+  backingAssetId: string | null
   note: string | null
   visibility: Visibility
 }
@@ -17,12 +18,13 @@ export interface GoalInput {
 export async function createGoal(input: GoalInput): Promise<string> {
   const id = crypto.randomUUID()
   const sortOrder = await db.goals.count()
-  await writeFields<Goal>("goal", id, { ...input, backingAssetType: null, backingAssetId: null, status: "ACTIVE", completedOn: null, sortOrder })
+  await writeFields<Goal>("goal", id, { ...input, backingAssetType: input.backingAssetId ? "ASSET" : null, status: "ACTIVE", completedOn: null, sortOrder })
   return id
 }
 
 export async function updateGoal(id: string, input: Partial<GoalInput>) {
-  await writeFields<Goal>("goal", id, input)
+  const backing = input.backingAssetId === undefined ? {} : { backingAssetType: input.backingAssetId ? "ASSET" : null }
+  await writeFields<Goal>("goal", id, { ...input, ...backing })
 }
 
 export function liveGoals() {
@@ -33,8 +35,9 @@ export function liveDeposits() {
   return db.goalDeposits.filter((d) => d.deletedAt === null).sortBy("depositedOn")
 }
 
-/** FR-GOL-02: progress is the deposit ledger. */
-export function savedOf(goal: Goal, deposits: GoalDeposit[]): number {
+/** FR-GOL-02 / BR-07: progress is the deposit ledger, or the backing asset's value when one is set. */
+export function savedOf(goal: Goal, deposits: GoalDeposit[], assetValues: Record<string, number> = {}): number {
+  if (goal.backingAssetId && goal.backingAssetId in assetValues) return assetValues[goal.backingAssetId]
   return deposits
     .filter((d) => d.goalId === goal.id)
     .reduce((sum, d) => sum + (d.direction === "DEPOSIT" ? d.amount : -d.amount), 0)

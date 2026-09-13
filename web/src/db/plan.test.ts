@@ -10,9 +10,9 @@ describe("plan versions", () => {
   })
 
   it("edits a plan in place in the month it started", async () => {
-    const planId = await saveBuckets("2026-09", [{ name: "A", colour: "#000", shareBasisPoints: 10000 }])
+    const planId = await saveBuckets("2026-09", [{ name: "A", colour: "#000", shareBasisPoints: 10000, fixedAmount: null, carryOver: false }])
     const [bucket] = await liveBucketsOf(planId)
-    const again = await saveBuckets("2026-09", [{ id: bucket.id, name: "A renamed", colour: "#000", shareBasisPoints: 10000 }])
+    const again = await saveBuckets("2026-09", [{ id: bucket.id, name: "A renamed", colour: "#000", shareBasisPoints: 10000, fixedAmount: null, carryOver: false }])
 
     expect(again).toBe(planId)
     expect(await livePlans()).toHaveLength(1)
@@ -20,10 +20,10 @@ describe("plan versions", () => {
   })
 
   it("starts a new version for a later month and closes the old one", async () => {
-    const first = await saveBuckets("2026-09", [{ name: "A", colour: "#000", shareBasisPoints: 10000 }])
+    const first = await saveBuckets("2026-09", [{ name: "A", colour: "#000", shareBasisPoints: 10000, fixedAmount: null, carryOver: false }])
     const second = await saveBuckets("2026-11", [
-      { name: "A", colour: "#000", shareBasisPoints: 6000 },
-      { name: "B", colour: "#fff", shareBasisPoints: 4000 },
+      { name: "A", colour: "#000", shareBasisPoints: 6000, fixedAmount: null, carryOver: false },
+      { name: "B", colour: "#fff", shareBasisPoints: 4000, fixedAmount: null, carryOver: false },
     ])
 
     const plans = await livePlans()
@@ -38,11 +38,11 @@ describe("plan versions", () => {
 
   it("soft-deletes buckets dropped from the list", async () => {
     const planId = await saveBuckets("2026-09", [
-      { name: "A", colour: "#000", shareBasisPoints: 5000 },
-      { name: "B", colour: "#fff", shareBasisPoints: 5000 },
+      { name: "A", colour: "#000", shareBasisPoints: 5000, fixedAmount: null, carryOver: false },
+      { name: "B", colour: "#fff", shareBasisPoints: 5000, fixedAmount: null, carryOver: false },
     ])
     const [a] = await liveBucketsOf(planId)
-    await saveBuckets("2026-09", [{ id: a.id, name: "A", colour: "#000", shareBasisPoints: 10000 }])
+    await saveBuckets("2026-09", [{ id: a.id, name: "A", colour: "#000", shareBasisPoints: 10000, fixedAmount: null, carryOver: false }])
 
     expect(await liveBucketsOf(planId)).toHaveLength(1)
     expect(await db.buckets.count()).toBe(2)

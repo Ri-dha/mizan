@@ -26,6 +26,13 @@ public enum ErrorCode {
 
     // Households
     HOUSEHOLD_NOT_FOUND(HttpStatus.NOT_FOUND, "Household Not Found"),
+    INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "Invitation Not Found"),
+    INVITATION_EXPIRED(HttpStatus.GONE, "Invitation Expired"),
+    ALREADY_A_MEMBER(HttpStatus.CONFLICT, "Already A Member"),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "Member Not Found"),
+    OWNER_CANNOT_LEAVE(HttpStatus.CONFLICT, "Owner Cannot Leave"),
+    ONLY_HOUSEHOLD(HttpStatus.CONFLICT, "Cannot Leave The Only Household"),
+    HOUSEHOLD_DELETION_PENDING(HttpStatus.CONFLICT, "Household Deletion Pending"),
 
     // Sync
     SYNC_DEVICE_NOT_FOUND(HttpStatus.NOT_FOUND, "Sync Device Not Found"),

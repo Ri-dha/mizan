@@ -10,7 +10,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import iq.mizan.domain.asset.Depreciation;
 import iq.mizan.domain.metal.MetalValuation;
+import iq.mizan.common.tenancy.TenantSession;
 import iq.mizan.domain.networth.NetWorth;
 import iq.mizan.market.entity.Instrument;
 import iq.mizan.market.entity.PriceQuote;
@@ -38,15 +40,19 @@ public class NetWorthCalculator {
     private final JdbcClient jdbc;
     private final PriceQuoteRepository quotes;
     private final Clock clock;
+    private final TenantSession tenantSession;
 
     public NetWorthResponse compute(UUID householdId) {
+        tenantSession.elevateToSystem();
         Prices prices = prices(householdId);
         long cash = cash(householdId, prices);
         long metals = metals(householdId, prices);
         long[] debts = debts(householdId);
-        NetWorth.Result result = NetWorth.compute(new NetWorth.Input(cash, metals, debts[0], debts[1]));
+        AssetTotals assets = assets(householdId);
+        NetWorth.Result result = NetWorth.compute(new NetWorth.Input(cash, metals, debts[0],
+                assets.vehicles(), assets.property(), assets.other(), assets.illiquid(), debts[1]));
         return new NetWorthResponse(result.totalAssets(), result.totalLiabilities(), result.netWorth(),
-                result.composition(), prices.rateSet(), clock.instant());
+                result.liquidAssets(), result.illiquidAssets(), result.composition(), prices.rateSet(), clock.instant());
     }
 
     private record Prices(long usdIqdMicros, String rateKind, Map<Instrument, Long> spotMicros,
@@ -150,6 +156,46 @@ public class NetWorthCalculator {
                     prices.overridePerGram24k().get(instrument))).value();
         }
         return total;
+    }
+
+    private record AssetTotals(long vehicles, long property, long other, long illiquid) {
+    }
+
+    /**
+     * BR-13: each held asset is worth its latest manual valuation depreciated to today, or its
+     * purchase price depreciated when it was never revalued. Converted at the asset's frozen rate.
+     */
+    private AssetTotals assets(UUID householdId) {
+        LocalDate today = LocalDate.now(clock);
+        long vehicles = 0;
+        long property = 0;
+        long other = 0;
+        long illiquid = 0;
+        for (Map<String, Object> row : jdbc.sql("select a.type, a.liquidity, a.purchase_date, a.purchase_price, a.fx_rate_micros, "
+                        + "a.depreciation_method, a.annual_rate_basis_points, a.salvage_value, v.valued_on, v.value "
+                        + "from asset a left join lateral (select valued_on, value from asset_valuation "
+                        + "  where asset_id = a.id and deleted_at is null order by valued_on desc, created_at desc limit 1) v on true "
+                        + "where a.household_id = ? and a.deleted_at is null and a.status = 'HELD'")
+                .param(householdId).query().listOfRows()) {
+            boolean revalued = row.get("value") != null;
+            long baseline = ((Number) (revalued ? row.get("value") : row.get("purchase_price"))).longValue();
+            java.sql.Date baselineDate = (java.sql.Date) (revalued ? row.get("valued_on") : row.get("purchase_date"));
+            long rate = ((Number) row.get("fx_rate_micros")).longValue();
+            long value = halfUp(Depreciation.compute(new Depreciation.Input(
+                    baseline, baselineDate == null ? today : baselineDate.toLocalDate(),
+                    ((Number) row.get("salvage_value")).longValue(),
+                    ((Number) row.get("annual_rate_basis_points")).intValue(),
+                    Depreciation.Method.valueOf((String) row.get("depreciation_method")), today)).value() * rate, RATE_SCALE);
+            switch ((String) row.get("type")) {
+                case "VEHICLE" -> vehicles += value;
+                case "PROPERTY" -> property += value;
+                default -> other += value;
+            }
+            if ("ILLIQUID".equals(row.get("liquidity"))) {
+                illiquid += value;
+            }
+        }
+        return new AssetTotals(vehicles, property, other, illiquid);
     }
 
     /** {receivables, liabilities}: balances derive from the payment ledger, converted at each debt's frozen rate. */

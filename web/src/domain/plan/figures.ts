@@ -1,14 +1,17 @@
 import { BASIS_POINTS, largestRemainderSplit } from "@/domain/money/split"
 
+/** A bucket with a fixed amount is funded first and takes no share of the remainder (FR-PLN-07). */
 export interface BucketShare {
   id: string
   shareBasisPoints: number
+  fixedAmount: number | null
 }
 
 export interface MonthFiguresInput {
   plannedIncome: number
   receivedIncome: number
   buckets: BucketShare[]
+  carriedIn: Record<string, number>
   committed: Record<string, number>
   spent: Record<string, number>
   transfersIn: Record<string, number>
@@ -19,6 +22,7 @@ export interface BucketFigures {
   id: string
   plannedAllocated: number
   allocated: number
+  carriedIn: number
   committed: number
   spent: number
   transfersIn: number
@@ -29,46 +33,69 @@ export interface BucketFigures {
 export interface MonthFiguresResult {
   buckets: BucketFigures[]
   totalShareBasisPoints: number
+  fixedTotal: number
   unallocatedPlanned: number
   unallocatedReceived: number
 }
 
 /**
  * The per-bucket view of a month (FR-PLN-05): what each bucket was allocated from planned and
- * from received income, what it has committed, spent and transferred, and what is free.
- * Transfers are never spending (BR-04) but they do move money out of a bucket.
+ * from received income, what it carried in from last month, what it has committed, spent and
+ * transferred, and what is free. Transfers are never spending (BR-04) but they do move money
+ * out of a bucket.
  */
 export function monthFigures(input: MonthFiguresInput): MonthFiguresResult {
-  const shares = input.buckets.map((b) => b.shareBasisPoints)
-  const planned = allocate(input.plannedIncome, shares)
-  const received = allocate(input.receivedIncome, shares)
+  const planned = allocate(input.plannedIncome, input.buckets)
+  const received = allocate(input.receivedIncome, input.buckets)
 
   const buckets = input.buckets.map((bucket, i) => {
+    const carriedIn = input.carriedIn[bucket.id] ?? 0
     const committed = input.committed[bucket.id] ?? 0
     const spent = input.spent[bucket.id] ?? 0
     const transfersIn = input.transfersIn[bucket.id] ?? 0
     const transfersOut = input.transfersOut[bucket.id] ?? 0
     const allocated = received[i]
     return {
-      id: bucket.id, plannedAllocated: planned[i], allocated, committed, spent, transfersIn, transfersOut,
-      free: allocated + transfersIn - committed - spent - transfersOut,
+      id: bucket.id, plannedAllocated: planned[i], allocated, carriedIn, committed, spent, transfersIn, transfersOut,
+      free: allocated + carriedIn + transfersIn - committed - spent - transfersOut,
     }
   })
 
   const sum = (values: number[]) => values.reduce((total, value) => total + value, 0)
   return {
     buckets,
-    totalShareBasisPoints: sum(shares),
+    totalShareBasisPoints: sum(input.buckets.filter((b) => b.fixedAmount === null).map((b) => b.shareBasisPoints)),
+    fixedTotal: sum(input.buckets.map((b) => b.fixedAmount ?? 0)),
     unallocatedPlanned: input.plannedIncome - sum(planned),
     unallocatedReceived: input.receivedIncome - sum(received),
   }
 }
 
 /**
- * A plan that sums to 100% splits exactly (BR-02). One that does not gets each share's floor,
- * and the difference surfaces as the unallocated amount the warning shows (FR-PLN-04).
+ * Fixed amounts are funded first, in bucket order, until the income runs out; the remainder
+ * splits by percentage. Shares that sum to 100% split exactly (BR-02); shares that do not get
+ * each share's floor, and the difference surfaces as the unallocated amount (FR-PLN-04).
  */
-export function allocate(total: number, sharesBasisPoints: number[]): number[] {
+export function allocate(total: number, buckets: BucketShare[]): number[] {
+  let remaining = total
+  const fixed: (number | null)[] = []
+  const shares: number[] = []
+  for (const bucket of buckets) {
+    if (bucket.fixedAmount !== null) {
+      const funded = Math.max(0, Math.min(bucket.fixedAmount, remaining))
+      remaining -= funded
+      fixed.push(funded)
+    } else {
+      fixed.push(null)
+      shares.push(bucket.shareBasisPoints)
+    }
+  }
+  const split = splitShares(remaining, shares)
+  let shareIndex = 0
+  return fixed.map((amount) => (amount !== null ? amount : split[shareIndex++]))
+}
+
+function splitShares(total: number, sharesBasisPoints: number[]): number[] {
   const sum = sharesBasisPoints.reduce((a, b) => a + b, 0)
   if (sum === BASIS_POINTS) return largestRemainderSplit(total, sharesBasisPoints)
   return sharesBasisPoints.map((share) => Math.floor((total * share) / BASIS_POINTS))

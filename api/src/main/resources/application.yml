@@ -71,9 +71,33 @@ mizan:
       grace-period: 30d
       purge-cron: "0 45 3 * * *"
 
+  # FR-NTF-01..06. VAPID keys identify this server to push services; leave blank in dev and a
+  # pair is generated at startup (subscriptions then last until the next restart).
+  notifications:
+    enabled: ${MIZAN_NOTIFICATIONS_ENABLED:true}
+    transport: ${MIZAN_NOTIFICATIONS_TRANSPORT:webpush}
+    daily-cron: "0 0 8 * * *"
+    time-zone: ${MIZAN_TIME_ZONE:Asia/Baghdad}
+    ttl: 24h
+    vapid:
+      subject: ${MIZAN_VAPID_SUBJECT:mailto:admin@mizan.iq}
+      public-key: ${MIZAN_VAPID_PUBLIC_KEY:}
+      private-key: ${MIZAN_VAPID_PRIVATE_KEY:}
+    defaults:
+      bill-lead-days: 3
+      overspend-threshold-basis-points: 9000
+      metal-move-basis-points: 200
+
   household:
     default-currency: IQD
     default-month-start-day: 1
+    invitation:
+      # FR-ACC-05: an invitation link stops working after this.
+      ttl: 7d
+    deletion:
+      # FR-ACC-07: household deletion needs the owner's password and waits this long.
+      grace-period: 7d
+      purge-cron: "0 15 4 * * *"
 
   # FR-PLN-02: the split a new household starts with. Shares are basis points (5500 = 55.0%).
   plan:
@@ -133,6 +157,8 @@ mizan:
     create-bucket-on-startup: "${MIZAN_STORAGE_CREATE_BUCKET:true}"
     # How long a presigned upload or download URL stays valid.
     url-ttl: 15m
+    # Objects of attachments past the recycle-bin window go shortly before the row purge.
+    object-purge-cron: "0 15 3 * * *"
 
   web:
     allowed-origins: "${MIZAN_ALLOWED_ORIGINS:}"

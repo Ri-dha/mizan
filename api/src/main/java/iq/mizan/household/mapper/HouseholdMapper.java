@@ -18,6 +18,7 @@ public interface HouseholdMapper {
     @Mapping(target = "monthStartDay", source = "household.monthStartDay")
     @Mapping(target = "role", source = "membership.role")
     @Mapping(target = "permissions", expression = "java(membership.getRole().permissions())")
+    @Mapping(target = "deletionRequestedAt", source = "household.deletionRequestedAt")
     HouseholdSummary toSummary(Household household, Membership membership);
 
     HouseholdResponse toResponse(HouseholdSummary summary);

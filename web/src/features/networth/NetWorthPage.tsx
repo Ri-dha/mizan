@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { toast } from "sonner"
@@ -27,6 +27,11 @@ export function NetWorthPage() {
   const startDay = session?.monthStartDay ?? 1
   const view = useNetWorth()
   const [busy, setBusy] = useState<string | null>(null)
+  const [household, setHousehold] = useState<{ netWorth: number } | null>(null)
+  useEffect(() => {
+    if (!navigator.onLine) return
+    unwrap(api.GET("/api/v1/networth/current")).then((figures) => setHousehold({ netWorth: figures.netWorth ?? 0 })).catch(() => setHousehold(null))
+  }, [view.current.netWorth])
   const prefs = usePreferences()
   useScreenTour("networth")
   const usdIqd = Number(view.rateSet.usdIqdMicros) / 1e6
@@ -67,12 +72,16 @@ export function NetWorthPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <p className={`text-4xl font-heading tabular-nums ${view.current.netWorth < 0 ? "text-chart-2" : ""}`}>{money(view.current.netWorth)}</p>
+          {household && household.netWorth !== view.current.netWorth && (
+            <p className="text-sm opacity-70">{t("networth.householdFigure", { value: money(household.netWorth) })}</p>
+          )}
           {prefs.showUsd && usdIqd > 0 && <p className="text-lg opacity-70 tabular-nums">≈ {inUsd(view.current.netWorth)} <span className="text-xs">({t(`metals.rateKinds.${String(view.rateSet.rateKind)}`)})</span></p>}
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="rounded-base border-2 border-border p-3">
               <p className="text-sm opacity-70">{t("networth.assets")}</p>
               <p className="font-heading tabular-nums">{money(view.current.totalAssets)}</p>
-              {view.current.composition.map((share) => (
+              <p className="mb-1 text-xs opacity-70">{t("networth.liquidLine", { liquid: money(view.current.liquidAssets), illiquid: money(view.current.illiquidAssets) })}</p>
+              {view.current.composition.filter((share) => share.amount !== 0 || ["CASH", "METALS", "RECEIVABLES"].includes(share.assetClass)).map((share) => (
                 <div key={share.assetClass} className="flex justify-between text-sm">
                   <span>{t(`networth.classes.${share.assetClass}`)} <span className="opacity-70">{share.percent}%</span></span>
                   <span className="tabular-nums">{money(share.amount)}</span>

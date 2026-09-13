@@ -1,0 +1,42 @@
+[
+  {
+    "name": "monthly bill on the 5th inside a calendar month",
+    "input": { "schedule": { "frequency": "MONTHLY", "dueDay": 5, "anchorDate": null, "intervalDays": null, "activeFrom": "2026-01-01", "activeTo": null }, "monthKey": "2026-09", "startDay": 1 },
+    "expected": ["2026-09-05"]
+  },
+  {
+    "name": "monthly bill on the 31st clamps to shorter months",
+    "input": { "schedule": { "frequency": "MONTHLY", "dueDay": 31, "anchorDate": null, "intervalDays": null, "activeFrom": "2026-01-01", "activeTo": null }, "monthKey": "2026-09", "startDay": 1 },
+    "expected": ["2026-09-30"]
+  },
+  {
+    "name": "a month starting on the 25th spans two calendar months and picks the due day that falls inside",
+    "input": { "schedule": { "frequency": "MONTHLY", "dueDay": 5, "anchorDate": null, "intervalDays": null, "activeFrom": "2026-01-01", "activeTo": null }, "monthKey": "2026-09", "startDay": 25 },
+    "expected": ["2026-10-05"]
+  },
+  {
+    "name": "quarterly from an anchor lands every third month",
+    "input": { "schedule": { "frequency": "QUARTERLY", "dueDay": null, "anchorDate": "2026-03-15", "intervalDays": null, "activeFrom": "2026-03-15", "activeTo": null }, "monthKey": "2026-09", "startDay": 1 },
+    "expected": ["2026-09-15"]
+  },
+  {
+    "name": "quarterly from an anchor skips months in between",
+    "input": { "schedule": { "frequency": "QUARTERLY", "dueDay": null, "anchorDate": "2026-03-15", "intervalDays": null, "activeFrom": "2026-03-15", "activeTo": null }, "monthKey": "2026-08", "startDay": 1 },
+    "expected": []
+  },
+  {
+    "name": "annual from an anchor",
+    "input": { "schedule": { "frequency": "ANNUAL", "dueDay": null, "anchorDate": "2025-09-20", "intervalDays": null, "activeFrom": "2025-09-20", "activeTo": null }, "monthKey": "2026-09", "startDay": 1 },
+    "expected": ["2026-09-20"]
+  },
+  {
+    "name": "every ten days from an anchor before the month",
+    "input": { "schedule": { "frequency": "CUSTOM", "dueDay": null, "anchorDate": "2026-08-28", "intervalDays": 10, "activeFrom": "2026-08-28", "activeTo": null }, "monthKey": "2026-09", "startDay": 1 },
+    "expected": ["2026-09-07", "2026-09-17", "2026-09-27"]
+  },
+  {
+    "name": "an ended bill has no due dates after its end",
+    "input": { "schedule": { "frequency": "MONTHLY", "dueDay": 10, "anchorDate": null, "intervalDays": null, "activeFrom": "2026-01-01", "activeTo": "2026-09-05" }, "monthKey": "2026-09", "startDay": 1 },
+    "expected": []
+  }
+]

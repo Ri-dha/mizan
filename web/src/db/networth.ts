@@ -1,7 +1,8 @@
-import { db, type CashAccount, type CashAdjustment, type Debt, type DebtPayment, type MonthClose, type NetWorthSnapshot } from "./schema"
+import { db, type Asset, type AssetValuation, type CashAccount, type CashAdjustment, type Debt, type DebtPayment, type MonthClose, type NetWorthSnapshot } from "./schema"
 import { writeFields } from "./write"
 import { baseBalanceOf } from "./debts"
 import { toBaseAmount } from "./income"
+import { assetTotals } from "./assets"
 import { netWorth, type NetWorthResult } from "@/domain/networth/networth"
 import type { ResolvedPrices } from "@/market/store"
 
@@ -28,9 +29,12 @@ export function debtBalances(debts: Debt[], payments: DebtPayment[]) {
   return { receivables, liabilities }
 }
 
-export function liveNetWorth(accounts: CashAccount[], base: string, prices: ResolvedPrices, metalsValue: number, debts: Debt[], payments: DebtPayment[]): NetWorthResult {
+export function liveNetWorth(
+  accounts: CashAccount[], base: string, prices: ResolvedPrices, metalsValue: number, debts: Debt[], payments: DebtPayment[],
+  assets: Asset[], valuations: AssetValuation[], today: string,
+): NetWorthResult {
   const { receivables, liabilities } = debtBalances(debts, payments)
-  return netWorth({ cash: cashInBase(accounts, base, prices), metals: metalsValue, receivables, liabilities })
+  return netWorth({ cash: cashInBase(accounts, base, prices), metals: metalsValue, receivables, ...assetTotals(assets, valuations, today), liabilities })
 }
 
 export const liveSnapshots = () => db.netWorthSnapshots.filter((s) => s.deletedAt === null).sortBy("takenAt")

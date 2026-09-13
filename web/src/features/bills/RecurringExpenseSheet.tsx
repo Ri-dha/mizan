@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 
+import { usePrivacyDefaults } from "@/db/privacy"
+
 import { useSession } from "@/api/auth"
 import { Field } from "@/components/Field"
 import { Button } from "@/components/ui/button"
@@ -28,12 +30,14 @@ interface Props {
 
 export function RecurringExpenseSheet({ open, expense, buckets, onClose }: Props) {
   const { t } = useTranslation()
+  const privacy = usePrivacyDefaults()
   const session = useSession()
   const base = session?.baseCurrency ?? "IQD"
   const [name, setName] = useState("")
   const [bucketId, setBucketId] = useState<string>(NONE)
   const [amount, setAmount] = useState("0")
   const [isEstimate, setIsEstimate] = useState(false)
+  const [reminderDays, setReminderDays] = useState("")
   const [currency, setCurrency] = useState(base)
   const [rate, setRate] = useState("1")
   const [frequency, setFrequency] = useState<ExpenseFrequency>("MONTHLY")
@@ -51,6 +55,7 @@ export function RecurringExpenseSheet({ open, expense, buckets, onClose }: Props
     setBucketId(expense?.bucketId ?? buckets[0]?.id ?? NONE)
     setAmount(expense ? fromMinorUnits(expense.amount, expense.currency) : "0")
     setIsEstimate(expense?.isEstimate ?? false)
+    setReminderDays(expense?.reminderDays == null ? "" : String(expense.reminderDays))
     setCurrency(expense?.currency ?? base)
     setRate(expense ? String(expense.fxRateMicros / RATE_SCALE) : "1")
     setFrequency(expense?.frequency ?? "MONTHLY")
@@ -60,8 +65,8 @@ export function RecurringExpenseSheet({ open, expense, buckets, onClose }: Props
     setActiveFrom(expense?.activeFrom ?? todayIso())
     setActiveTo(expense?.activeTo ?? "")
     setCategory(expense?.category ?? "")
-    setIsPrivate(expense?.visibility === "PRIVATE")
-  }, [open, expense, buckets, base])
+    setIsPrivate(expense ? expense.visibility === "PRIVATE" : privacy.transactions === "PRIVATE")
+  }, [open, expense, buckets, base, privacy])
 
   const needsRate = currency !== base
 
@@ -72,6 +77,7 @@ export function RecurringExpenseSheet({ open, expense, buckets, onClose }: Props
       bucketId: bucketId === NONE ? null : bucketId,
       amount: toMinorUnits(amount, currency),
       isEstimate,
+      reminderDays: reminderDays.trim() === "" ? null : Math.max(0, Math.min(30, Number(reminderDays))),
       currency,
       fxRateMicros: needsRate ? Math.round(Number(rate) * RATE_SCALE) : RATE_SCALE,
       frequency,
@@ -131,6 +137,11 @@ export function RecurringExpenseSheet({ open, expense, buckets, onClose }: Props
           <div className="flex items-center gap-2">
             <Switch id="estimate" checked={isEstimate} onCheckedChange={setIsEstimate} />
             <Label htmlFor="estimate">{t("bills.isEstimate")}</Label>
+          </div>
+          <Field id="reminderDays" label={t("bills.reminderDays")} hint={t("bills.reminderDaysHint")}>
+            <Input id="reminderDays" type="number" min={0} max={30} dir="ltr" value={reminderDays} onChange={(e) => setReminderDays(e.target.value)} placeholder="3" />
+          </Field>
+          <div>
           </div>
           <Field id="frequency" label={t("income.frequency")}>
             <Select value={frequency} onValueChange={(v) => setFrequency(v as ExpenseFrequency)}>

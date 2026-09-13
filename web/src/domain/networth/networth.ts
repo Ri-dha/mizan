@@ -1,9 +1,14 @@
-export type AssetClass = "CASH" | "METALS" | "RECEIVABLES"
+export type AssetClass = "CASH" | "METALS" | "RECEIVABLES" | "VEHICLES" | "PROPERTY" | "OTHER_ASSETS"
 
+/** `illiquid` is the part of vehicles, property and other assets the household marked illiquid. */
 export interface NetWorthInput {
   cash: number
   metals: number
   receivables: number
+  vehicles: number
+  property: number
+  otherAssets: number
+  illiquid: number
   liabilities: number
 }
 
@@ -17,6 +22,8 @@ export interface NetWorthResult {
   totalAssets: number
   totalLiabilities: number
   netWorth: number
+  liquidAssets: number
+  illiquidAssets: number
   composition: Share[]
 }
 
@@ -28,17 +35,23 @@ function percent(amount: number, assets: number): number {
   return Math.floor((amount * 100 * PERCENT_SCALE * 2 + assets) / (2 * assets)) / PERCENT_SCALE
 }
 
-/** BR-05: assets minus liabilities, with the composition by class (FR-NET-02). Everything in base minor units. */
+/** BR-05: assets minus liabilities, with the composition by class (FR-NET-02) and the liquid split (FR-NET-06). */
 export function netWorth(input: NetWorthInput): NetWorthResult {
-  const totalAssets = input.cash + input.metals + input.receivables
+  const totalAssets = input.cash + input.metals + input.receivables + input.vehicles + input.property + input.otherAssets
+  const share = (assetClass: AssetClass, amount: number): Share => ({ assetClass, amount, percent: percent(amount, totalAssets) })
   return {
     totalAssets,
     totalLiabilities: input.liabilities,
     netWorth: totalAssets - input.liabilities,
+    liquidAssets: totalAssets - input.illiquid,
+    illiquidAssets: input.illiquid,
     composition: [
-      { assetClass: "CASH", amount: input.cash, percent: percent(input.cash, totalAssets) },
-      { assetClass: "METALS", amount: input.metals, percent: percent(input.metals, totalAssets) },
-      { assetClass: "RECEIVABLES", amount: input.receivables, percent: percent(input.receivables, totalAssets) },
+      share("CASH", input.cash),
+      share("METALS", input.metals),
+      share("RECEIVABLES", input.receivables),
+      share("VEHICLES", input.vehicles),
+      share("PROPERTY", input.property),
+      share("OTHER_ASSETS", input.otherAssets),
     ],
   }
 }

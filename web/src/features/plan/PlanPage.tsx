@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from "lucide-react"
+import { ArrowLeftRight, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -10,7 +10,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { saveBuckets, type BucketInput } from "@/db/plan"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { saveBuckets, undoMove, type BucketInput } from "@/db/plan"
+import { fromMinorUnits, toMinorUnits } from "@/domain/money/format"
+import { MoveMoneySheet } from "./MoveMoneySheet"
 import { formatMoney } from "@/domain/money/format"
 import { BASIS_POINTS } from "@/domain/money/split"
 import { basisPointsToPercent, percentToBasisPoints, rebalance } from "@/domain/plan/figures"
@@ -28,16 +32,19 @@ export function PlanPage() {
   const [monthKey, setMonthKey] = useSelectedMonth(startDay)
   const view = useMonthView(monthKey, startDay)
   const [draft, setDraft] = useState<BucketInput[] | null>(null)
+  const [moving, setMoving] = useState(false)
   useScreenTour("plan", view.buckets.length > 0)
 
   useEffect(() => {
     setDraft(null)
   }, [monthKey, view.plan?.id])
 
-  const editing = draft ?? view.buckets.map((b) => ({ id: b.id, name: b.name, colour: b.colour, shareBasisPoints: b.shareBasisPoints }))
-  const totalShares = editing.reduce((sum, b) => sum + b.shareBasisPoints, 0)
+  const editing = draft ?? view.buckets.map((b) => ({ id: b.id, name: b.name, colour: b.colour, shareBasisPoints: b.shareBasisPoints, fixedAmount: b.fixedAmount, carryOver: b.carryOver }))
+  const totalShares = editing.filter((b) => b.fixedAmount === null).reduce((sum, b) => sum + b.shareBasisPoints, 0)
+  const fixedTotal = editing.reduce((sum, b) => sum + (b.fixedAmount ?? 0), 0)
+  const date = (iso: string) => new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { day: "numeric", month: "short" }).format(new Date(iso))
   const gapShares = totalShares - BASIS_POINTS
-  const gapAmount = Math.round((view.income.planned * gapShares) / BASIS_POINTS)
+  const gapAmount = Math.round(((view.income.planned - fixedTotal) * gapShares) / BASIS_POINTS)
   const money = (amount: number) => formatMoney(amount, currency, i18n.language)
 
   function update(index: number, patch: Partial<BucketInput>) {
@@ -75,7 +82,7 @@ export function PlanPage() {
                   <span className="truncate font-heading">{bucket.name}</span>
                   <span className="shrink-0 text-sm opacity-70">{basisPointsToPercent(bucket.shareBasisPoints)}%</span>
                 </div>
-                <Figure label={t("plan.allocated")} value={money(figure.allocated)} hint={money(figure.plannedAllocated)} />
+                <Figure label={t("plan.allocated")} value={money(figure.allocated)} hint={figure.carriedIn > 0 ? t("plan.carriedIn", { amount: money(figure.carriedIn) }) : money(figure.plannedAllocated)} />
                 <Figure label={t("plan.committed")} value={money(figure.committed)} />
                 <Figure label={t("plan.spent")} value={money(figure.spent)} />
                 <Figure label={t("plan.free")} value={money(figure.free)} strong />
@@ -85,6 +92,23 @@ export function PlanPage() {
           {view.figures.unallocatedPlanned !== 0 && (
             <p className="text-sm">{t("plan.unallocated", { amount: money(view.figures.unallocatedPlanned) })}</p>
           )}
+          {view.figures.fixedTotal > view.income.planned && view.income.planned > 0 && (
+            <Alert><AlertDescription>{t("plan.fixedExceeds", { amount: money(view.figures.fixedTotal - view.income.planned) })}</AlertDescription></Alert>
+          )}
+          {view.buckets.length > 1 && (
+            <Button variant="neutral" className="self-start" data-tour="plan-move" onClick={() => setMoving(true)}><ArrowLeftRight /> {t("plan.move")}</Button>
+          )}
+          {view.moves.map((move) => (
+            <div key={move.id} className="flex items-center justify-between gap-2 text-sm">
+              <span>
+                {date(move.movedOn)} · {view.buckets.find((b) => b.id === move.fromBucketId)?.name ?? "?"} → {view.buckets.find((b) => b.id === move.toBucketId)?.name ?? "?"}
+                {move.reason ? <span className="opacity-70"> · {move.reason}</span> : null}
+              </span>
+              <span className="flex items-center gap-2 tabular-nums">{money(move.amount)}
+                <Button size="sm" variant="neutral" onClick={() => void undoMove(move)}>{t("bills.undo")}</Button>
+              </span>
+            </div>
+          ))}
         </CardContent>
       </Card>
 
@@ -97,7 +121,8 @@ export function PlanPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {editing.map((bucket, index) => (
-            <div key={bucket.id ?? index} className="grid grid-cols-[auto_1fr_6rem_auto] items-center gap-2">
+            <div key={bucket.id ?? index} className="flex flex-col gap-2 rounded-base border-2 border-border p-2">
+            <div className="grid grid-cols-[auto_1fr_6rem_auto] items-center gap-2">
               <input
                 type="color"
                 aria-label={t("plan.colour")}
@@ -110,7 +135,8 @@ export function PlanPage() {
                 <Input
                   aria-label={t("plan.share")}
                   type="number" step="0.1" min="0" max="100" inputMode="decimal"
-                  value={basisPointsToPercent(bucket.shareBasisPoints)}
+                  disabled={bucket.fixedAmount !== null}
+                  value={bucket.fixedAmount !== null ? 0 : basisPointsToPercent(bucket.shareBasisPoints)}
                   onChange={(e) => update(index, { shareBasisPoints: percentToBasisPoints(Number(e.target.value) || 0) })}
                 />
                 <span>%</span>
@@ -119,14 +145,29 @@ export function PlanPage() {
                 <Trash2 />
               </Button>
             </div>
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <Switch id={`fixed-${index}`} checked={bucket.fixedAmount !== null} onCheckedChange={(on) => update(index, { fixedAmount: on ? 0 : null, shareBasisPoints: on ? 0 : bucket.shareBasisPoints })} />
+                <Label htmlFor={`fixed-${index}`}>{t("plan.fixedAmount")}</Label>
+                {bucket.fixedAmount !== null && (
+                  <Input aria-label={t("plan.fixedAmount")} inputMode="decimal" dir="ltr" className="w-32"
+                    value={fromMinorUnits(bucket.fixedAmount, currency)} onChange={(e) => update(index, { fixedAmount: toMinorUnits(e.target.value, currency) })} />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch id={`carry-${index}`} checked={bucket.carryOver} onCheckedChange={(on) => update(index, { carryOver: on })} />
+                <Label htmlFor={`carry-${index}`}>{t("plan.carryOver")}</Label>
+              </div>
+            </div>
+            </div>
           ))}
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="neutral" onClick={() => setDraft([...editing, { name: "", colour: PALETTE[editing.length % PALETTE.length], shareBasisPoints: 0 }])}>
+            <Button variant="neutral" onClick={() => setDraft([...editing, { name: "", colour: PALETTE[editing.length % PALETTE.length], shareBasisPoints: 0, fixedAmount: null, carryOver: false }])}>
               <Plus /> {t("plan.addBucket")}
             </Button>
             {gapShares !== 0 && (
-              <Button variant="neutral" onClick={() => setDraft(editing.map((b, i) => ({ ...b, shareBasisPoints: rebalance(editing.map((x) => x.shareBasisPoints))[i] })))}>
+              <Button variant="neutral" onClick={() => { const scaled = rebalance(editing.map((x) => (x.fixedAmount === null ? x.shareBasisPoints : 0))); setDraft(editing.map((b, i) => ({ ...b, shareBasisPoints: b.fixedAmount === null ? scaled[i] : 0 }))) }}>
                 {t("plan.rebalance")}
               </Button>
             )}
@@ -145,6 +186,8 @@ export function PlanPage() {
           <Button data-tour="plan-save" onClick={() => void save()} disabled={draft === null} className="self-start">{t("plan.save")}</Button>
         </CardContent>
       </Card>
+
+      <MoveMoneySheet open={moving} buckets={view.buckets} figures={view.figures} monthKey={monthKey} startDay={startDay} currency={currency} onClose={() => setMoving(false)} />
     </div>
   )
 }

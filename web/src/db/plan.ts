@@ -1,5 +1,6 @@
-import { db, type Bucket, type Plan } from "./schema"
-import { writeFields } from "./write"
+import { db, type Bucket, type BucketMove, type Plan } from "./schema"
+import { createTransaction, deleteTransaction } from "./transactions"
+import { softDelete, writeFields } from "./write"
 import { shiftKey } from "@/domain/calendar/month"
 
 export interface BucketInput {
@@ -7,6 +8,8 @@ export interface BucketInput {
   name: string
   colour: string
   shareBasisPoints: number
+  fixedAmount: number | null
+  carryOver: boolean
 }
 
 export async function livePlans(): Promise<Plan[]> {
@@ -45,8 +48,10 @@ export async function saveBuckets(monthKey: string, buckets: BucketInput[]): Pro
         name: bucket.name,
         colour: bucket.colour,
         shareBasisPoints: bucket.shareBasisPoints,
+        fixedAmount: bucket.fixedAmount,
+        carryOver: bucket.carryOver,
         sortOrder,
-        ...(existing.some((b) => b.id === id) ? {} : { visibility: "SHARED" as const, fixedAmount: null, carryOver: false }),
+        ...(existing.some((b) => b.id === id) ? {} : { visibility: "SHARED" as const }),
       })
     }
     for (const gone of existing.filter((b) => !keep.has(b.id))) {
@@ -63,4 +68,32 @@ async function startVersion(previous: Plan | undefined, monthKey: string): Promi
   const id = crypto.randomUUID()
   await writeFields<Plan>("plan", id, { visibility: "SHARED", effectiveFrom: monthKey, effectiveTo: null })
   return id
+}
+
+export function liveMovesFor(monthKey: string) {
+  return db.bucketMoves.where("monthKey").equals(monthKey).filter((m) => m.deletedAt === null).reverse().sortBy("movedOn")
+}
+
+/**
+ * FR-PLN-03: the money moves as a transfer between buckets, so the month figures already count
+ * it; the move row keeps the reason for the audit trail.
+ */
+export async function moveMoney(from: Bucket, to: Bucket, amount: number, movedOn: string, monthKey: string, reason: string | null, currency: string) {
+  await db.transaction("rw", db.tables, async () => {
+    const transactionId = await createTransaction({
+      type: "TRANSFER", occurredOn: movedOn, monthKey, amount, currency, fxRateMicros: 1_000_000,
+      bucketId: from.id, category: null, payee: to.name, note: reason, counterpartyType: "BUCKET", counterpartyId: to.id,
+      attachmentId: null, visibility: "SHARED",
+    })
+    await writeFields<BucketMove>("bucket_move", crypto.randomUUID(), {
+      visibility: "SHARED", fromBucketId: from.id, toBucketId: to.id, monthKey, movedOn, amount, reason, transactionId,
+    })
+  })
+}
+
+export async function undoMove(move: BucketMove) {
+  await db.transaction("rw", db.tables, async () => {
+    if (move.transactionId) await deleteTransaction(move.transactionId)
+    await softDelete("bucket_move", move.id)
+  })
 }

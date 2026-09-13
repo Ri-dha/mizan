@@ -88,6 +88,22 @@ order every hour; the parallel-market dollar rate comes from `MIZAN_PARALLEL_RAT
 | GET | `/api/v1/attachments/{id}/download-url` | bearer | Presigned GET for the same |
 | GET | `/api/v1/market/quotes` | bearer | Latest XAU, XAG and USD→IQD quotes with source, time and stale flag |
 | GET | `/api/v1/market/history?instrument&from&to` | bearer | Daily price history for charts and snapshots |
+| GET | `/api/v1/households` | bearer | Every household the caller belongs to and which is current |
+| POST | `/api/v1/households/{id}/switch` | bearer | Make another household current; refresh the session afterwards |
+| GET | `/api/v1/households/current/members` | bearer, `HOUSEHOLD_VIEW` | Active members with roles |
+| PATCH | `/api/v1/households/current/members/{userId}` | bearer, `MEMBERS_MANAGE` | Change a member's role |
+| DELETE | `/api/v1/households/current/members/{userId}` | bearer, `MEMBERS_MANAGE` | Remove a member |
+| POST | `/api/v1/households/current/leave` | bearer | Leave; refused for the owner or the only household |
+| POST | `/api/v1/households/current/transfer-ownership` | bearer, `HOUSEHOLD_DELETE` | Hand ownership to a member |
+| POST | `/api/v1/households/current/invitations` | bearer, `MEMBERS_MANAGE` | Create an invitation; returns the token once |
+| GET | `/api/v1/households/current/invitations` | bearer, `MEMBERS_MANAGE` | Open invitations |
+| DELETE | `/api/v1/households/current/invitations/{id}` | bearer, `MEMBERS_MANAGE` | Revoke |
+| POST/DELETE | `/api/v1/households/current/deletion-request` | bearer, `HOUSEHOLD_DELETE` | Request (with password) or cancel household deletion; purged after 7 days |
+| GET | `/api/v1/invitations/{token}` | public | Preview an invitation |
+| POST | `/api/v1/invitations/{token}/accept` | bearer | Join the household behind the link |
+| GET | `/api/v1/notifications/vapid-key` | bearer | The server's VAPID public key for subscribing a browser |
+| GET/POST/DELETE | `/api/v1/notifications/subscriptions` | bearer | This account's push subscriptions; register or remove one |
+| POST | `/api/v1/notifications/test` | bearer | Send a test notification to every subscribed device |
 | GET | `/api/v1/networth/current` | bearer | Net worth computed on the server from the synced ledgers, with the rate set used |
 | GET | `/api/v1/months` | bearer | Which months are closed |
 | POST | `/api/v1/months/{monthKey}/close` | bearer, `PLAN_EDIT` | Close a month: immutable snapshot |
@@ -106,7 +122,7 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/login`, `/register`, `/reset` | Sign in, create account, password reset |
 | `/` | Home: greeting, cash on hand, verification prompt |
 | `/verify` | Enter the 6-digit contact verification code |
-| `/plan` | Buckets for the selected month with allocated, committed, spent and free; edit shares with the over/under warning and rebalance |
+| `/plan` | Buckets for the selected month with allocated, carried over, committed, spent and free; edit shares, fixed amounts and carry-over with the over/under warning and rebalance; move money between buckets with a reason |
 | `/income` | Income sources with an amount history (record a raise from a date), this month's expected pay dates, mark received, irregular receipts |
 | `/transactions` | The ledger for the selected month: search and filters, edit, recycle bin; the + button anywhere opens quick add |
 | `/bills` | Recurring bills, this month's due dates, mark paid with the actual amount, undo |
@@ -114,11 +130,15 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/goals` | Savings goals with deposits, withdrawals, progress and projection |
 | `/metals` | Gold and silver: holdings by purity, purchases with cost per gram vs now, sales with realised gain, prices in use, "how is this calculated", enter today's price, valuation settings |
 | `/networth` | Net worth with composition, USD line, trend chart of closed months, close and reopen months with their snapshots |
-| `/report` | Monthly report: planned vs actual per bucket, top categories, month-over-month, saving rate |
+| `/report` | Monthly report: planned vs actual per bucket, top categories, month-over-month, saving rate, save as PDF |
+| `/report/year` | The year at a glance: income, spending and saving per month, spending per bucket chart, top categories, trailing saving rate, net worth change |
 | `/more` | Links to the less frequent screens |
 | `/accounts` | Cash accounts: add, edit, soft-delete with undo |
+| `/household` | Members and roles, invite by link, pending invitations, switch between your households, leave, transfer ownership, delete the household with password and a 7-day grace |
+| `/join/:token` | Landing page of an invitation link: preview, sign in or register, join |
+| `/assets` | Other assets grouped by type: valuation history, depreciation, liquid/illiquid, sell with realised gain, stale-valuation reminder on Home |
 | `/sync` | Sync status, sync now, overridden edits (conflict log) |
-| `/settings` | Language, theme, digits, USD line, notification switches, lock timeout, PIN, household settings, export and import JSON, account deletion, replay tours, install, sign out |
+| `/settings` | Language, theme, digits, USD line, CSV/Excel exports of transactions, metals and assets, encrypted daily cloud backup with restore, push notifications with per-kind switches and thresholds, lock timeout, PIN, household settings, export and import JSON, account deletion, replay tours, install, sign out |
 | `/help`, `/help/:slug` | The user manual, bundled so it reads offline, in the app's language with search |
 
 Each screen has a `?` button that replays its guided tour or opens its manual page. A welcome

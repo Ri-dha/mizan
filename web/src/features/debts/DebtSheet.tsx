@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
 import { useTranslation } from "react-i18next"
 
+import { usePrivacyDefaults } from "@/db/privacy"
+
 import { useSession } from "@/api/auth"
 import { currentMonthKey } from "@/app/month"
 import { Field } from "@/components/Field"
@@ -24,6 +26,7 @@ const NONE = "__none__"
 
 export function DebtSheet({ open, debt, onClose }: { open: boolean; debt: Debt | null; onClose: () => void }) {
   const { t } = useTranslation()
+  const privacy = usePrivacyDefaults()
   const session = useSession()
   const base = session?.baseCurrency ?? "IQD"
   const startDay = session?.monthStartDay ?? 1
@@ -54,8 +57,8 @@ export function DebtSheet({ open, debt, onClose }: { open: boolean; debt: Debt |
     setMonthlyPayment(debt ? fromMinorUnits(debt.monthlyPayment, debt.currency) : "0")
     setBucketId(debt?.bucketId ?? NONE)
     setStartDate(debt?.startDate ?? todayIso())
-    setIsPrivate(debt?.visibility === "PRIVATE")
-  }, [open, debt, base])
+    setIsPrivate(debt ? debt.visibility === "PRIVATE" : privacy.debts === "PRIVATE")
+  }, [open, debt, base, privacy])
 
   const needsRate = currency !== base
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { allPages, pagesFor, parseFrontMatter } from "./manual"
 
-const ROUTES = ["/", "/plan", "/income", "/bills", "/transactions", "/debts", "/goals", "/metals", "/networth", "/report", "/accounts", "/sync", "/settings", "/help"]
+const ROUTES = ["/", "/plan", "/income", "/bills", "/transactions", "/debts", "/goals", "/metals", "/networth", "/report", "/report/year", "/accounts", "/assets", "/household", "/sync", "/settings", "/help"]
 
 describe("manual", () => {
   it("parses front matter", () => {

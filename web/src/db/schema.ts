@@ -96,6 +96,8 @@ export interface RecurringExpense extends Syncable {
   activeTo: string | null
   category: string | null
   note: string | null
+  /** FR-NTF-02: days before the due date to remind; null uses the household default. */
+  reminderDays: number | null
   sortOrder: number
 }
 
@@ -285,6 +287,72 @@ export interface CashAdjustment extends Syncable {
   note: string | null
 }
 
+export interface PrivacySetting extends Syncable {
+  visibility: Visibility
+  transactions: Visibility
+  accounts: Visibility
+  metals: Visibility
+  debts: Visibility
+  goals: Visibility
+  assets: Visibility
+}
+
+export interface NotificationSetting extends Syncable {
+  visibility: Visibility
+  billDue: boolean
+  billLeadDays: number
+  payDay: boolean
+  overspend: boolean
+  overspendThresholdBp: number
+  monthClose: boolean
+  metalPrice: boolean
+  metalMoveBp: number
+  quietMode: boolean
+}
+
+export interface BucketMove extends Syncable {
+  visibility: Visibility
+  fromBucketId: string
+  toBucketId: string
+  monthKey: string
+  movedOn: string
+  amount: number
+  reason: string | null
+  transactionId: string | null
+}
+
+export type AssetType = "VEHICLE" | "PROPERTY" | "ELECTRONICS" | "EQUIPMENT" | "FURNITURE" | "LIVESTOCK" | "OTHER"
+export type Liquidity = "LIQUID" | "ILLIQUID"
+
+export interface Asset extends Syncable {
+  visibility: Visibility
+  type: AssetType
+  name: string
+  purchaseDate: string | null
+  purchasePrice: number
+  currency: string
+  fxRateMicros: number
+  liquidity: Liquidity
+  depreciationMethod: "NONE" | "STRAIGHT_LINE" | "DECLINING_BALANCE"
+  annualRateBasisPoints: number
+  salvageValue: number
+  attributes: Record<string, string | number>
+  status: "HELD" | "SOLD"
+  soldOn: string | null
+  salePrice: number | null
+  note: string | null
+  sortOrder: number
+}
+
+export interface AssetValuation extends Syncable {
+  visibility: Visibility
+  assetId: string
+  valuedOn: string
+  value: number
+  source: "MANUAL" | "ESTIMATED"
+  note: string | null
+}
+
 export interface NetWorthSnapshot extends Syncable {
   visibility: Visibility
   monthKey: string
@@ -292,6 +360,8 @@ export interface NetWorthSnapshot extends Syncable {
   totalAssets: number
   totalLiabilities: number
   netWorth: number
+  liquidAssets: number | null
+  illiquidAssets: number | null
   composition: { assetClass: string; amount: number; percent: number }[]
   rateSet: Record<string, unknown>
 }
@@ -352,6 +422,11 @@ export const SYNC_TABLES = {
   cash_adjustment: "cashAdjustments",
   net_worth_snapshot: "netWorthSnapshots",
   month_close: "monthCloses",
+  asset: "assets",
+  asset_valuation: "assetValuations",
+  bucket_move: "bucketMoves",
+  privacy_setting: "privacySettings",
+  notification_setting: "notificationSettings",
 } as const
 
 export type SyncTableName = keyof typeof SYNC_TABLES
@@ -380,6 +455,11 @@ export class MizanDatabase extends Dexie {
   cashAdjustments!: EntityTable<CashAdjustment, "id">
   netWorthSnapshots!: EntityTable<NetWorthSnapshot, "id">
   monthCloses!: EntityTable<MonthClose, "id">
+  assets!: EntityTable<Asset, "id">
+  assetValuations!: EntityTable<AssetValuation, "id">
+  bucketMoves!: EntityTable<BucketMove, "id">
+  privacySettings!: EntityTable<PrivacySetting, "id">
+  notificationSettings!: EntityTable<NotificationSetting, "id">
   outbox!: EntityTable<OutboxOp, "opId">
   conflicts!: EntityTable<LocalConflict, "id">
   meta!: EntityTable<MetaEntry, "key">
@@ -423,6 +503,19 @@ export class MizanDatabase extends Dexie {
       cashAdjustments: "id, deletedAt, cashAccountId, adjustedOn",
       netWorthSnapshots: "id, deletedAt, monthKey, takenAt",
       monthCloses: "id, deletedAt, monthKey",
+    })
+    this.version(7).stores({
+      assets: "id, deletedAt, type, status, sortOrder",
+      assetValuations: "id, deletedAt, assetId, valuedOn",
+    })
+    this.version(8).stores({
+      bucketMoves: "id, deletedAt, monthKey",
+    })
+    this.version(9).stores({
+      privacySettings: "id, deletedAt",
+    })
+    this.version(10).stores({
+      notificationSettings: "id, deletedAt",
     })
   }
 }

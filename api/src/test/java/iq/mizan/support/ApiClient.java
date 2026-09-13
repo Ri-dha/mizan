@@ -32,6 +32,11 @@ public class ApiClient {
         return new Session(body.get("accessToken").asString(), body.get("refreshToken").asString());
     }
 
+    public Session refresh(String refreshToken) {
+        JsonNode body = body(post("/api/v1/auth/refresh", null, Map.of("refreshToken", refreshToken)));
+        return new Session(body.get("accessToken").asString(), body.get("refreshToken").asString());
+    }
+
     public MvcTestResult post(String path, String accessToken, Object body) {
         var request = mvc.post().uri(path).contentType(MediaType.APPLICATION_JSON);
         if (body != null) {
@@ -49,6 +54,11 @@ public class ApiClient {
                 .content(json.writeValueAsString(body))
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .exchange();
+    }
+
+    public MvcTestResult delete(String path, String accessToken, Object body) {
+        return mvc.delete().uri(path).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken).exchange();
     }
 
     public MvcTestResult delete(String path, String accessToken) {

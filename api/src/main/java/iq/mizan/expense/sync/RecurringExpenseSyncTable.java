@@ -28,6 +28,7 @@ public class RecurringExpenseSyncTable implements SyncTable {
             Map.entry("activeTo", SyncColumnType.DATE),
             Map.entry("category", SyncColumnType.TEXT),
             Map.entry("note", SyncColumnType.TEXT),
+            Map.entry("reminderDays", SyncColumnType.INTEGER),
             Map.entry("sortOrder", SyncColumnType.INTEGER),
             Map.entry("deletedAt", SyncColumnType.TIMESTAMP));
 

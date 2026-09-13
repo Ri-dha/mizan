@@ -44,16 +44,17 @@ describe("reconciliation properties", () => {
   it("allocated plus unallocated is the income and free is the identity", () => {
     fc.assert(fc.property(
       fc.integer({ min: 0, max: MAX_AMOUNT }), fc.integer({ min: 0, max: MAX_AMOUNT }),
-      fc.array(fc.integer({ min: 0, max: 10_000 }), { maxLength: 8 }), amountMap, amountMap,
-      (planned, received, shares, committed, spent) => {
-        const buckets = shares.map((s, i) => ({ id: `b${i}`, shareBasisPoints: s }))
+      fc.array(fc.integer({ min: 0, max: 10_000 }), { maxLength: 8 }), amountMap, amountMap, amountMap, amountMap,
+      (planned, received, shares, committed, spent, fixed, carried) => {
+        const buckets = shares.map((s, i) => ({ id: `b${i}`, shareBasisPoints: s, fixedAmount: fixed[i] ?? null }))
         const byId = (m: Record<string, number>) => Object.fromEntries(Object.entries(m).map(([k, v]) => [`b${k}`, v]))
-        const result = monthFigures({ plannedIncome: planned, receivedIncome: received, buckets, committed: byId(committed), spent: byId(spent), transfersIn: {}, transfersOut: {} })
+        const result = monthFigures({ plannedIncome: planned, receivedIncome: received, buckets, carriedIn: byId(carried), committed: byId(committed), spent: byId(spent), transfersIn: {}, transfersOut: {} })
         const allocated = result.buckets.reduce((s, b) => s + b.allocated, 0)
         const plannedAllocated = result.buckets.reduce((s, b) => s + b.plannedAllocated, 0)
         return allocated + result.unallocatedReceived === received
           && plannedAllocated + result.unallocatedPlanned === planned
-          && result.buckets.every((b) => b.free === b.allocated + b.transfersIn - b.committed - b.spent - b.transfersOut)
+          && result.buckets.every((b, i) => b.allocated >= 0 && (buckets[i].fixedAmount === null || b.allocated <= buckets[i].fixedAmount))
+          && result.buckets.every((b) => b.free === b.allocated + b.carriedIn + b.transfersIn - b.committed - b.spent - b.transfersOut)
       },
     ))
   })
@@ -77,12 +78,15 @@ describe("reconciliation properties", () => {
 
   it("net worth is assets minus liabilities and the shares cover the assets", () => {
     fc.assert(fc.property(
-      fc.integer({ min: 0, max: MAX_AMOUNT }), fc.integer({ min: 0, max: MAX_AMOUNT }), fc.integer({ min: 0, max: MAX_AMOUNT }), fc.integer({ min: 0, max: MAX_AMOUNT }),
-      (cash, metals, receivables, liabilities) => {
-        const result = netWorth({ cash, metals, receivables, liabilities })
+      fc.integer({ min: 0, max: MAX_AMOUNT }), fc.integer({ min: 0, max: MAX_AMOUNT }), fc.integer({ min: 0, max: MAX_AMOUNT }),
+      fc.integer({ min: 0, max: MAX_AMOUNT }), fc.integer({ min: 0, max: MAX_AMOUNT }), fc.integer({ min: 0, max: MAX_AMOUNT }),
+      (cash, metals, receivables, vehicles, property, liabilities) => {
+        const illiquid = Math.min(vehicles, property)
+        const result = netWorth({ cash, metals, receivables, vehicles, property, otherAssets: 0, illiquid, liabilities })
         const shares = result.composition.reduce((s, c) => s + c.amount, 0)
         const percent = result.composition.reduce((s, c) => s + c.percent, 0)
-        return result.totalAssets === cash + metals + receivables
+        return result.totalAssets === cash + metals + receivables + vehicles + property
+          && result.liquidAssets + result.illiquidAssets === result.totalAssets
           && result.netWorth === result.totalAssets - result.totalLiabilities
           && shares === result.totalAssets
           && (result.totalAssets === 0 || (percent >= 99.7 && percent <= 100.3))

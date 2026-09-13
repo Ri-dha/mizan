@@ -1,7 +1,10 @@
 import { House, ListOrdered, MoreHorizontal, PieChart, Plus, Receipt } from "lucide-react"
 import { Suspense, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Link, NavLink, Outlet } from "react-router"
+import { Link, NavLink, Outlet, useNavigate } from "react-router"
+import { useEffect } from "react"
+
+import { takePendingInvite } from "@/api/household"
 
 import { useSession } from "@/api/auth"
 import { Badge } from "@/components/ui/badge"
@@ -16,6 +19,12 @@ export function AppShell() {
   const { t } = useTranslation()
   const session = useSession()
   const [adding, setAdding] = useState(false)
+  const navigate = useNavigate()
+  const canWrite = session?.role !== "VIEWER"
+  useEffect(() => {
+    const pending = takePendingInvite()
+    if (pending) navigate(`/join/${pending}`)
+  }, [navigate])
 
   const primary = [
     { to: "/", label: t("nav.home"), icon: House, end: true },
@@ -29,12 +38,12 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
-      <aside className="hidden w-60 shrink-0 flex-col gap-2 border-e-4 border-border bg-secondary-background p-4 md:flex">
+      <aside className="print:hidden hidden w-60 shrink-0 flex-col gap-2 border-e-4 border-border bg-secondary-background p-4 md:flex">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-2xl font-heading">{t("app.name")}</span>
           <SyncBadge />
         </div>
-        <Button onClick={() => setAdding(true)} className="mb-2" data-tour="quick-add-desktop"><Plus /> {t("transactions.add")}</Button>
+        {canWrite && <Button onClick={() => setAdding(true)} className="mb-2" data-tour="quick-add-desktop"><Plus /> {t("transactions.add")}</Button>}
         {sidebar.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
             <item.icon className="size-5" />
@@ -54,17 +63,17 @@ export function AppShell() {
         </Suspense>
       </main>
 
-      <Button
+      {canWrite && <Button
         data-tour="quick-add"
-        className="fixed bottom-20 end-4 z-20 size-14 rounded-full md:hidden"
+        className="print:hidden fixed bottom-20 end-4 z-20 size-14 rounded-full md:hidden"
         size="icon"
         aria-label={t("transactions.add")}
         onClick={() => setAdding(true)}
       >
         <Plus className="size-7" />
-      </Button>
+      </Button>}
 
-      <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t-4 border-border bg-secondary-background md:hidden">
+      <nav className="print:hidden fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t-4 border-border bg-secondary-background md:hidden">
         {primary.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end}
             className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-heading", isActive && "bg-main text-main-foreground")}>

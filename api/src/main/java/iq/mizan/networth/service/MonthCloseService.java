@@ -57,6 +57,8 @@ public class MonthCloseService {
         snapshot.put("totalAssets", figures.totalAssets());
         snapshot.put("totalLiabilities", figures.totalLiabilities());
         snapshot.put("netWorth", figures.netWorth());
+        snapshot.put("liquidAssets", figures.liquidAssets());
+        snapshot.put("illiquidAssets", figures.illiquidAssets());
         snapshot.put("composition", figures.composition());
         snapshot.put("rateSet", figures.rateSet());
         syncWriter.insert(snapshotTable, snapshotId, householdId, actorId, snapshot);

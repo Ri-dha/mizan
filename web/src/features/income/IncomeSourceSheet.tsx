@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
+
+import { usePrivacyDefaults } from "@/db/privacy"
 import { toast } from "sonner"
 
 import { useSession } from "@/api/auth"
@@ -27,6 +29,7 @@ interface Props {
 
 export function IncomeSourceSheet({ open, source, history, onClose }: Props) {
   const { t, i18n } = useTranslation()
+  const privacy = usePrivacyDefaults()
   const session = useSession()
   const base = session?.baseCurrency ?? "IQD"
   const [name, setName] = useState("")
@@ -54,11 +57,11 @@ export function IncomeSourceSheet({ open, source, history, onClose }: Props) {
     setAnchorDate(source?.anchorDate ?? todayIso())
     setActiveFrom(source?.activeFrom ?? todayIso())
     setActiveTo(source?.activeTo ?? "")
-    setIsPrivate(source?.visibility === "PRIVATE")
+    setIsPrivate(source ? source.visibility === "PRIVATE" : privacy.accounts === "PRIVATE")
     setRaiseAmount("")
     setRaiseFrom(todayIso())
     setRaiseNote("")
-  }, [open, source, base])
+  }, [open, source, base, privacy])
 
   const timeline = source ? historyOf(source, history) : []
   const date = (iso: string) => new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso))

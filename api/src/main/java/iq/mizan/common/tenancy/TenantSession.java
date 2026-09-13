@@ -17,6 +17,11 @@ public class TenantSession {
 
     private final JdbcClient jdbcClient;
 
+    /** BR-16: household aggregates run as the system so every member's private rows count without being itemised. */
+    public void elevateToSystem() {
+        jdbcClient.sql("select set_config('app.system', 'on', true)").query().singleRow();
+    }
+
     public void bind(UUID userId, UUID householdId) {
         jdbcClient.sql("select set_config('app.user_id', ?, true), set_config('app.household_id', ?, true)")
                 .param(userId.toString())

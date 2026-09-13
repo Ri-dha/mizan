@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
 import { useTranslation } from "react-i18next"
 
+import { usePrivacyDefaults } from "@/db/privacy"
+
 import { useSession } from "@/api/auth"
 import { currentMonthKey } from "@/app/month"
 import { Field } from "@/components/Field"
@@ -11,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
+import { liveAssets } from "@/db/assets"
 import { createGoal, updateGoal } from "@/db/goals"
 import { liveBucketsOf, livePlans, planFor } from "@/db/plan"
 import type { Goal } from "@/db/schema"
@@ -22,6 +25,7 @@ const NONE = "__none__"
 
 export function GoalSheet({ open, goal, onClose }: { open: boolean; goal: Goal | null; onClose: () => void }) {
   const { t } = useTranslation()
+  const privacy = usePrivacyDefaults()
   const session = useSession()
   const base = session?.baseCurrency ?? "IQD"
   const startDay = session?.monthStartDay ?? 1
@@ -32,6 +36,8 @@ export function GoalSheet({ open, goal, onClose }: { open: boolean; goal: Goal |
   const [targetDate, setTargetDate] = useState("")
   const [contribution, setContribution] = useState("")
   const [bucketId, setBucketId] = useState(NONE)
+  const [assetId, setAssetId] = useState(NONE)
+  const assets = useLiveQuery(liveAssets, [], [])
   const [isPrivate, setIsPrivate] = useState(false)
 
   useEffect(() => {
@@ -42,8 +48,9 @@ export function GoalSheet({ open, goal, onClose }: { open: boolean; goal: Goal |
     setTargetDate(goal?.targetDate ?? "")
     setContribution(goal?.monthlyContribution ? fromMinorUnits(goal.monthlyContribution, goal.currency) : "")
     setBucketId(goal?.bucketId ?? NONE)
-    setIsPrivate(goal?.visibility === "PRIVATE")
-  }, [open, goal, base])
+    setAssetId(goal?.backingAssetId ?? NONE)
+    setIsPrivate(goal ? goal.visibility === "PRIVATE" : privacy.goals === "PRIVATE")
+  }, [open, goal, base, privacy])
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -54,6 +61,7 @@ export function GoalSheet({ open, goal, onClose }: { open: boolean; goal: Goal |
       targetDate: targetDate || null,
       monthlyContribution: contribution ? toMinorUnits(contribution, currency) : null,
       bucketId: bucketId === NONE ? null : bucketId,
+      backingAssetId: assetId === NONE ? null : assetId,
       note: null,
       visibility: isPrivate ? ("PRIVATE" as const) : ("SHARED" as const),
     }
@@ -99,6 +107,16 @@ export function GoalSheet({ open, goal, onClose }: { open: boolean; goal: Goal |
               </SelectContent>
             </Select>
           </Field>
+          <Field id="backingAsset" label={t("goals.backingAsset")}>
+            <Select value={assetId} onValueChange={setAssetId}>
+              <SelectTrigger id="backingAsset"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>{t("goals.noBackingAsset")}</SelectItem>
+                {assets.filter((a) => a.status === "HELD").map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <p className="text-xs opacity-70">{t("goals.backingAssetHint")}</p>
           <div className="flex items-center gap-2">
             <Switch id="private" checked={isPrivate} onCheckedChange={setIsPrivate} />
             <Label htmlFor="private">{t("accounts.private")}</Label>

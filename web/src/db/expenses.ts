@@ -20,6 +20,7 @@ export interface RecurringExpenseInput {
   activeTo: string | null
   category: string | null
   note: string | null
+  reminderDays: number | null
   visibility: Visibility
 }
 

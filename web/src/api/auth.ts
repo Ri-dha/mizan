@@ -16,6 +16,7 @@ export interface LocalSession {
   baseCurrency: string
   monthStartDay: number
   deletionRequestedAt: string | null
+  householdDeletionRequestedAt: string | null
 }
 
 type Listener = () => void
@@ -57,8 +58,9 @@ setSessionLostHandler(() => {
   void persist(null)
 })
 
-async function rememberFromServer(accessToken: string) {
-  setAccessToken(accessToken)
+/** A null token keeps the one already obtained through a refresh. */
+export async function rememberFromServer(accessToken: string | null) {
+  if (accessToken) setAccessToken(accessToken)
   const me = await unwrap(api.GET("/api/v1/me"))
   await persist({
     userId: me.id,
@@ -72,6 +74,7 @@ async function rememberFromServer(accessToken: string) {
     baseCurrency: me.household.baseCurrency,
     monthStartDay: me.household.monthStartDay,
     deletionRequestedAt: me.deletionRequestedAt ?? null,
+    householdDeletionRequestedAt: me.household.deletionRequestedAt ?? null,
   })
 }
 
@@ -89,7 +92,7 @@ export async function login(identifier: string, password: string) {
 export async function refreshProfile() {
   const me = await unwrap(api.GET("/api/v1/me"))
   if (!session) return
-  await persist({ ...session, verified: me.verified, householdName: me.household.name, monthStartDay: me.household.monthStartDay, deletionRequestedAt: me.deletionRequestedAt ?? null })
+  await persist({ ...session, verified: me.verified, householdName: me.household.name, monthStartDay: me.household.monthStartDay, role: me.household.role, deletionRequestedAt: me.deletionRequestedAt ?? null, householdDeletionRequestedAt: me.household.deletionRequestedAt ?? null })
 }
 
 /** FR-ACC-08: the account and household are purged after the grace period unless withdrawn. */
@@ -138,7 +141,7 @@ export async function logout() {
 }
 
 /** A different account must never see the previous one's rows; the whole local store goes. */
-async function clearLocalData() {
+export async function clearLocalData() {
   await db.transaction("rw", db.tables, async () => {
     for (const table of db.tables) await table.clear()
   })

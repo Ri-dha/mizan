@@ -1,5 +1,6 @@
 package iq.mizan.household.service;
 
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -13,5 +14,6 @@ public record HouseholdSummary(
         String baseCurrency,
         int monthStartDay,
         HouseholdRole role,
-        Set<Permission> permissions) {
+        Set<Permission> permissions,
+        Instant deletionRequestedAt) {
 }

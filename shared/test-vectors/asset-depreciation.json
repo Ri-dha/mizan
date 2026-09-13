@@ -1,0 +1,37 @@
+[
+  {
+    "name": "no depreciation keeps the baseline",
+    "input": { "baselineValue": 25000000, "baselineDate": "2024-03-10", "salvageValue": 0, "annualRateBasisPoints": 0, "method": "NONE", "asOf": "2026-09-13" },
+    "expected": { "value": 25000000, "monthsElapsed": 30 }
+  },
+  {
+    "name": "straight line loses a fixed share of the baseline each month (BR-13)",
+    "input": { "baselineValue": 25000000, "baselineDate": "2024-03-10", "salvageValue": 5000000, "annualRateBasisPoints": 1500, "method": "STRAIGHT_LINE", "asOf": "2026-09-13" },
+    "expected": { "value": 15625000, "monthsElapsed": 30 }
+  },
+  {
+    "name": "straight line never drops below the salvage value",
+    "input": { "baselineValue": 25000000, "baselineDate": "2016-01-01", "salvageValue": 5000000, "annualRateBasisPoints": 1500, "method": "STRAIGHT_LINE", "asOf": "2026-09-13" },
+    "expected": { "value": 5000000, "monthsElapsed": 128 }
+  },
+  {
+    "name": "declining balance compounds monthly on the remaining value",
+    "input": { "baselineValue": 1200000, "baselineDate": "2026-01-01", "salvageValue": 0, "annualRateBasisPoints": 2400, "method": "DECLINING_BALANCE", "asOf": "2026-04-01" },
+    "expected": { "value": 1129430, "monthsElapsed": 3 }
+  },
+  {
+    "name": "a whole month is only counted once its day of month has passed",
+    "input": { "baselineValue": 1000000, "baselineDate": "2026-01-31", "salvageValue": 0, "annualRateBasisPoints": 1200, "method": "STRAIGHT_LINE", "asOf": "2026-02-28" },
+    "expected": { "value": 1000000, "monthsElapsed": 0 }
+  },
+  {
+    "name": "a valuation dated in the future is taken as is",
+    "input": { "baselineValue": 800000, "baselineDate": "2026-12-01", "salvageValue": 0, "annualRateBasisPoints": 1200, "method": "STRAIGHT_LINE", "asOf": "2026-09-13" },
+    "expected": { "value": 800000, "monthsElapsed": 0 }
+  },
+  {
+    "name": "rounding is half-up on the monthly step",
+    "input": { "baselineValue": 1000001, "baselineDate": "2026-01-01", "salvageValue": 0, "annualRateBasisPoints": 1000, "method": "STRAIGHT_LINE", "asOf": "2026-03-01" },
+    "expected": { "value": 983335, "monthsElapsed": 2 }
+  }
+]

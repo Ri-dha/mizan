@@ -1,8 +1,11 @@
+import { Printer } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router"
 
 import { useSession } from "@/api/auth"
 import { shiftMonth, useSelectedMonth } from "@/app/month"
 import { MonthPicker } from "@/components/MonthPicker"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatMoney } from "@/domain/money/format"
 import { useMonthView } from "@/features/plan/useMonthFigures"
@@ -35,7 +38,13 @@ export function ReportPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl">{t("report.title")}</h1>
-        <MonthPicker value={monthKey} onChange={setMonthKey} />
+        <div className="flex items-center gap-2">
+          <MonthPicker value={monthKey} onChange={setMonthKey} />
+          <span className="flex gap-2 print:hidden">
+            <Button variant="neutral" size="sm" onClick={() => window.print()}><Printer /> {t("report.savePdf")}</Button>
+            <Button variant="neutral" size="sm" asChild><Link to="/report/year">{t("report.year")}</Link></Button>
+          </span>
+        </div>
       </div>
 
       <Card>

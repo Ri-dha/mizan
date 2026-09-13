@@ -7,86 +7,98 @@
       "buckets": [
         {
           "id": "essentials",
-          "shareBasisPoints": 5500
+          "shareBasisPoints": 5500,
+          "fixedAmount": null
         },
         {
           "id": "guilt-free",
-          "shareBasisPoints": 500
+          "shareBasisPoints": 500,
+          "fixedAmount": null
         },
         {
           "id": "debt",
-          "shareBasisPoints": 1000
+          "shareBasisPoints": 1000,
+          "fixedAmount": null
         },
         {
           "id": "short-term",
-          "shareBasisPoints": 1500
+          "shareBasisPoints": 1500,
+          "fixedAmount": null
         },
         {
           "id": "investing",
-          "shareBasisPoints": 1500
+          "shareBasisPoints": 1500,
+          "fixedAmount": null
         }
       ],
       "committed": {},
       "spent": {},
       "transfersIn": {},
-      "transfersOut": {}
+      "transfersOut": {},
+      "carriedIn": {}
     },
     "expected": {
-      "totalShareBasisPoints": 10000,
-      "unallocatedPlanned": 0,
-      "unallocatedReceived": 0,
       "buckets": [
         {
           "id": "essentials",
           "plannedAllocated": 825000,
           "allocated": 825000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 825000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 825000
         },
         {
           "id": "guilt-free",
           "plannedAllocated": 75000,
           "allocated": 75000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 75000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 75000
         },
         {
           "id": "debt",
           "plannedAllocated": 150000,
           "allocated": 150000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 150000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 150000
         },
         {
           "id": "short-term",
           "plannedAllocated": 225000,
           "allocated": 225000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 225000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 225000
         },
         {
           "id": "investing",
           "plannedAllocated": 225000,
           "allocated": 225000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 225000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 225000
         }
-      ]
+      ],
+      "totalShareBasisPoints": 10000,
+      "fixedTotal": 0,
+      "unallocatedPlanned": 0,
+      "unallocatedReceived": 0
     }
   },
   {
@@ -97,44 +109,50 @@
       "buckets": [
         {
           "id": "a",
-          "shareBasisPoints": 5500
+          "shareBasisPoints": 5500,
+          "fixedAmount": null
         },
         {
           "id": "b",
-          "shareBasisPoints": 4500
+          "shareBasisPoints": 4500,
+          "fixedAmount": null
         }
       ],
       "committed": {},
       "spent": {},
       "transfersIn": {},
-      "transfersOut": {}
+      "transfersOut": {},
+      "carriedIn": {}
     },
     "expected": {
-      "totalShareBasisPoints": 10000,
-      "unallocatedPlanned": 0,
-      "unallocatedReceived": 0,
       "buckets": [
         {
           "id": "a",
           "plannedAllocated": 550001,
           "allocated": 0,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 0,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 0
         },
         {
           "id": "b",
           "plannedAllocated": 450000,
           "allocated": 0,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 0,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 0
         }
-      ]
+      ],
+      "totalShareBasisPoints": 10000,
+      "fixedTotal": 0,
+      "unallocatedPlanned": 0,
+      "unallocatedReceived": 0
     }
   },
   {
@@ -145,44 +163,50 @@
       "buckets": [
         {
           "id": "a",
-          "shareBasisPoints": 6000
+          "shareBasisPoints": 6000,
+          "fixedAmount": null
         },
         {
           "id": "b",
-          "shareBasisPoints": 3000
+          "shareBasisPoints": 3000,
+          "fixedAmount": null
         }
       ],
       "committed": {},
       "spent": {},
       "transfersIn": {},
-      "transfersOut": {}
+      "transfersOut": {},
+      "carriedIn": {}
     },
     "expected": {
-      "totalShareBasisPoints": 9000,
-      "unallocatedPlanned": 100000,
-      "unallocatedReceived": 100000,
       "buckets": [
         {
           "id": "a",
           "plannedAllocated": 600000,
           "allocated": 600000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 600000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 600000
         },
         {
           "id": "b",
           "plannedAllocated": 300000,
           "allocated": 300000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 300000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 300000
         }
-      ]
+      ],
+      "totalShareBasisPoints": 9000,
+      "fixedTotal": 0,
+      "unallocatedPlanned": 100000,
+      "unallocatedReceived": 100000
     }
   },
   {
@@ -193,44 +217,50 @@
       "buckets": [
         {
           "id": "a",
-          "shareBasisPoints": 7000
+          "shareBasisPoints": 7000,
+          "fixedAmount": null
         },
         {
           "id": "b",
-          "shareBasisPoints": 4000
+          "shareBasisPoints": 4000,
+          "fixedAmount": null
         }
       ],
       "committed": {},
       "spent": {},
       "transfersIn": {},
-      "transfersOut": {}
+      "transfersOut": {},
+      "carriedIn": {}
     },
     "expected": {
-      "totalShareBasisPoints": 11000,
-      "unallocatedPlanned": -100000,
-      "unallocatedReceived": -100000,
       "buckets": [
         {
           "id": "a",
           "plannedAllocated": 700000,
           "allocated": 700000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 700000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 700000
         },
         {
           "id": "b",
           "plannedAllocated": 400000,
           "allocated": 400000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
-          "free": 400000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": 400000
         }
-      ]
+      ],
+      "totalShareBasisPoints": 11000,
+      "fixedTotal": 0,
+      "unallocatedPlanned": -100000,
+      "unallocatedReceived": -100000
     }
   },
   {
@@ -241,11 +271,13 @@
       "buckets": [
         {
           "id": "essentials",
-          "shareBasisPoints": 5000
+          "shareBasisPoints": 5000,
+          "fixedAmount": null
         },
         {
           "id": "fun",
-          "shareBasisPoints": 5000
+          "shareBasisPoints": 5000,
+          "fixedAmount": null
         }
       ],
       "committed": {
@@ -256,34 +288,38 @@
         "fun": 600000
       },
       "transfersIn": {},
-      "transfersOut": {}
+      "transfersOut": {},
+      "carriedIn": {}
     },
     "expected": {
-      "totalShareBasisPoints": 10000,
-      "unallocatedPlanned": 0,
-      "unallocatedReceived": 0,
       "buckets": [
         {
           "id": "essentials",
           "plannedAllocated": 500000,
           "allocated": 500000,
+          "carriedIn": 0,
           "committed": 300000,
           "spent": 250000,
-          "free": -50000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": -50000
         },
         {
           "id": "fun",
           "plannedAllocated": 500000,
           "allocated": 500000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 600000,
-          "free": -100000,
           "transfersIn": 0,
-          "transfersOut": 0
+          "transfersOut": 0,
+          "free": -100000
         }
-      ]
+      ],
+      "totalShareBasisPoints": 10000,
+      "fixedTotal": 0,
+      "unallocatedPlanned": 0,
+      "unallocatedReceived": 0
     }
   },
   {
@@ -295,13 +331,15 @@
       "committed": {},
       "spent": {},
       "transfersIn": {},
-      "transfersOut": {}
+      "transfersOut": {},
+      "carriedIn": {}
     },
     "expected": {
+      "buckets": [],
       "totalShareBasisPoints": 0,
+      "fixedTotal": 0,
       "unallocatedPlanned": 5000,
-      "unallocatedReceived": 5000,
-      "buckets": []
+      "unallocatedReceived": 5000
     }
   },
   {
@@ -312,11 +350,13 @@
       "buckets": [
         {
           "id": "a",
-          "shareBasisPoints": 5000
+          "shareBasisPoints": 5000,
+          "fixedAmount": null
         },
         {
           "id": "b",
-          "shareBasisPoints": 5000
+          "shareBasisPoints": 5000,
+          "fixedAmount": null
         }
       ],
       "committed": {},
@@ -328,17 +368,16 @@
       },
       "transfersOut": {
         "a": 150000
-      }
+      },
+      "carriedIn": {}
     },
     "expected": {
-      "totalShareBasisPoints": 10000,
-      "unallocatedPlanned": 0,
-      "unallocatedReceived": 0,
       "buckets": [
         {
           "id": "a",
           "plannedAllocated": 500000,
           "allocated": 500000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 100000,
           "transfersIn": 0,
@@ -349,13 +388,18 @@
           "id": "b",
           "plannedAllocated": 500000,
           "allocated": 500000,
+          "carriedIn": 0,
           "committed": 0,
           "spent": 0,
           "transfersIn": 150000,
           "transfersOut": 0,
           "free": 650000
         }
-      ]
+      ],
+      "totalShareBasisPoints": 10000,
+      "fixedTotal": 0,
+      "unallocatedPlanned": 0,
+      "unallocatedReceived": 0
     }
   },
   {
@@ -366,7 +410,8 @@
       "buckets": [
         {
           "id": "essentials",
-          "shareBasisPoints": 10000
+          "shareBasisPoints": 10000,
+          "fixedAmount": null
         }
       ],
       "committed": {
@@ -376,24 +421,227 @@
         "essentials": 180000
       },
       "transfersIn": {},
-      "transfersOut": {}
+      "transfersOut": {},
+      "carriedIn": {}
     },
     "expected": {
-      "totalShareBasisPoints": 10000,
-      "unallocatedPlanned": 0,
-      "unallocatedReceived": 0,
       "buckets": [
         {
           "id": "essentials",
           "plannedAllocated": 1000000,
           "allocated": 1000000,
+          "carriedIn": 0,
           "committed": 200000,
           "spent": 180000,
           "transfersIn": 0,
           "transfersOut": 0,
           "free": 620000
         }
-      ]
+      ],
+      "totalShareBasisPoints": 10000,
+      "fixedTotal": 0,
+      "unallocatedPlanned": 0,
+      "unallocatedReceived": 0
+    }
+  },
+  {
+    "name": "a fixed-amount bucket is funded first and the rest splits by percentage (FR-PLN-07)",
+    "input": {
+      "plannedIncome": 1500000,
+      "receivedIncome": 1500000,
+      "buckets": [
+        {
+          "id": "rent",
+          "shareBasisPoints": 0,
+          "fixedAmount": 600000
+        },
+        {
+          "id": "essentials",
+          "shareBasisPoints": 6000,
+          "fixedAmount": null
+        },
+        {
+          "id": "savings",
+          "shareBasisPoints": 4000,
+          "fixedAmount": null
+        }
+      ],
+      "carriedIn": {},
+      "committed": {
+        "rent": 600000
+      },
+      "spent": {},
+      "transfersIn": {},
+      "transfersOut": {}
+    },
+    "expected": {
+      "buckets": [
+        {
+          "id": "rent",
+          "plannedAllocated": 600000,
+          "allocated": 600000,
+          "carriedIn": 0,
+          "committed": 600000,
+          "spent": 0,
+          "transfersIn": 0,
+          "transfersOut": 0,
+          "free": 0
+        },
+        {
+          "id": "essentials",
+          "plannedAllocated": 540000,
+          "allocated": 540000,
+          "carriedIn": 0,
+          "committed": 0,
+          "spent": 0,
+          "transfersIn": 0,
+          "transfersOut": 0,
+          "free": 540000
+        },
+        {
+          "id": "savings",
+          "plannedAllocated": 360000,
+          "allocated": 360000,
+          "carriedIn": 0,
+          "committed": 0,
+          "spent": 0,
+          "transfersIn": 0,
+          "transfersOut": 0,
+          "free": 360000
+        }
+      ],
+      "totalShareBasisPoints": 10000,
+      "fixedTotal": 600000,
+      "unallocatedPlanned": 0,
+      "unallocatedReceived": 0
+    }
+  },
+  {
+    "name": "fixed amounts beyond the income are funded in order and the rest gets nothing",
+    "input": {
+      "plannedIncome": 1000000,
+      "receivedIncome": 500000,
+      "buckets": [
+        {
+          "id": "rent",
+          "shareBasisPoints": 0,
+          "fixedAmount": 600000
+        },
+        {
+          "id": "school",
+          "shareBasisPoints": 0,
+          "fixedAmount": 300000
+        },
+        {
+          "id": "rest",
+          "shareBasisPoints": 10000,
+          "fixedAmount": null
+        }
+      ],
+      "carriedIn": {},
+      "committed": {},
+      "spent": {},
+      "transfersIn": {},
+      "transfersOut": {}
+    },
+    "expected": {
+      "buckets": [
+        {
+          "id": "rent",
+          "plannedAllocated": 600000,
+          "allocated": 500000,
+          "carriedIn": 0,
+          "committed": 0,
+          "spent": 0,
+          "transfersIn": 0,
+          "transfersOut": 0,
+          "free": 500000
+        },
+        {
+          "id": "school",
+          "plannedAllocated": 300000,
+          "allocated": 0,
+          "carriedIn": 0,
+          "committed": 0,
+          "spent": 0,
+          "transfersIn": 0,
+          "transfersOut": 0,
+          "free": 0
+        },
+        {
+          "id": "rest",
+          "plannedAllocated": 100000,
+          "allocated": 0,
+          "carriedIn": 0,
+          "committed": 0,
+          "spent": 0,
+          "transfersIn": 0,
+          "transfersOut": 0,
+          "free": 0
+        }
+      ],
+      "totalShareBasisPoints": 10000,
+      "fixedTotal": 900000,
+      "unallocatedPlanned": 0,
+      "unallocatedReceived": 0
+    }
+  },
+  {
+    "name": "carry-over adds last month's free to the bucket without touching the allocation (FR-PLN-08)",
+    "input": {
+      "plannedIncome": 1000000,
+      "receivedIncome": 1000000,
+      "buckets": [
+        {
+          "id": "fun",
+          "shareBasisPoints": 2000,
+          "fixedAmount": null
+        },
+        {
+          "id": "rest",
+          "shareBasisPoints": 8000,
+          "fixedAmount": null
+        }
+      ],
+      "carriedIn": {
+        "fun": 45000
+      },
+      "committed": {},
+      "spent": {
+        "fun": 30000
+      },
+      "transfersIn": {},
+      "transfersOut": {}
+    },
+    "expected": {
+      "buckets": [
+        {
+          "id": "fun",
+          "plannedAllocated": 200000,
+          "allocated": 200000,
+          "carriedIn": 45000,
+          "committed": 0,
+          "spent": 30000,
+          "transfersIn": 0,
+          "transfersOut": 0,
+          "free": 215000
+        },
+        {
+          "id": "rest",
+          "plannedAllocated": 800000,
+          "allocated": 800000,
+          "carriedIn": 0,
+          "committed": 0,
+          "spent": 0,
+          "transfersIn": 0,
+          "transfersOut": 0,
+          "free": 800000
+        }
+      ],
+      "totalShareBasisPoints": 10000,
+      "fixedTotal": 0,
+      "unallocatedPlanned": 0,
+      "unallocatedReceived": 0
     }
   }
 ]

@@ -41,6 +41,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a test notification to every subscribed device of the caller */
+        post: operations["test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** This account's subscribed devices in the current household */
+        get: operations["mine"];
+        put?: never;
+        /** Register this browser's push subscription (FR-NTF-01) */
+        post: operations["subscribe"];
+        /** Remove a subscription */
+        delete: operations["unsubscribe"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/months/{monthKey}/reopen": {
         parameters: {
             query?: never;
@@ -88,6 +124,110 @@ export interface paths {
         post: operations["requestDeletion"];
         /** Withdraw a pending deletion request */
         delete: operations["cancelDeletion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/{token}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Join the household behind the link; refresh the session afterwards to act in it */
+        post: operations["accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/households/{householdId}/switch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Make another of the caller's households current; refresh the session afterwards */
+        post: operations["switchTo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/households/current/transfer-ownership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hand ownership to another member; the caller becomes a Member */
+        post: operations["transferOwnership"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/households/current/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave the current household; the caller's own household becomes current again */
+        post: operations["leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/households/current/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Invitations not yet accepted, revoked or expired */
+        get: operations["invitations"];
+        put?: never;
+        /** Invite someone by link; the token is returned once so the owner can share it (FR-ACC-05) */
+        post: operations["invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/households/current/deletion-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask for the household to be deleted after the grace period; needs the owner's password (FR-ACC-07) */
+        post: operations["requestDeletion_1"];
+        /** Withdraw a pending household deletion */
+        delete: operations["cancelDeletion_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -265,7 +405,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The caller's household */
+        /** The caller's current household */
         get: operations["current"];
         put?: never;
         post?: never;
@@ -274,6 +414,24 @@ export interface paths {
         head?: never;
         /** Rename the household or change its month start day (FR-SET-05) */
         patch: operations["update"];
+        trace?: never;
+    };
+    "/api/v1/households/current/members/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a member (FR-ACC-06) */
+        delete: operations["removeMember"];
+        options?: never;
+        head?: never;
+        /** Change a member's role (FR-ACC-06) */
+        patch: operations["changeRole"];
         trace?: never;
     };
     "/api/v1/sync/pull": {
@@ -302,6 +460,23 @@ export interface paths {
         };
         /** Conflicts recorded for a device */
         get: operations["conflicts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/vapid-key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The server's VAPID public key, needed to subscribe a browser */
+        get: operations["vapidKey"];
         put?: never;
         post?: never;
         delete?: never;
@@ -395,6 +570,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/invitations/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What an invitation link leads to; public so the join page can show it before sign-in */
+        get: operations["preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/households": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every household the caller belongs to */
+        get: operations["memberships"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/households/current/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active members of the current household */
+        get: operations["members"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attachments/{id}/download-url": {
         parameters: {
             query?: never;
@@ -407,6 +633,23 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/households/current/invitations/{invitationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke an invitation */
+        delete: operations["revoke"];
         options?: never;
         head?: never;
         patch?: never;
@@ -464,6 +707,19 @@ export interface components {
             /** Format: date-time */
             lastSeenAt?: string;
         };
+        SubscribeRequest: {
+            endpoint: string;
+            p256dh: string;
+            auth: string;
+        };
+        SubscriptionResponse: {
+            /** Format: uuid */
+            id?: string;
+            endpoint?: string;
+            userAgent?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
         MonthCloseResponse: {
             monthKey?: string;
             /** Format: uuid */
@@ -495,6 +751,30 @@ export interface components {
             monthStartDay?: number;
             /** @enum {string} */
             role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            /** Format: date-time */
+            deletionRequestedAt?: string;
+        };
+        TransferOwnershipRequest: {
+            /** Format: uuid */
+            userId: string;
+        };
+        CreateInvitationRequest: {
+            /** @enum {string} */
+            role: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            contact?: string;
+        };
+        InvitationResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            contact?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            token?: string;
+        };
+        ConfirmPasswordRequest: {
+            password: string;
         };
         VerifyRequest: {
             code: string;
@@ -537,6 +817,21 @@ export interface components {
             /** Format: int32 */
             monthStartDay?: number;
         };
+        ChangeRoleRequest: {
+            /** @enum {string} */
+            role: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+        };
+        MemberResponse: {
+            /** Format: uuid */
+            userId?: string;
+            displayName?: string;
+            contact?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            /** Format: date-time */
+            joinedAt?: string;
+            you?: boolean;
+        };
         SyncPullResponse: {
             records?: components["schemas"]["SyncRecordResponse"][];
             /** Format: int64 */
@@ -558,6 +853,9 @@ export interface components {
             /** Format: int64 */
             seq?: number;
         };
+        VapidKeyResponse: {
+            publicKey?: string;
+        };
         NetWorthResponse: {
             /** Format: int64 */
             totalAssets?: number;
@@ -565,6 +863,10 @@ export interface components {
             totalLiabilities?: number;
             /** Format: int64 */
             netWorth?: number;
+            /** Format: int64 */
+            liquidAssets?: number;
+            /** Format: int64 */
+            illiquidAssets?: number;
             composition?: components["schemas"]["Share"][];
             rateSet?: {
                 [key: string]: unknown;
@@ -574,7 +876,7 @@ export interface components {
         };
         Share: {
             /** @enum {string} */
-            assetClass?: "CASH" | "METALS" | "RECEIVABLES";
+            assetClass?: "CASH" | "METALS" | "RECEIVABLES" | "VEHICLES" | "PROPERTY" | "OTHER_ASSETS";
             /** Format: int64 */
             amount?: number;
             /** Format: double */
@@ -598,6 +900,25 @@ export interface components {
             /** Format: int64 */
             priceMicros?: number;
             source?: string;
+        };
+        InvitationPreviewResponse: {
+            householdName?: string;
+            invitedBy?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            /** Format: date-time */
+            expiresAt?: string;
+        };
+        MembershipResponse: {
+            /** Format: uuid */
+            householdId?: string;
+            householdName?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            current?: boolean;
+        };
+        UnsubscribeRequest: {
+            endpoint: string;
         };
     };
     responses: never;
@@ -653,6 +974,96 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["DeviceResponse"];
                 };
+            };
+        };
+    };
+    test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+    };
+    mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SubscriptionResponse"][];
+                };
+            };
+        };
+    };
+    subscribe: {
+        parameters: {
+            query?: never;
+            header?: {
+                "User-Agent"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscribeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SubscriptionResponse"];
+                };
+            };
+        };
+    };
+    unsubscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnsubscribeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -736,6 +1147,180 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CurrentUserResponse"];
+                };
+            };
+        };
+    };
+    accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HouseholdResponse"];
+                };
+            };
+        };
+    };
+    switchTo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                householdId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HouseholdResponse"];
+                };
+            };
+        };
+    };
+    transferOwnership: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferOwnershipRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    leave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HouseholdResponse"];
+                };
+            };
+        };
+    };
+    invitations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InvitationResponse"][];
+                };
+            };
+        };
+    };
+    invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InvitationResponse"];
+                };
+            };
+        };
+    };
+    requestDeletion_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HouseholdResponse"];
+                };
+            };
+        };
+    };
+    cancelDeletion_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HouseholdResponse"];
                 };
             };
         };
@@ -984,6 +1569,52 @@ export interface operations {
             };
         };
     };
+    removeMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    changeRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MemberResponse"];
+                };
+            };
+        };
+    };
     pull: {
         parameters: {
             query: {
@@ -1026,6 +1657,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ConflictResponse"][];
+                };
+            };
+        };
+    };
+    vapidKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VapidKeyResponse"];
                 };
             };
         };
@@ -1134,6 +1785,68 @@ export interface operations {
             };
         };
     };
+    preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InvitationPreviewResponse"];
+                };
+            };
+        };
+    };
+    memberships: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MembershipResponse"][];
+                };
+            };
+        };
+    };
+    members: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MemberResponse"][];
+                };
+            };
+        };
+    };
     downloadUrl: {
         parameters: {
             query?: never;
@@ -1153,6 +1866,26 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["PresignedUrlResponse"];
                 };
+            };
+        };
+    };
+    revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

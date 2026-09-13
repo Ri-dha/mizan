@@ -1,5 +1,6 @@
 package iq.mizan.household.dto;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import iq.mizan.household.entity.HouseholdRole;
@@ -9,5 +10,6 @@ public record HouseholdResponse(
         String name,
         String baseCurrency,
         int monthStartDay,
-        HouseholdRole role) {
+        HouseholdRole role,
+        Instant deletionRequestedAt) {
 }

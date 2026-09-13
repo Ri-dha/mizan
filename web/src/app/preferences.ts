@@ -5,22 +5,19 @@ export type DigitStyle = "western" | "eastern"
 export interface Preferences {
   digitStyle: DigitStyle
   showUsd: boolean
-  quietMode: boolean
-  notifications: Record<NotificationClass, boolean>
   /** Tour ids already shown on this device; deliberately not synced. */
   toursSeen: string[]
+  /** FR-AST-04: months after which an asset without a fresh valuation is flagged on Home. */
+  valuationReminderMonths: number
 }
 
-export type NotificationClass = "billDue" | "payDay" | "overspend" | "metalPrice" | "monthClose"
-export const NOTIFICATION_CLASSES: NotificationClass[] = ["billDue", "payDay", "overspend", "metalPrice", "monthClose"]
 
 const KEY = "mizan.preferences"
 const DEFAULTS: Preferences = {
   digitStyle: "western",
   showUsd: false,
-  quietMode: false,
-  notifications: { billDue: true, payDay: true, overspend: true, metalPrice: false, monthClose: true },
   toursSeen: [],
+  valuationReminderMonths: 6,
 }
 
 let current: Preferences = load()
@@ -29,7 +26,7 @@ const listeners = new Set<() => void>()
 function load(): Preferences {
   try {
     const stored = localStorage.getItem(KEY)
-    return stored ? { ...DEFAULTS, ...JSON.parse(stored), notifications: { ...DEFAULTS.notifications, ...JSON.parse(stored).notifications } } : DEFAULTS
+    return stored ? { ...DEFAULTS, ...JSON.parse(stored) } : DEFAULTS
   } catch {
     return DEFAULTS
   }

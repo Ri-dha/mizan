@@ -6,7 +6,10 @@ import { useSession } from "@/api/auth"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { staleAssets } from "@/db/assets"
 import { liveCashAccounts, totalsByCurrency } from "@/db/cashAccounts"
+import { todayIso } from "@/domain/calendar/month"
+import { usePreferences } from "@/app/preferences"
 import { formatMoney } from "@/domain/money/format"
 import { currentMonthKey } from "@/app/month"
 import { useMonthView } from "@/features/plan/useMonthFigures"
@@ -25,6 +28,8 @@ export function HomePage() {
   const month = useMonthView(currentMonthKey(startDay), startDay)
   const metals = useMetals()
   const worth = useNetWorth()
+  const prefs = usePreferences()
+  const stale = staleAssets(worth.assets, worth.valuations, todayIso(), prefs.valuationReminderMonths)
   useScreenTour("welcome", session !== undefined)
   const metalTotals = metals.lines.reduce((acc, l) => ({ value: acc.value + l.valueNow, gain: acc.gain + l.gain }), { value: 0, gain: 0 })
 
@@ -40,6 +45,15 @@ export function HomePage() {
           <AlertDescription className="flex items-center justify-between gap-2">
             <span>{t("auth.verifyTitle")}</span>
             <Button asChild size="sm"><Link to="/verify">{t("auth.verify")}</Link></Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {stale.length > 0 && (
+        <Alert>
+          <AlertDescription className="flex items-center justify-between gap-2">
+            <span>{t("assets.stalePrompt", { count: stale.length, name: stale[0].name, months: prefs.valuationReminderMonths })}</span>
+            <Button asChild size="sm"><Link to="/assets">{t("nav.assets")}</Link></Button>
           </AlertDescription>
         </Alert>
       )}
@@ -125,7 +139,6 @@ export function HomePage() {
         </CardContent>
       </Card>
 
-      <p className="text-sm opacity-70">{t("home.comingSoon")}</p>
     </div>
   )
 }

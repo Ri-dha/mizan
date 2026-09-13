@@ -9,6 +9,9 @@ export const META_KEYS = {
   pin: "lock.pin",
   webauthn: "lock.webauthn",
   lockAfterSeconds: "lock.afterSeconds",
+  backupKey: "backup.key",
+  backupAuto: "backup.auto",
+  backupLastAt: "backup.lastAt",
 } as const
 
 export async function readMeta<T>(key: string): Promise<T | undefined> {

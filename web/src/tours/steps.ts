@@ -40,6 +40,7 @@ export const TOURS: Record<string, TourDefinition> = {
     helpSlug: "plan",
     steps: [
       step("plan-figures", "plan.figures"),
+      step("plan-move", "plan.move", "top"),
       step("plan-editor", "plan.editor"),
       step("plan-balance", "plan.balance", "top"),
       step("plan-save", "plan.save", "top"),
@@ -81,6 +82,16 @@ export const TOURS: Record<string, TourDefinition> = {
       step("metals-sell", "metals.sell", "top"),
     ],
   },
+  assets: {
+    id: "assets",
+    helpSlug: "assets",
+    steps: [
+      step("assets-total", "assets.total"),
+      step("assets-add", "assets.add", "bottom"),
+      step("assets-list", "assets.list"),
+      step("assets-value", "assets.value", "top"),
+    ],
+  },
   networth: {
     id: "networth",
     helpSlug: "net-worth",
@@ -90,11 +101,23 @@ export const TOURS: Record<string, TourDefinition> = {
       step("networth-months", "networth.months", "top"),
     ],
   },
+  household: {
+    id: "household",
+    helpSlug: "household",
+    steps: [
+      step("household-members", "household.members"),
+      step("household-invite", "household.invite"),
+      step("household-switch", "household.switch", "top"),
+    ],
+  },
   settings: {
     id: "settings",
     helpSlug: "settings",
     steps: [
       step("settings-security", "settings.security"),
+      step("settings-privacy", "settings.privacy"),
+      step("settings-notifications", "settings.notifications"),
+      step("settings-backup", "settings.backup"),
       step("settings-data", "settings.data"),
       step("settings-account", "settings.account", "top"),
     ],

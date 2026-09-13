@@ -17,7 +17,8 @@
     "more": "More",
     "metals": "Gold & silver",
     "networth": "Net worth",
-    "report": "Report"
+    "report": "Report",
+    "assets": "Other assets"
   },
   "auth": {
     "identifier": "Email or phone",
@@ -151,7 +152,7 @@
     },
     "showUsd": "Also show net worth in US dollars",
     "notifications": "Notifications",
-    "notificationsBody": "Delivery arrives in a later release; your choices are kept and off means off.",
+    "notificationsBody": "Reminders arrive once a day through this device's push service, worded in your language. Each kind can be switched off; quiet mode silences all of them.",
     "quietMode": "Quiet mode (all off)",
     "notificationClasses": {
       "billDue": "Bill due reminders",
@@ -159,7 +160,8 @@
       "overspend": "Bucket overspend alerts",
       "metalPrice": "Gold and silver price moves",
       "monthClose": "Month-end close reminder"
-    }
+    },
+    "householdBody": "{{name}} · you are {{role}}"
   },
   "common": {
     "cancel": "Cancel",
@@ -180,7 +182,15 @@
     "VERIFICATION_RESEND_TOO_SOON": "Please wait before requesting another code",
     "RATE_LIMIT_EXCEEDED": "Too many attempts. Please wait and try again.",
     "VALIDATION_FAILED": "Please check the form",
-    "NETWORK": "Can't reach the server"
+    "NETWORK": "Can't reach the server",
+    "INVITATION_NOT_FOUND": "This invitation link is not valid.",
+    "INVITATION_EXPIRED": "This invitation has expired. Ask for a new link.",
+    "ALREADY_A_MEMBER": "You are already a member of this household.",
+    "MEMBER_NOT_FOUND": "No such member.",
+    "OWNER_CANNOT_LEAVE": "Transfer ownership first.",
+    "ONLY_HOUSEHOLD": "This is your only household; you cannot leave it.",
+    "HOUSEHOLD_DELETION_PENDING": "This household is scheduled for deletion.",
+    "PUSH_NOT_CONFIGURED": "The server has no push keys configured."
   },
   "month": {
     "previous": "Previous month",
@@ -259,7 +269,17 @@
     "over": "Over by {{percent}}%: that is {{amount}} more than this month's planned income.",
     "under": "Under by {{percent}}%: {{amount}} of this month's planned income has no bucket.",
     "save": "Save plan",
-    "saved": "Plan saved"
+    "saved": "Plan saved",
+    "carriedIn": "+ {{amount}} carried over",
+    "fixedAmount": "Fixed amount",
+    "carryOver": "Carry over what is left",
+    "fixedExceeds": "Fixed amounts exceed this month's planned income by {{amount}}. Later buckets get nothing until the income covers them.",
+    "move": "Move money",
+    "moveConfirm": "Move",
+    "reason": "Reason",
+    "reasonHint": "e.g. Generator repair",
+    "moveHint": "The move is a transfer, not spending: it leaves one bucket and arrives in the other, and stays in this month's audit trail.",
+    "moved": "Moved {{amount}} from {{from}} to {{to}}"
   },
   "transactions": {
     "title": "Ledger",
@@ -322,7 +342,9 @@
     "noBucket": "No bucket",
     "actualAmount": "Amount paid",
     "paidOnLabel": "Paid on",
-    "end": "End this bill"
+    "end": "End this bill",
+    "reminderDays": "Remind me (days before)",
+    "reminderDaysHint": "Leave empty to use the default from Settings."
   },
   "debts": {
     "title": "Debts",
@@ -381,7 +403,10 @@
     "projected": "On track for {{date}} ({{months}} months)",
     "required": "Needs {{amount}} a month to reach it by {{date}}",
     "noProjection": "Add a monthly deposit or a target date to see a projection.",
-    "archive": "Archive"
+    "archive": "Archive",
+    "backingAsset": "Backed by an asset",
+    "noBackingAsset": "None",
+    "backingAssetHint": "When set, progress follows the asset's value instead of deposits."
   },
   "metals": {
     "title": "Gold & silver",
@@ -483,13 +508,16 @@
   "networth": {
     "title": "Net worth",
     "headline": "What you are worth today",
-    "formula": "Cash + gold and silver + money owed to you − what you owe (BR-05)",
+    "formula": "Cash + gold and silver + money owed to you + other assets − what you owe (BR-05)",
     "assets": "Assets",
     "liabilities": "Liabilities",
     "classes": {
       "CASH": "Cash",
       "METALS": "Gold & silver",
-      "RECEIVABLES": "Owed to you"
+      "RECEIVABLES": "Owed to you",
+      "VEHICLES": "Vehicles",
+      "PROPERTY": "Property",
+      "OTHER_ASSETS": "Other assets"
     },
     "ratesInUse": "Dollar at {{rate}} ({{kind}}); gold from {{gold}}",
     "trend": "Over time",
@@ -504,7 +532,9 @@
     "reopened": "{{month}} reopened",
     "needsOnline": "Closing a month needs a connection.",
     "snapshotLine": "Snapshot {{value}} taken {{at}} at {{rate}} per dollar",
-    "monthClosed": "{{month}} is closed. Reopen it on the Net worth page to change it."
+    "monthClosed": "{{month}} is closed. Reopen it on the Net worth page to change it.",
+    "liquidLine": "Liquid {{liquid}} · illiquid {{illiquid}}",
+    "householdFigure": "Household total including other members' private records: {{value}}"
   },
   "report": {
     "title": "Monthly report",
@@ -513,7 +543,20 @@
     "monthOverMonth": "Spending vs last month: {{delta}}",
     "plannedVsActual": "Planned vs actual per bucket",
     "topCategories": "Top categories",
-    "uncategorised": "Uncategorised"
+    "uncategorised": "Uncategorised",
+    "savePdf": "Save as PDF",
+    "year": "Year",
+    "yearTitle": "{{year}} at a glance",
+    "saved": "Saved",
+    "trailing": "Trailing 12-month saving rate",
+    "rate": "Rate",
+    "month": "Month",
+    "savingRateDefinition": "Saving rate = (income received − spending) ÷ income received. Transfers to goals, debts and gold are not spending.",
+    "netWorthChange": "Net worth change",
+    "noSnapshots": "No closed months yet",
+    "noProjection": "—",
+    "spendingByBucket": "Spending per bucket, by month",
+    "months": "Month by month"
   },
   "data": {
     "title": "Your data",
@@ -602,6 +645,10 @@
       "save": {
         "title": "Save",
         "body": "Saving starts a new plan version from this month when the plan began earlier."
+      },
+      "move": {
+        "title": "Move money",
+        "body": "Overspent one bucket? Move money from another with a reason. Every move is listed here and in the ledger."
       }
     },
     "income": {
@@ -686,8 +733,252 @@
       "account": {
         "title": "Account",
         "body": "Help, replaying tours, sync and deleting your account are here."
+      },
+      "privacy": {
+        "title": "Private by default",
+        "body": "Choose which kinds of record start as private to you. Private rows never reach other members' devices, but they still count in the household total."
+      },
+      "notifications": {
+        "title": "Reminders",
+        "body": "Turn on push for this device, then choose which reminders you want: bills due, pay day, overspending, month end and metal price moves."
+      },
+      "backup": {
+        "title": "Cloud backup",
+        "body": "Set a backup passphrase and Mizan uploads an encrypted copy every day. Only the passphrase can open it, so keep it somewhere safe."
       }
     },
-    "nextWithProgress": "Next ({current} of {total})"
+    "nextWithProgress": "Next ({current} of {total})",
+    "assets": {
+      "total": {
+        "title": "What your belongings are worth",
+        "body": "Every held asset at its current value, converted to your base currency."
+      },
+      "add": {
+        "title": "Record an asset",
+        "body": "Pick a type and fill in what matters for it: the price, the date, and whether it should depreciate."
+      },
+      "list": {
+        "title": "Grouped by type",
+        "body": "Each card says where its value comes from: the purchase or the latest valuation, and how many months of depreciation apply."
+      },
+      "value": {
+        "title": "Keep values fresh",
+        "body": "Add a valuation whenever you know better. Home reminds you when one is older than six months."
+      }
+    },
+    "household": {
+      "members": {
+        "title": "Who is in the household",
+        "body": "Everyone here sees the shared records. The owner sets roles: members write, viewers only look, dependents log their own spending."
+      },
+      "invite": {
+        "title": "Invite by link",
+        "body": "Create a link and share it however you like. It works for seven days and once."
+      },
+      "switch": {
+        "title": "Your households",
+        "body": "You keep your own household when you join another. Switch here; the app reloads with the other household's data."
+      }
+    }
+  },
+  "assets": {
+    "title": "Other assets",
+    "add": "Add asset",
+    "edit": "Edit asset",
+    "type": "Type",
+    "types": {
+      "VEHICLE": "Vehicle",
+      "PROPERTY": "Property",
+      "ELECTRONICS": "Electronics",
+      "EQUIPMENT": "Equipment",
+      "FURNITURE": "Furniture",
+      "LIVESTOCK": "Livestock",
+      "OTHER": "Other"
+    },
+    "attributes": {
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "plate": "Plate",
+      "mileageKm": "Mileage (km)",
+      "address": "Address",
+      "areaSqm": "Area (m²)",
+      "deed": "Deed number",
+      "brand": "Brand",
+      "serial": "Serial",
+      "headCount": "Head count"
+    },
+    "purchasePrice": "Purchase price",
+    "purchaseDate": "Purchase date",
+    "depreciation": "Depreciation",
+    "methods": {
+      "NONE": "None",
+      "STRAIGHT_LINE": "Straight line",
+      "DECLINING_BALANCE": "Declining balance"
+    },
+    "methodHints": {
+      "NONE": "The value is the latest valuation you enter.",
+      "STRAIGHT_LINE": "Loses the same amount every month: the yearly rate of the baseline value, divided by twelve, down to the salvage value.",
+      "DECLINING_BALANCE": "Loses the yearly rate, divided by twelve, of what it is still worth each month, down to the salvage value."
+    },
+    "annualRate": "Yearly rate (%)",
+    "salvage": "Salvage value",
+    "illiquid": "Illiquid (cannot be turned into cash within a month)",
+    "illiquidBadge": "Illiquid",
+    "staleBadge": "Valuation is old",
+    "totalTitle": "Current value",
+    "totalBody_one": "{{count}} asset held",
+    "totalBody_other": "{{count}} assets held",
+    "none": "No assets yet. Add a car, a property or anything else worth money.",
+    "valueFromValuation": "From the valuation on {{date}}",
+    "valueFromPurchase": "From the purchase on {{date}}",
+    "depreciatedLine": "{{months}} months at {{rate}}% a year",
+    "sincePurchase": "Since purchase: {{amount}}",
+    "addValuation": "Add valuation",
+    "value": "Value",
+    "sell": "Sell",
+    "salePrice": "Sale price",
+    "sellHint": "The asset leaves net worth from this date. Update your cash account with what you received.",
+    "soldToggle_one": "{{count}} sold asset",
+    "soldToggle_other": "{{count}} sold assets",
+    "soldLine": "Sold {{date}} for {{price}}",
+    "deleted": "Asset deleted",
+    "stalePrompt_one": "{{name}} has not been valued for {{months}} months.",
+    "stalePrompt_other": "{{count}} assets have not been valued for {{months}} months."
+  },
+  "privacy": {
+    "title": "Privacy",
+    "body": "Records marked private are only ever sent to your own devices. The household net worth still counts them, without showing them. These switches set the default for new records; each record can still be changed.",
+    "kinds": {
+      "transactions": "New transactions and bills are private",
+      "accounts": "New cash accounts and income are private",
+      "metals": "New gold and silver is private",
+      "debts": "New debts are private",
+      "goals": "New goals are private",
+      "assets": "New assets are private"
+    }
+  },
+  "household": {
+    "title": "Household",
+    "manage": "Members and invitations",
+    "members": "Members",
+    "membersBody": "Everyone who shares this household's records.",
+    "you": "you",
+    "since": "since {{date}}",
+    "roles": {
+      "OWNER": "Owner",
+      "MEMBER": "Member",
+      "VIEWER": "Viewer",
+      "DEPENDENT": "Dependent"
+    },
+    "rolesHint": "Owner: everything. Member: records and plan. Viewer: read only. Dependent: logs own spending only.",
+    "roleChanged": "Role changed",
+    "makeOwner": "Make owner",
+    "transferred": "Ownership transferred. You are now a member.",
+    "remove": "Remove",
+    "removed": "Member removed",
+    "loading": "Loading…",
+    "needsOnline": "Managing the household needs a connection.",
+    "invite": "Invite someone",
+    "inviteBody": "Create a link and share it by WhatsApp or any other way. It works once and expires after seven days.",
+    "contact": "Email or phone (optional)",
+    "contactHint": "For your records",
+    "role": "Role",
+    "createLink": "Create link",
+    "copyLink": "Copy link",
+    "copied": "Link copied",
+    "expires": "expires {{date}}",
+    "revoke": "Revoke",
+    "revoked": "Invitation revoked",
+    "yours": "Your households",
+    "yoursBody": "You keep your own household when you join another one. Only one is active at a time.",
+    "current": "Current",
+    "switch": "Switch",
+    "switched": "Switched to {{name}}",
+    "joinWithLink": "Join with a link",
+    "join": "Join",
+    "joined": "You joined the household",
+    "leave": "Leave this household",
+    "left": "You left the household",
+    "joinTitle": "Join a household",
+    "joinBody": "{{by}} invited you to join {{household}} as {{role}}.",
+    "joinSignIn": "Sign in or create an account first; you will come back here.",
+    "backHome": "Back to Mizan",
+    "deleteTitle": "Delete this household",
+    "deleteBody": "Everything in it is removed for every member seven days after you confirm. Members fall back to their own households.",
+    "delete": "Delete household",
+    "deleteConfirm": "Enter your password to confirm. You can cancel within seven days.",
+    "deletionRequested": "Deletion requested",
+    "deletionPending": "This household will be deleted seven days after {{date}}.",
+    "cancelDeletion": "Keep the household",
+    "deletionCancelled": "Deletion cancelled"
+  },
+  "notifications": {
+    "onThisDevice": "Push notifications on this device",
+    "unsupported": "This browser cannot receive push notifications. On iPhone, install Mizan to the home screen first.",
+    "denied": "Notifications are blocked for Mizan in this browser's settings.",
+    "sendTest": "Send a test",
+    "testSent_one": "Test sent to {{count}} device",
+    "testSent_other": "Test sent to {{count}} devices",
+    "iosHint": "On iPhone and iPad, notifications only work once Mizan is installed to the home screen.",
+    "leadDays": "Days before a bill is due",
+    "thresholdPercent": "Percent of a bucket spent",
+    "movePercent": "Price move percent"
+  },
+  "exports": {
+    "body": "Spreadsheets for your own analysis; column names follow the app language.",
+    "transactions": "Transactions",
+    "metals": "Gold & silver",
+    "assets": "Assets",
+    "columns": {
+      "date": "Date",
+      "type": "Type",
+      "amount": "Amount",
+      "currency": "Currency",
+      "baseAmount": "Amount (IQD)",
+      "bucket": "Bucket",
+      "category": "Category",
+      "payee": "Payee",
+      "note": "Note",
+      "metal": "Metal",
+      "purity": "Purity",
+      "form": "Form",
+      "weightGrams": "Weight (g)",
+      "remainingGrams": "Remaining (g)",
+      "metalCost": "Metal cost",
+      "makingCharge": "Making charge",
+      "fees": "Fees",
+      "dealer": "Dealer",
+      "name": "Name",
+      "status": "Status",
+      "purchaseDate": "Purchase date",
+      "purchasePrice": "Purchase price",
+      "value": "Current value",
+      "valuedOn": "Valued on",
+      "liquidity": "Liquidity",
+      "soldOn": "Sold on",
+      "salePrice": "Sale price"
+    }
+  },
+  "backup": {
+    "title": "Cloud backup",
+    "body": "Once a day, an encrypted copy of everything goes to the server. It can only be opened with your backup passphrase, which is not your PIN and is never sent anywhere.",
+    "setPassphrase": "Set a backup passphrase",
+    "changePassphrase": "Change passphrase",
+    "forget": "Stop backing up",
+    "passphrase": "Backup passphrase",
+    "passphraseHint": "At least 8 characters. Write it down: a lost passphrase means the backups cannot be opened, not even by us.",
+    "passphraseSet": "Backups are on. The first one uploads with the next sync.",
+    "automatic": "Back up automatically every day",
+    "last": "Last backup {{at}}",
+    "never": "No backup yet",
+    "now": "Back up now",
+    "queued": "Backup queued; it uploads with the next sync",
+    "list": "Backups",
+    "pendingUpload": "waiting to upload",
+    "restore": "Restore",
+    "restoreHint": "Enter the passphrase this backup was made with. You will see what it contains before anything is written.",
+    "open": "Open",
+    "wrongPassphrase": "That passphrase does not open this backup."
   }
 }

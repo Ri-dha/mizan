@@ -50,7 +50,28 @@ only when its key is set, so swapping providers is a `.env` change and a restart
 provider fails, the last quote stays and turns `stale` after 24 hours; the app labels it and
 users can enter today's price themselves, which wins over the feed.
 
+## Push notifications
+
+Web Push needs a VAPID key pair that identifies this server to Apple, Google and Mozilla. Without
+one the API generates a pair at startup and logs the public key; subscriptions then break at the
+next restart, so a real deployment sets both:
+
+```bash
+# Prints a fresh pair; put them in .env as MIZAN_VAPID_PUBLIC_KEY and MIZAN_VAPID_PRIVATE_KEY.
+cd api && ./mvnw -q compile && java -cp target/classes iq.mizan.notification.push.VapidKeyTool
+```
+
+`MIZAN_VAPID_SUBJECT` is a `mailto:` address the push services can contact. The daily job runs
+at `mizan.notifications.daily-cron` in `mizan.notifications.time-zone` (Asia/Baghdad). Set
+`MIZAN_NOTIFICATIONS_TRANSPORT=log` to print instead of sending.
+
 ## Scheduled jobs
+
+| Job | Default | What it does |
+|---|---|---|
+| Notifications | 08:00 Asia/Baghdad | Evaluates reminders per subscribed member and sends them once |
+| Attachment object purge | 03:15 | Removes storage objects (receipts, backups) whose rows left the recycle bin |
+| Household deletion purge | 04:15 | Deletes households seven days after the owner confirmed |
 
 | Job | When (server time) | What it does |
 |---|---|---|

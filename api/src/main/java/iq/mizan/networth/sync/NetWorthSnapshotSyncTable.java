@@ -19,6 +19,8 @@ public class NetWorthSnapshotSyncTable implements SyncTable {
             Map.entry("totalAssets", SyncColumnType.BIGINT),
             Map.entry("totalLiabilities", SyncColumnType.BIGINT),
             Map.entry("netWorth", SyncColumnType.BIGINT),
+            Map.entry("liquidAssets", SyncColumnType.BIGINT),
+            Map.entry("illiquidAssets", SyncColumnType.BIGINT),
             Map.entry("composition", SyncColumnType.JSON),
             Map.entry("rateSet", SyncColumnType.JSON),
             Map.entry("deletedAt", SyncColumnType.TIMESTAMP));

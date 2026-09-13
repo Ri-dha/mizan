@@ -11,6 +11,8 @@ public record NetWorthResponse(
         long totalAssets,
         long totalLiabilities,
         long netWorth,
+        long liquidAssets,
+        long illiquidAssets,
         List<NetWorth.Share> composition,
         Map<String, Object> rateSet,
         Instant computedAt) {

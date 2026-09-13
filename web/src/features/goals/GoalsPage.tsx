@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { currentValue, liveAssets, liveValuations } from "@/db/assets"
 import { liveDeposits, liveGoals, recordDeposit, savedOf, undoDeposit } from "@/db/goals"
 import type { Goal, GoalDeposit } from "@/db/schema"
 import { monthKeyFor, todayIso } from "@/domain/calendar/month"
@@ -23,11 +24,14 @@ export function GoalsPage() {
   const startDay = session?.monthStartDay ?? 1
   const goals = useLiveQuery(liveGoals, [], [])
   const deposits = useLiveQuery(liveDeposits, [], [])
+  const assets = useLiveQuery(liveAssets, [], [])
+  const valuations = useLiveQuery(liveValuations, [], [])
   const [editing, setEditing] = useState<Goal | null | "new">(null)
   const [depositing, setDepositing] = useState<{ goal: Goal; direction: GoalDeposit["direction"] } | null>(null)
   const [amount, setAmount] = useState("")
   const [on, setOn] = useState(todayIso())
   const today = todayIso()
+  const assetValues = Object.fromEntries(assets.map((a) => [a.id, currentValue(a, valuations, today).value]))
 
   const money = (value: number, currency: string) => formatMoney(value, currency, i18n.language)
   const date = (iso: string) => new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso))
@@ -51,7 +55,7 @@ export function GoalsPage() {
 
       {active.length === 0 && <p className="opacity-70">{t("goals.none")}</p>}
       {active.map((goal) => {
-        const saved = savedOf(goal, deposits)
+        const saved = savedOf(goal, deposits, assetValues)
         const projection = goalProjection(goal.targetAmount, saved, goal.monthlyContribution, goal.targetDate, today)
         const ledger = deposits.filter((d) => d.goalId === goal.id).slice(-3).reverse()
         return (
