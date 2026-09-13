@@ -16,6 +16,8 @@ import { OverrideSheet } from "./OverrideSheet"
 import { PriceExplainer } from "./PriceExplainer"
 import { SellSheet } from "./SellSheet"
 import { useMetals } from "./useMetals"
+import { HelpButton } from "@/components/HelpButton"
+import { useScreenTour } from "@/tours/useTour"
 
 export function grams(mg: number, locale: string): string {
   return `${new Intl.NumberFormat(locale === "ar" ? "ar-IQ" : "en-GB", { maximumFractionDigits: 3 }).format(mg / 1000)} g`
@@ -31,6 +33,7 @@ export function MetalsPage() {
   const [overriding, setOverriding] = useState(false)
   const [settings, setSettings] = useState(false)
   const [explaining, setExplaining] = useState(false)
+  useScreenTour("metals")
 
   const money = (v: number) => formatMoney(v, base, i18n.language)
   const signed = (v: number) => (v > 0 ? "+" : "") + money(v)
@@ -42,12 +45,13 @@ export function MetalsPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-3xl">{t("metals.title")}</h1>
         <div className="flex gap-2">
+          <HelpButton tour="metals" />
           <Button variant="neutral" size="icon" aria-label={t("metals.settings")} onClick={() => setSettings(true)}><Settings2 /></Button>
-          <Button onClick={() => setEditing("new")}><Plus /> {t("metals.addLot")}</Button>
+          <Button data-tour="metals-add" onClick={() => setEditing("new")}><Plus /> {t("metals.addLot")}</Button>
         </div>
       </div>
 
-      <Card>
+      <Card data-tour="metals-holdings">
         <CardHeader>
           <CardTitle>{t("metals.portfolio")}</CardTitle>
           <CardDescription>
@@ -69,7 +73,7 @@ export function MetalsPage() {
               <Fig label={t("metals.gain")} value={signed(line.gain)} strong />
             </div>
           ))}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" data-tour="metals-sell">
             {(["GOLD", "SILVER"] as const).map((metal) => (
               <Button key={metal} variant="neutral" size="sm" disabled={!openLots.some((v) => v.lot.metal === metal)} onClick={() => setSelling(metal)}>
                 {t("metals.sell", { metal: t(`metals.metal.${metal}`) })}
@@ -79,7 +83,7 @@ export function MetalsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="metals-prices">
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>{t("metals.prices")}</CardTitle>
           <div className="flex gap-2">

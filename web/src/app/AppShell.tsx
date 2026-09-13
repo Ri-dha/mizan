@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MORE_LINKS } from "@/features/more/MorePage"
 import { QuickAddSheet } from "@/features/transactions/QuickAddSheet"
+import { TourProvider } from "@/tours/TourProvider"
 import { cn } from "@/lib/utils"
 import { useSyncStatus } from "@/sync/engine"
 
@@ -33,7 +34,7 @@ export function AppShell() {
           <span className="text-2xl font-heading">{t("app.name")}</span>
           <SyncBadge />
         </div>
-        <Button onClick={() => setAdding(true)} className="mb-2"><Plus /> {t("transactions.add")}</Button>
+        <Button onClick={() => setAdding(true)} className="mb-2" data-tour="quick-add-desktop"><Plus /> {t("transactions.add")}</Button>
         {sidebar.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
             <item.icon className="size-5" />
@@ -54,6 +55,7 @@ export function AppShell() {
       </main>
 
       <Button
+        data-tour="quick-add"
         className="fixed bottom-20 end-4 z-20 size-14 rounded-full md:hidden"
         size="icon"
         aria-label={t("transactions.add")}
@@ -70,13 +72,14 @@ export function AppShell() {
             {item.label}
           </NavLink>
         ))}
-        <NavLink to="/more" className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-heading", isActive && "bg-main text-main-foreground")}>
+        <NavLink to="/more" data-tour="nav-more" className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-heading", isActive && "bg-main text-main-foreground")}>
           <MoreHorizontal className="size-5" />
           {t("nav.more")}
         </NavLink>
       </nav>
 
       <QuickAddSheet open={adding} transaction={null} onClose={() => setAdding(false)} />
+      <TourProvider />
     </div>
   )
 }

@@ -21,6 +21,9 @@ import { SUPPORTED_LOCALES } from "@/i18n"
 import { clearLock, DEFAULT_LOCK_AFTER_SECONDS, removePin, lock, useLockState } from "@/lock/store"
 import { canPromptInstall, promptInstall } from "@/pwa/register"
 import { resetSyncState } from "@/sync/engine"
+import { HelpButton } from "@/components/HelpButton"
+import { useScreenTour } from "@/tours/useTour"
+import { forgetAllTours } from "@/tours/store"
 
 const LOCK_CHOICES = [0, 30, 60, 300]
 const THEMES: Theme[] = ["system", "light", "dark"]
@@ -37,6 +40,7 @@ export function SettingsPage() {
   const [preview, setPreview] = useState<ImportPreview | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
+  useScreenTour("settings")
 
   useEffect(() => {
     void readMeta<number>(META_KEYS.lockAfterSeconds).then((value) => value !== undefined && setLockAfter(value))
@@ -93,7 +97,10 @@ export function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-3xl">{t("settings.title")}</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-3xl">{t("settings.title")}</h1>
+        <HelpButton tour="settings" />
+      </div>
 
       <Card>
         <CardHeader><CardTitle>{t("settings.language")} · {t("settings.theme")}</CardTitle></CardHeader>
@@ -117,7 +124,7 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="settings-security">
         <CardHeader><CardTitle>{t("settings.security")}</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Field id="lockAfter" label={t("settings.lockAfter")}>
@@ -187,7 +194,7 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="settings-data">
         <CardHeader><CardTitle>{t("data.title")}</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-3">
           <p className="text-sm opacity-70">{t("data.body")}</p>
@@ -199,7 +206,7 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="settings-account">
         <CardHeader><CardTitle>{t("settings.account")}</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-3">
           {session?.deletionRequestedAt && (
@@ -209,6 +216,8 @@ export function SettingsPage() {
           )}
           <div className="flex flex-wrap gap-2">
             <Button variant="neutral" asChild><Link to="/sync">{t("sync.title")}</Link></Button>
+            <Button variant="neutral" asChild><Link to="/help">{t("help.title")}</Link></Button>
+            <Button variant="neutral" onClick={() => { forgetAllTours(); toast(t("tours.replayed")) }}>{t("tours.replay")}</Button>
             {canPromptInstall() && <Button variant="neutral" onClick={() => void promptInstall()}>{t("settings.install")}</Button>}
             <Button variant="neutral" onClick={() => void signOut()}>{t("auth.logout")}</Button>
             {session?.deletionRequestedAt ? (

@@ -7,6 +7,8 @@ export interface Preferences {
   showUsd: boolean
   quietMode: boolean
   notifications: Record<NotificationClass, boolean>
+  /** Tour ids already shown on this device; deliberately not synced. */
+  toursSeen: string[]
 }
 
 export type NotificationClass = "billDue" | "payDay" | "overspend" | "metalPrice" | "monthClose"
@@ -18,6 +20,7 @@ const DEFAULTS: Preferences = {
   showUsd: false,
   quietMode: false,
   notifications: { billDue: true, payDay: true, overspend: true, metalPrice: false, monthClose: true },
+  toursSeen: [],
 }
 
 let current: Preferences = load()

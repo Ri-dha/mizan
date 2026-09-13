@@ -17,6 +17,8 @@ import { todayIso } from "@/domain/calendar/month"
 import { formatMoney, fromMinorUnits, toMinorUnits } from "@/domain/money/format"
 import { useMonthView } from "@/features/plan/useMonthFigures"
 import { RecurringExpenseSheet } from "./RecurringExpenseSheet"
+import { HelpButton } from "@/components/HelpButton"
+import { useScreenTour } from "@/tours/useTour"
 
 export function BillsPage() {
   const { t, i18n } = useTranslation()
@@ -29,6 +31,7 @@ export function BillsPage() {
   const [paying, setPaying] = useState<BillDue | null>(null)
   const [actual, setActual] = useState("")
   const [paidOn, setPaidOn] = useState(todayIso())
+  useScreenTour("bills")
   const today = todayIso()
   const money = (amount: number, currency = base) => formatMoney(amount, currency, i18n.language)
   const date = (iso: string) => new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { day: "numeric", month: "short" }).format(new Date(iso))
@@ -54,10 +57,10 @@ export function BillsPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl">{t("bills.title")}</h1>
-        <MonthPicker value={monthKey} onChange={setMonthKey} />
+        <div className="flex items-center gap-2"><MonthPicker value={monthKey} onChange={setMonthKey} /><HelpButton tour="bills" /></div>
       </div>
 
-      <Card>
+      <Card data-tour="bills-due">
         <CardHeader>
           <CardTitle>{t("bills.thisMonth")}</CardTitle>
           <CardDescription>{t("bills.stillDue")}: {money(committed)} · {t("bills.paid")}: {money(paid)}</CardDescription>
@@ -93,7 +96,7 @@ export function BillsPage() {
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>{t("bills.recurring")}</CardTitle>
-          <Button size="sm" onClick={() => setEditing("new")}><Plus /> {t("bills.add")}</Button>
+          <Button size="sm" data-tour="bills-add" onClick={() => setEditing("new")}><Plus /> {t("bills.add")}</Button>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {view.bills.length === 0 && <p className="opacity-70">{t("bills.none")}</p>}

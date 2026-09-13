@@ -1,0 +1,34 @@
+---
+title: "Gold and silver"
+screen: /metals
+summary: "Recording purchases, how today's price is calculated, entering your own price, selling, and cost basis methods."
+---
+## Recording a purchase
+
+Enter the metal, purity (24k, 22k, 21k, 18k for gold; 999 or 925 for silver), the weight in grams, mithqal (5 g), tola, troy ounces or kilograms, the form, the price paid for the metal, and separately the making charge and any fees. Making charges count in the cost but are shown separately, because a dealer rarely pays them back on sale.
+
+## How the price is calculated
+
+Mizan fetches the world spot price in dollars per troy ounce and a dollar rate, then works out the dinar price per gram of pure metal, applies the purity and any local premium you set, and multiplies by your weight. **How is this calculated?** shows every step with the numbers in use.
+
+Every price carries its source and time. After 24 hours without a refresh it is marked stale.
+
+## Entering today's price
+
+Local prices differ from world prices. **Enter today's price** takes what the market quotes, for example per mithqal of 21k, converts it to a price per gram of pure metal, and uses it instead of the feed until you enter a newer one. Screens then say the price is yours.
+
+## Valuation settings
+
+Choose whether the official or the market dollar rate governs conversion, a local premium per metal, and the default cost basis method.
+
+## Selling
+
+**Sell** asks for the weight, the amount received, fees and the date. Metal is drawn from your purchases by the chosen method:
+
+| Method | Which purchase the metal comes from |
+|---|---|
+| First in, first out | The oldest purchases first |
+| Specific lots | The purchases you tick, in order |
+| Weighted average | Every gram priced at the average cost of everything you hold |
+
+The realised gain is shown with and without making charges. The method is stored on the sale and never changes afterwards.

@@ -25,6 +25,7 @@ const GoalsPage = lazy(() => import("@/features/goals/GoalsPage").then((m) => ({
 const MorePage = lazy(() => import("@/features/more/MorePage").then((m) => ({ default: m.MorePage })))
 const MetalsPage = lazy(() => import("@/features/metals/MetalsPage").then((m) => ({ default: m.MetalsPage })))
 const NetWorthPage = lazy(() => import("@/features/networth/NetWorthPage").then((m) => ({ default: m.NetWorthPage })))
+const HelpPage = lazy(() => import("@/features/help/HelpPage").then((m) => ({ default: m.HelpPage })))
 const ReportPage = lazy(() => import("@/features/report/ReportPage").then((m) => ({ default: m.ReportPage })))
 const SyncPage = lazy(() => import("@/features/sync/SyncPage").then((m) => ({ default: m.SyncPage })))
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })))
@@ -56,6 +57,8 @@ const router = createBrowserRouter([
       { path: "metals", element: <MetalsPage /> },
       { path: "networth", element: <NetWorthPage /> },
       { path: "report", element: <ReportPage /> },
+      { path: "help", element: <HelpPage /> },
+      { path: "help/:slug", element: <HelpPage /> },
       { path: "more", element: <MorePage /> },
       { path: "income", element: <IncomePage /> },
       { path: "accounts", element: <AccountsPage /> },

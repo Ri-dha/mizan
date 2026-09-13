@@ -16,6 +16,8 @@ import { EMPTY_FILTER, filterTransactions, liveRecentlyDeleted, restoreTransacti
 import { formatMoney, toMinorUnits } from "@/domain/money/format"
 import { useMonthView } from "@/features/plan/useMonthFigures"
 import { QuickAddSheet } from "./QuickAddSheet"
+import { HelpButton } from "@/components/HelpButton"
+import { useScreenTour } from "@/tours/useTour"
 
 const ALL = "__all__"
 const PAGE_SIZE = 100
@@ -31,6 +33,7 @@ export function TransactionsPage() {
   const [filter, setFilter] = useState<TransactionFilter>(EMPTY_FILTER)
   const [editing, setEditing] = useState<LedgerTransaction | null | "new">(null)
   const [limit, setLimit] = useState(PAGE_SIZE)
+  useScreenTour("ledger")
 
   const matching = filterTransactions(view.transactions, filter)
   const rows = matching.slice(0, limit)
@@ -47,10 +50,10 @@ export function TransactionsPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl">{t("transactions.title")}</h1>
-        <MonthPicker value={monthKey} onChange={setMonthKey} />
+        <div className="flex items-center gap-2"><MonthPicker value={monthKey} onChange={setMonthKey} /><HelpButton tour="ledger" /></div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
+      <div className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr_1fr_1fr]" data-tour="ledger-filters">
         <Input placeholder={t("transactions.search")} value={filter.text} onChange={(e) => setFilter({ ...filter, text: e.target.value })} />
         <Select value={filter.bucketId ?? ALL} onValueChange={(v) => setFilter({ ...filter, bucketId: v === ALL ? null : v })}>
           <SelectTrigger><SelectValue /></SelectTrigger>
@@ -70,6 +73,7 @@ export function TransactionsPage() {
         <Input placeholder={t("transactions.max")} inputMode="numeric" dir="ltr" onChange={(e) => setFilter({ ...filter, maxAmount: e.target.value ? toMinorUnits(e.target.value, base) : null })} />
       </div>
 
+      <div className="flex flex-col gap-4" data-tour="ledger-list">
       {matching.length === 0 && <p className="opacity-70">{t("transactions.none")}</p>}
       {Object.entries(byDay).map(([date, items]) => (
         <Card key={date}>
@@ -93,6 +97,7 @@ export function TransactionsPage() {
           </CardContent>
         </Card>
       ))}
+      </div>
 
       {matching.length > rows.length && (
         <Button variant="neutral" className="self-center" onClick={() => setLimit(limit + PAGE_SIZE)}>

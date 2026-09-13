@@ -15,6 +15,8 @@ import { formatMoney } from "@/domain/money/format"
 import { syncNow } from "@/sync/engine"
 import { usePreferences } from "@/app/preferences"
 import { useNetWorth } from "./useNetWorth"
+import { HelpButton } from "@/components/HelpButton"
+import { useScreenTour } from "@/tours/useTour"
 
 const MONTHS_LISTED = 12
 
@@ -26,6 +28,7 @@ export function NetWorthPage() {
   const view = useNetWorth()
   const [busy, setBusy] = useState<string | null>(null)
   const prefs = usePreferences()
+  useScreenTour("networth")
   const usdIqd = Number(view.rateSet.usdIqdMicros) / 1e6
   const inUsd = (v: number) => formatMoney(Math.round((v / usdIqd) * 100), "USD", i18n.language)
   const money = (v: number) => formatMoney(v, base, i18n.language)
@@ -52,9 +55,12 @@ export function NetWorthPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-3xl">{t("networth.title")}</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-3xl">{t("networth.title")}</h1>
+        <HelpButton tour="networth" />
+      </div>
 
-      <Card>
+      <Card data-tour="networth-headline">
         <CardHeader>
           <CardTitle>{t("networth.headline")}</CardTitle>
           <CardDescription>{t("networth.formula")}</CardDescription>
@@ -84,7 +90,7 @@ export function NetWorthPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="networth-trend">
         <CardHeader>
           <CardTitle>{t("networth.trend")}</CardTitle>
           <CardDescription>{t("networth.trendBody")}</CardDescription>
@@ -104,7 +110,7 @@ export function NetWorthPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="networth-months">
         <CardHeader>
           <CardTitle>{t("networth.months")}</CardTitle>
           <CardDescription>{t("networth.monthsBody")}</CardDescription>

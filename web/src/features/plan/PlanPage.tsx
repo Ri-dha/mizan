@@ -15,6 +15,8 @@ import { formatMoney } from "@/domain/money/format"
 import { BASIS_POINTS } from "@/domain/money/split"
 import { basisPointsToPercent, percentToBasisPoints, rebalance } from "@/domain/plan/figures"
 import { useMonthView } from "./useMonthFigures"
+import { HelpButton } from "@/components/HelpButton"
+import { useScreenTour } from "@/tours/useTour"
 
 const PALETTE = ["#88aaee", "#ffdc58", "#ff6b6b", "#a3e635", "#c4a1ff", "#fd9745", "#7fdbca"]
 
@@ -26,6 +28,7 @@ export function PlanPage() {
   const [monthKey, setMonthKey] = useSelectedMonth(startDay)
   const view = useMonthView(monthKey, startDay)
   const [draft, setDraft] = useState<BucketInput[] | null>(null)
+  useScreenTour("plan", view.buckets.length > 0)
 
   useEffect(() => {
     setDraft(null)
@@ -51,10 +54,10 @@ export function PlanPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl">{t("plan.title")}</h1>
-        <MonthPicker value={monthKey} onChange={setMonthKey} />
+        <div className="flex items-center gap-2"><MonthPicker value={monthKey} onChange={setMonthKey} /><HelpButton tour="plan" /></div>
       </div>
 
-      <Card>
+      <Card data-tour="plan-figures">
         <CardHeader>
           <CardTitle>{t("plan.figures")}</CardTitle>
           <CardDescription>
@@ -85,7 +88,7 @@ export function PlanPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="plan-editor">
         <CardHeader>
           <CardTitle>{t("plan.buckets")}</CardTitle>
           <CardDescription>
@@ -129,7 +132,7 @@ export function PlanPage() {
             )}
           </div>
 
-          <Alert>
+          <Alert data-tour="plan-balance">
             <AlertDescription>
               {gapShares === 0
                 ? t("plan.balanced")
@@ -139,7 +142,7 @@ export function PlanPage() {
             </AlertDescription>
           </Alert>
 
-          <Button onClick={() => void save()} disabled={draft === null} className="self-start">{t("plan.save")}</Button>
+          <Button data-tour="plan-save" onClick={() => void save()} disabled={draft === null} className="self-start">{t("plan.save")}</Button>
         </CardContent>
       </Card>
     </div>

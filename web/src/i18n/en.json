@@ -536,5 +536,158 @@
     "deletionPending": "This account will be deleted on {{date}} unless you cancel.",
     "cancelDeletion": "Cancel deletion",
     "deletionCancelled": "Deletion cancelled"
+  },
+  "help": {
+    "title": "Help",
+    "openGuide": "Open guide",
+    "backToIndex": "← All topics",
+    "search": "Search the manual",
+    "noMatch": "Nothing matches.",
+    "openScreen": "Open this screen",
+    "englishOnly": "This page is only available in English for now."
+  },
+  "tours": {
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "last": "Done",
+    "close": "Close",
+    "showMeAround": "Show me around",
+    "replay": "Replay tours",
+    "replayed": "Tours will show again on each screen.",
+    "readMore": "The full guide opens when you press Done.",
+    "welcome": {
+      "intro": {
+        "title": "Welcome to Mizan",
+        "body": "Mizan plans one month at a time, works without a signal, and counts gold as savings. This takes half a minute."
+      },
+      "networth": {
+        "title": "Net worth",
+        "body": "Cash plus gold and silver at today's price plus what people owe you, minus what you owe. Closing a month freezes the number."
+      },
+      "plan": {
+        "title": "This month's plan",
+        "body": "Your income splits into buckets. Each shows what is allocated, what is committed to bills, what is spent, and what is free."
+      },
+      "quickAdd": {
+        "title": "Log spending",
+        "body": "Amount, bucket, save. It works offline and syncs when you are back online."
+      },
+      "bills": {
+        "title": "Bills",
+        "body": "Unpaid bills are committed against their bucket from day one, so free already accounts for them."
+      },
+      "metals": {
+        "title": "Gold and silver",
+        "body": "Record purchases by weight and purity. Mizan values them at today's price, or a price you enter yourself."
+      },
+      "more": {
+        "title": "Everything else",
+        "body": "Income, debts, goals, accounts, sync and settings live under More. The ? on each screen replays its tour or opens the guide."
+      }
+    },
+    "plan": {
+      "figures": {
+        "title": "Four figures",
+        "body": "Allocated is this bucket's share of received income. Committed is bills, debt payments and goal deposits not yet made. Free is what remains after committed and spent."
+      },
+      "editor": {
+        "title": "Change the split",
+        "body": "Edit names and percentages. Past months keep the plan they ran under; the change starts from the month you are viewing."
+      },
+      "balance": {
+        "title": "Add up to 100%",
+        "body": "This line shows whether the shares add up. Rebalance scales them so they do."
+      },
+      "save": {
+        "title": "Save",
+        "body": "Saving starts a new plan version from this month when the plan began earlier."
+      }
+    },
+    "income": {
+      "month": {
+        "title": "Expected pay dates",
+        "body": "Each source's pay dates for the month appear here. Mark them received when the money arrives so the plan can allocate it."
+      },
+      "addSource": {
+        "title": "Add a source",
+        "body": "Salary, rent, freelance: amount, currency and how often it pays."
+      },
+      "sources": {
+        "title": "Raises and endings",
+        "body": "Edit a source to record a raise with the date it takes effect. Earlier months keep the old amount."
+      }
+    },
+    "bills": {
+      "due": {
+        "title": "Due this month",
+        "body": "Every due date with its status. Marking a bill paid records the expense and settles the obligation in one step."
+      },
+      "add": {
+        "title": "Add a bill",
+        "body": "Set the bucket, amount and frequency. Switch on amount varies for electricity and the generator."
+      }
+    },
+    "ledger": {
+      "filters": {
+        "title": "Find anything",
+        "body": "Search by payee or note; filter by bucket, type and amount."
+      },
+      "list": {
+        "title": "Your entries",
+        "body": "Grouped by day for the selected month. Tap one to edit; deleted entries wait 30 days in the recycle bin."
+      },
+      "quickAdd": {
+        "title": "Add in four taps",
+        "body": "Expense takes from a bucket. Transfer moves money to a goal, a debt or an account and is not spending."
+      }
+    },
+    "metals": {
+      "holdings": {
+        "title": "What you hold",
+        "body": "Total weight, cost and value at today's price, with the gain shown with and without making charges."
+      },
+      "prices": {
+        "title": "Today's price",
+        "body": "Prices come from a feed with their source and time. Enter today's price to use the local market quote instead."
+      },
+      "add": {
+        "title": "Record a purchase",
+        "body": "Weight in grams or mithqal, purity, the price paid and the making charge kept separate."
+      },
+      "sell": {
+        "title": "Selling",
+        "body": "Sell draws from your purchases by the method you choose and shows the realised gain."
+      }
+    },
+    "networth": {
+      "headline": {
+        "title": "The number",
+        "body": "Assets minus liabilities with a breakdown by class. The dollar line uses the rate valuation uses."
+      },
+      "trend": {
+        "title": "Over time",
+        "body": "One point per closed month plus today."
+      },
+      "months": {
+        "title": "Closing a month",
+        "body": "Close month takes a snapshot the app never changes. Reopen to correct something, then close again."
+      }
+    },
+    "settings": {
+      "security": {
+        "title": "Lock",
+        "body": "Choose how long the app can stay in the background before asking for the PIN."
+      },
+      "data": {
+        "title": "Your data",
+        "body": "Export everything as one file, or import one. Imports are checked before anything is written."
+      },
+      "account": {
+        "title": "Account",
+        "body": "Help, replaying tours, sync and deleting your account are here."
+      }
+    },
+    "nextWithProgress": "Next ({current} of {total})"
   }
 }

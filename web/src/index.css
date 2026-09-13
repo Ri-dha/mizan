@@ -101,3 +101,16 @@
 body.privacy-blur #root {
   filter: blur(14px);
 }
+
+/* Manual pages rendered from Markdown. */
+.manual h2 { @apply mt-6 mb-2 text-2xl; }
+.manual h3 { @apply mt-4 mb-1 text-xl; }
+.manual p { @apply my-2 leading-relaxed; }
+.manual ul, .manual ol { @apply my-2 ps-6; }
+.manual ul { @apply list-disc; }
+.manual ol { @apply list-decimal; }
+.manual li { @apply my-1; }
+.manual table { @apply my-3 w-full border-collapse text-sm; }
+.manual th, .manual td { @apply border-2 border-border px-2 py-1 text-start; }
+.manual code { @apply rounded-base bg-secondary-background px-1; }
+.manual blockquote { @apply my-3 border-s-4 border-border ps-3 opacity-80; }

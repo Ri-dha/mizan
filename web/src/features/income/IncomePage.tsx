@@ -15,6 +15,8 @@ import { formatMoney } from "@/domain/money/format"
 import { useMonthView } from "@/features/plan/useMonthFigures"
 import { IncomeSourceSheet } from "./IncomeSourceSheet"
 import { ReceiptSheet, type ReceiptDraft } from "./ReceiptSheet"
+import { HelpButton } from "@/components/HelpButton"
+import { useScreenTour } from "@/tours/useTour"
 
 export function IncomePage() {
   const { t, i18n } = useTranslation()
@@ -25,6 +27,7 @@ export function IncomePage() {
   const view = useMonthView(monthKey, startDay)
   const [editingSource, setEditingSource] = useState<IncomeSource | null | "new">(null)
   const [receipt, setReceipt] = useState<ReceiptDraft | null>(null)
+  useScreenTour("income")
   const today = todayIso()
   const money = (amount: number, currency = base) => formatMoney(amount, currency, i18n.language)
   const date = (iso: string) => new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { day: "numeric", month: "short" }).format(new Date(iso))
@@ -51,10 +54,10 @@ export function IncomePage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl">{t("income.title")}</h1>
-        <MonthPicker value={monthKey} onChange={setMonthKey} />
+        <div className="flex items-center gap-2"><MonthPicker value={monthKey} onChange={setMonthKey} /><HelpButton tour="income" /></div>
       </div>
 
-      <Card>
+      <Card data-tour="income-month">
         <CardHeader>
           <CardTitle>{t("income.thisMonth")}</CardTitle>
           <CardDescription>
@@ -106,9 +109,9 @@ export function IncomePage() {
             <CardTitle>{t("income.sources")}</CardTitle>
             <CardDescription>{t("income.sourcesHint")}</CardDescription>
           </div>
-          <Button size="sm" onClick={() => setEditingSource("new")}><Plus /> {t("income.addSource")}</Button>
+          <Button size="sm" data-tour="income-add-source" onClick={() => setEditingSource("new")}><Plus /> {t("income.addSource")}</Button>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2">
+        <CardContent className="flex flex-col gap-2" data-tour="income-sources">
           {view.sources.length === 0 && <p className="opacity-70">{t("income.noSources")}</p>}
           {view.sources.map((source) => {
             const ended = source.activeTo !== null && source.activeTo < today

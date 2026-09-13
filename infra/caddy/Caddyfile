@@ -12,6 +12,11 @@ handle /actuator/health* {
     reverse_proxy api:8080
 }
 
+handle /docs/* {
+    root * /srv
+    file_server
+}
+
 handle {
     root * /srv
     # The service worker and manifest must never be served stale.

@@ -45,6 +45,7 @@ scheduled jobs are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 |---|---|---|
 | Web app (dev) | http://localhost:5173 | Vite dev server with hot reload; `/api` is proxied to the API |
 | Web app (built) | http://localhost:4173 | `npm run preview` after `npm run build`; the service worker only runs here or in production |
+| User manual (built) | http://localhost:4173/docs/en/ | Static site rendered from `docs/manual`; Arabic at `/docs/ar/` |
 | API | http://localhost:8080 | REST under `/api/v1` |
 | Swagger UI | http://localhost:8080/swagger-ui.html | Enabled in the `dev` profile; off elsewhere unless `SWAGGER_UI_ENABLED=true` |
 | OpenAPI document | http://localhost:8080/v3/api-docs | What `npm run api:types` reads |
@@ -117,7 +118,19 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/more` | Links to the less frequent screens |
 | `/accounts` | Cash accounts: add, edit, soft-delete with undo |
 | `/sync` | Sync status, sync now, overridden edits (conflict log) |
-| `/settings` | Language, theme, digits, USD line, notification switches, lock timeout, PIN, household settings, export and import JSON, account deletion, install, sign out |
+| `/settings` | Language, theme, digits, USD line, notification switches, lock timeout, PIN, household settings, export and import JSON, account deletion, replay tours, install, sign out |
+| `/help`, `/help/:slug` | The user manual, bundled so it reads offline, in the app's language with search |
+
+Each screen has a `?` button that replays its guided tour or opens its manual page. A welcome
+tour runs once on the home screen after the first unlock; "Replay tours" in Settings shows them all again.
+
+### User manual
+
+The manual is written once in `docs/manual/en` and `docs/manual/ar` (one Markdown file per page
+with `title`, `screen` and `summary` front matter). The app bundles it at `/help`, and
+`npm run build` also renders it with `web/scripts/build-docs.mjs` into `dist/docs/<lang>/`, which
+Caddy serves at `/docs/en/` and `/docs/ar/` with a print stylesheet for "Save as PDF". The build
+fails if an English page has no Arabic counterpart. `npm run docs` renders the site alone.
 
 A PIN screen appears after first sign-in and whenever the app has been in the background longer
 than the configured timeout (30 seconds by default).
@@ -144,5 +157,7 @@ cd web && npm test && npm run typecheck
 - `web/src/features/<feature>` — screens. `db/` is the local store and the only place that writes to
   syncable tables. `sync/` is the change-log engine. `lock/` is the PIN and biometric lock.
 - `shared/test-vectors/` — one JSON file per business rule, loaded by both test suites.
+- `docs/manual/<lang>/` — the user manual, bundled into the app at `/help` and built into `dist/docs`.
+- `web/src/tours/` — guided tour definitions and the single Joyride mount; screens mark targets with `data-tour`.
 
 See [CLAUDE.md](CLAUDE.md) for the coding conventions.

@@ -43,6 +43,8 @@ export default defineConfig({
     alias: { "@": path.resolve(import.meta.dirname, "./src") },
   },
   server: {
+    // The manual lives in ../docs so the static site and the app share one source.
+    fs: { allow: [".."] },
     proxy: {
       "/api": { target: process.env.API_ORIGIN ?? "http://localhost:8080", changeOrigin: true },
     },

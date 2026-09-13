@@ -12,6 +12,8 @@ import { currentMonthKey } from "@/app/month"
 import { useMonthView } from "@/features/plan/useMonthFigures"
 import { useMetals } from "@/features/metals/useMetals"
 import { useNetWorth } from "@/features/networth/useNetWorth"
+import { HelpButton } from "@/components/HelpButton"
+import { useScreenTour } from "@/tours/useTour"
 
 export function HomePage() {
   const { t, i18n } = useTranslation()
@@ -23,11 +25,15 @@ export function HomePage() {
   const month = useMonthView(currentMonthKey(startDay), startDay)
   const metals = useMetals()
   const worth = useNetWorth()
+  useScreenTour("welcome", session !== undefined)
   const metalTotals = metals.lines.reduce((acc, l) => ({ value: acc.value + l.valueNow, gain: acc.gain + l.gain }), { value: 0, gain: 0 })
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl">{t("home.greeting", { name: session?.displayName })}</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-3xl">{t("home.greeting", { name: session?.displayName })}</h1>
+        <HelpButton tour="welcome" />
+      </div>
 
       {session && !session.verified && (
         <Alert>
@@ -38,7 +44,7 @@ export function HomePage() {
         </Alert>
       )}
 
-      <Card>
+      <Card data-tour="home-networth">
         <CardHeader>
           <CardTitle>{t("home.netWorth")}</CardTitle>
           <CardDescription>{t("networth.assets")}: {formatMoney(worth.current.totalAssets, base, i18n.language)} · {t("networth.liabilities")}: {formatMoney(worth.current.totalLiabilities, base, i18n.language)}</CardDescription>
@@ -49,7 +55,7 @@ export function HomePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="home-plan">
         <CardHeader>
           <CardTitle>{t("home.planTitle")}</CardTitle>
           <CardDescription>
@@ -73,7 +79,7 @@ export function HomePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="home-metals">
         <CardHeader>
           <CardTitle>{t("home.metalsTitle")}</CardTitle>
           <CardDescription>{metals.lines.length === 0 ? t("home.metalsNone") : t("metals.valueNow") + ": " + formatMoney(metalTotals.value, base, i18n.language)}</CardDescription>
@@ -84,7 +90,7 @@ export function HomePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="home-bills">
         <CardHeader>
           <CardTitle>{t("home.upcomingBills")}</CardTitle>
         </CardHeader>
