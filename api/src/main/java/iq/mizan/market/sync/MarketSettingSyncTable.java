@@ -19,6 +19,9 @@ public class MarketSettingSyncTable implements SyncTable {
             Map.entry("silverPremiumBasisPoints", SyncColumnType.INTEGER),
             Map.entry("goldMethod", SyncColumnType.TEXT),
             Map.entry("silverMethod", SyncColumnType.TEXT),
+            Map.entry("valuationBasis", SyncColumnType.TEXT),
+            Map.entry("goldBuybackBasisPoints", SyncColumnType.INTEGER),
+            Map.entry("silverBuybackBasisPoints", SyncColumnType.INTEGER),
             Map.entry("deletedAt", SyncColumnType.TIMESTAMP));
 
     @Override

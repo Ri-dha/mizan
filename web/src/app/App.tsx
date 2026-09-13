@@ -31,6 +31,7 @@ const JoinPage = lazy(() => import("@/features/household/JoinPage").then((m) => 
 const HelpPage = lazy(() => import("@/features/help/HelpPage").then((m) => ({ default: m.HelpPage })))
 const ReportPage = lazy(() => import("@/features/report/ReportPage").then((m) => ({ default: m.ReportPage })))
 const YearReportPage = lazy(() => import("@/features/report/YearReportPage").then((m) => ({ default: m.YearReportPage })))
+const AdvisorPage = lazy(() => import("@/features/advisor/AdvisorPage").then((m) => ({ default: m.AdvisorPage })))
 const SyncPage = lazy(() => import("@/features/sync/SyncPage").then((m) => ({ default: m.SyncPage })))
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })))
 
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
       { path: "sync", element: <SyncPage /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "household", element: <HouseholdPage /> },
+      { path: "advisor", element: <AdvisorPage /> },
     ],
   },
 ])

@@ -1,6 +1,6 @@
 import { useLiveQuery } from "dexie-react-hooks"
 import { useTranslation } from "react-i18next"
-import { Link } from "react-router"
+import { Link, Navigate } from "react-router"
 
 import { useSession } from "@/api/auth"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -32,6 +32,20 @@ export function HomePage() {
   const stale = staleAssets(worth.assets, worth.valuations, todayIso(), prefs.valuationReminderMonths)
   useScreenTour("welcome", session !== undefined)
   const metalTotals = metals.lines.reduce((acc, l) => ({ value: acc.value + l.valueNow, gain: acc.gain + l.gain }), { value: 0, gain: 0 })
+
+  if (session?.role === "ADVISOR") return <Navigate to="/advisor" replace />
+  if (session?.role === "DEPENDENT") {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="text-3xl">{t("home.greeting", { name: session.displayName })}</h1>
+        <p className="opacity-70">{t("home.dependentBody", { household: session.householdName })}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild><Link to="/goals">{t("nav.goals")}</Link></Button>
+          <Button asChild variant="neutral"><Link to="/transactions">{t("nav.transactions")}</Link></Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6">

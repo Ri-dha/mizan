@@ -25,6 +25,10 @@ Assets that lose value over time can also **depreciate** automatically from the 
 
 Both stop at the **salvage value** you set. The card shows which baseline the value comes from and how many months of depreciation have been applied.
 
+## Running costs
+
+When you log fuel, repairs or insurance, pick the asset under **Running cost of**. The card then shows the running costs and the total cost of ownership so far: purchase price plus running costs, less what it is worth today.
+
 ## Liquid or illiquid
 
 Property is marked illiquid by default because it cannot usually be turned into cash within a month; everything else is liquid. You can change this per asset. The Net worth screen shows the liquid and illiquid totals side by side.

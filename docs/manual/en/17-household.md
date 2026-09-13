@@ -14,7 +14,10 @@ On the Household screen the owner presses **Create link**, picks a role and shar
 | Owner | Everything, including members, invitations and deleting the household |
 | Member | Add and edit records, edit the plan, export |
 | Viewer | Look, nothing else; the + button is hidden |
-| Dependent | Log their own spending only |
+| Dependent | Their own goals and spending only |
+| Advisor | The annual report only, for a limited time |
+
+A **Dependent** sees only what they create themselves, typically a goal and their own spending; nothing shared reaches their device. An **Advisor** sees only the annual report over shared records, never a transaction, and only for the number of days set on the invitation (30 by default).
 
 The owner can change a member's role, remove a member, or hand ownership to another member, after which the previous owner becomes a member.
 

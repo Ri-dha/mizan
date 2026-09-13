@@ -1,0 +1,114 @@
+[
+  {
+    "name": "avalanche clears the dear loan first and saves interest; snowball clears the small one first (FR-DBT-07)",
+    "input": {
+      "debts": [
+        {
+          "id": "car",
+          "balance": 4000000,
+          "annualRateBasisPoints": 1200,
+          "monthlyPayment": 250000
+        },
+        {
+          "id": "phone",
+          "balance": 600000,
+          "annualRateBasisPoints": 0,
+          "monthlyPayment": 100000
+        }
+      ],
+      "extraMonthly": 50000
+    },
+    "expected": {
+      "snowball": {
+        "order": [
+          "phone",
+          "car"
+        ],
+        "months": 13,
+        "totalInterest": 294761,
+        "neverClears": false
+      },
+      "avalanche": {
+        "order": [
+          "car",
+          "phone"
+        ],
+        "months": 13,
+        "totalInterest": 288221,
+        "neverClears": false
+      }
+    }
+  },
+  {
+    "name": "one debt: both orders agree",
+    "input": {
+      "debts": [
+        {
+          "id": "loan",
+          "balance": 1000000,
+          "annualRateBasisPoints": 2400,
+          "monthlyPayment": 100000
+        }
+      ],
+      "extraMonthly": 0
+    },
+    "expected": {
+      "snowball": {
+        "order": [
+          "loan"
+        ],
+        "months": 12,
+        "totalInterest": 127032,
+        "neverClears": false
+      },
+      "avalanche": {
+        "order": [
+          "loan"
+        ],
+        "months": 12,
+        "totalInterest": 127032,
+        "neverClears": false
+      }
+    }
+  },
+  {
+    "name": "a payment that never covers the interest never clears, whatever the order",
+    "input": {
+      "debts": [
+        {
+          "id": "a",
+          "balance": 1000000,
+          "annualRateBasisPoints": 3600,
+          "monthlyPayment": 20000
+        },
+        {
+          "id": "b",
+          "balance": 50000,
+          "annualRateBasisPoints": 0,
+          "monthlyPayment": 5000
+        }
+      ],
+      "extraMonthly": 0
+    },
+    "expected": {
+      "snowball": {
+        "order": [
+          "b",
+          "a"
+        ],
+        "months": 0,
+        "totalInterest": 0,
+        "neverClears": true
+      },
+      "avalanche": {
+        "order": [
+          "a",
+          "b"
+        ],
+        "months": 0,
+        "totalInterest": 0,
+        "neverClears": true
+      }
+    }
+  }
+]

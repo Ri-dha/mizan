@@ -21,7 +21,7 @@ type Member = Awaited<ReturnType<typeof listMembers>>[number]
 type Invitation = Awaited<ReturnType<typeof listInvitations>>[number]
 type Membership = Awaited<ReturnType<typeof listMemberships>>[number]
 
-const INVITE_ROLES: Role[] = ["MEMBER", "VIEWER", "DEPENDENT"]
+const INVITE_ROLES: Role[] = ["MEMBER", "VIEWER", "DEPENDENT", "ADVISOR"]
 
 export function HouseholdPage() {
   const { t, i18n } = useTranslation()
@@ -34,6 +34,7 @@ export function HouseholdPage() {
   const [monthStartDay, setMonthStartDay] = useState(session?.monthStartDay ?? 1)
   const [inviteRole, setInviteRole] = useState<Role>("MEMBER")
   const [inviteContact, setInviteContact] = useState("")
+  const [accessDays, setAccessDays] = useState("")
   const [lastLink, setLastLink] = useState<string | null>(null)
   const [password, setPassword] = useState("")
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -79,7 +80,7 @@ export function HouseholdPage() {
   async function invite(event: FormEvent) {
     event.preventDefault()
     try {
-      const created = await createInvitation(inviteRole, inviteContact.trim() || null)
+      const created = await createInvitation(inviteRole, inviteContact.trim() || null, accessDays.trim() ? Number(accessDays) : null)
       setLastLink(`${location.origin}/join/${created.token}`)
       setInviteContact("")
       await load()
@@ -135,7 +136,7 @@ export function HouseholdPage() {
             <div key={member.userId} className="flex flex-wrap items-center justify-between gap-2 rounded-base border-2 border-border p-3">
               <div className="flex min-w-0 flex-col">
                 <span className="font-heading">{member.displayName} {member.you && <Badge variant="neutral">{t("household.you")}</Badge>}</span>
-                <span className="text-sm opacity-70">{member.contact} · {t("household.since", { date: date(member.joinedAt) })}</span>
+                <span className="text-sm opacity-70">{member.contact} · {t("household.since", { date: date(member.joinedAt) })}{member.expiresAt ? ` · ${t("household.until", { date: date(member.expiresAt) })}` : ""}</span>
               </div>
               <div className="flex items-center gap-2">
                 {canManage && !member.you && member.role !== "OWNER" ? (
@@ -177,6 +178,9 @@ export function HouseholdPage() {
               </Field>
               <Button type="submit" className="self-end">{t("household.createLink")}</Button>
             </form>
+            <Field id="accessDays" label={t("household.accessDays")} hint={t("household.accessDaysHint")}>
+              <Input id="accessDays" type="number" min={1} max={365} dir="ltr" className="w-32" value={accessDays} onChange={(e) => setAccessDays(e.target.value)} placeholder={inviteRole === "ADVISOR" ? "30" : "∞"} />
+            </Field>
             {lastLink && (
               <Alert>
                 <AlertDescription className="flex flex-wrap items-center justify-between gap-2">

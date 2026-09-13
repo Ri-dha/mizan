@@ -82,6 +82,12 @@ export function premiumFor(setting: MarketSetting | undefined, metal: Metal): nu
   return metal === "GOLD" ? (setting?.goldPremiumBasisPoints ?? 0) : (setting?.silverPremiumBasisPoints ?? 0)
 }
 
+/** FR-MTL-11: the buy-back spread applies only when the household chose to value at what a dealer pays. */
+export function discountFor(setting: MarketSetting | undefined, metal: Metal): number {
+  if (setting?.valuationBasis !== "BUYBACK") return 0
+  return metal === "GOLD" ? (setting.goldBuybackBasisPoints ?? 0) : (setting.silverBuybackBasisPoints ?? 0)
+}
+
 /** FR-MTL-07: each open lot at today's price, against what it cost. */
 export function valueLots(states: LotState[], prices: ResolvedPrices, setting: MarketSetting | undefined): LotValuation[] {
   return states.map((state) => {
@@ -106,7 +112,7 @@ export function perGramFor(metal: Metal, purityBasisPoints: number, prices: Reso
   return metalValuation({
     spotUsdPerOzMicros: spot.spotUsdPerOzMicros, usdIqdMicros: prices.usdIqdMicros, purityBasisPoints,
     premiumBasisPoints: premiumFor(setting, metal), premiumFixedPerGramMicros: 0, weightMg: 0,
-    overridePerGram24kMicros: spot.perGram24kOverrideMicros,
+    overridePerGram24kMicros: spot.perGram24kOverrideMicros, discountBasisPoints: discountFor(setting, metal),
   }).perGramMicros
 }
 

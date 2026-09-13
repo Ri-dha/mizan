@@ -1,4 +1,4 @@
-import { House, ListOrdered, MoreHorizontal, PieChart, Plus, Receipt } from "lucide-react"
+import { BarChart3, House, ListOrdered, MoreHorizontal, PieChart, PiggyBank, Plus, Receipt, Settings } from "lucide-react"
 import { Suspense, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, NavLink, Outlet, useNavigate } from "react-router"
@@ -20,19 +20,36 @@ export function AppShell() {
   const session = useSession()
   const [adding, setAdding] = useState(false)
   const navigate = useNavigate()
-  const canWrite = session?.role !== "VIEWER"
+  const canWrite = session?.role !== "VIEWER" && session?.role !== "ADVISOR"
   useEffect(() => {
     const pending = takePendingInvite()
     if (pending) navigate(`/join/${pending}`)
   }, [navigate])
 
-  const primary = [
-    { to: "/", label: t("nav.home"), icon: House, end: true },
-    { to: "/transactions", label: t("nav.transactions"), icon: ListOrdered },
-    { to: "/plan", label: t("nav.plan"), icon: PieChart },
-    { to: "/bills", label: t("nav.bills"), icon: Receipt },
-  ]
-  const sidebar = [...primary, ...MORE_LINKS.filter((l) => l.to !== "/bills").map((l) => ({ to: l.to, label: t(l.key), icon: l.icon, end: false }))]
+  const role = session?.role
+  // §4.2: a dependent gets their own ledger and goals; an advisor gets the report and nothing else.
+  const primary = role === "DEPENDENT"
+    ? [
+      { to: "/", label: t("nav.home"), icon: House, end: true },
+      { to: "/transactions", label: t("nav.transactions"), icon: ListOrdered },
+      { to: "/goals", label: t("nav.goals"), icon: PiggyBank },
+      { to: "/settings", label: t("nav.settings"), icon: Settings },
+    ]
+    : role === "ADVISOR"
+      ? [
+        { to: "/advisor", label: t("advisor.nav"), icon: BarChart3, end: true },
+        { to: "/household", label: t("household.title"), icon: House },
+        { to: "/help", label: t("help.title"), icon: ListOrdered },
+        { to: "/settings", label: t("nav.settings"), icon: Settings },
+      ]
+      : [
+        { to: "/", label: t("nav.home"), icon: House, end: true },
+        { to: "/transactions", label: t("nav.transactions"), icon: ListOrdered },
+        { to: "/plan", label: t("nav.plan"), icon: PieChart },
+        { to: "/bills", label: t("nav.bills"), icon: Receipt },
+      ]
+  const restricted = role === "DEPENDENT" || role === "ADVISOR"
+  const sidebar = restricted ? primary : [...primary, ...MORE_LINKS.filter((l) => l.to !== "/bills").map((l) => ({ to: l.to, label: t(l.key), icon: l.icon, end: false }))]
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn("flex items-center gap-3 rounded-base border-2 border-border px-3 py-2 font-heading", isActive ? "bg-main text-main-foreground shadow-shadow" : "hover:bg-background")
 
@@ -73,7 +90,7 @@ export function AppShell() {
         <Plus className="size-7" />
       </Button>}
 
-      <nav className="print:hidden fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t-4 border-border bg-secondary-background md:hidden">
+      <nav className={cn("print:hidden fixed inset-x-0 bottom-0 z-10 grid border-t-4 border-border bg-secondary-background md:hidden", restricted ? "grid-cols-4" : "grid-cols-5")}>
         {primary.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end}
             className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-heading", isActive && "bg-main text-main-foreground")}>
@@ -81,10 +98,12 @@ export function AppShell() {
             {item.label}
           </NavLink>
         ))}
-        <NavLink to="/more" data-tour="nav-more" className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-heading", isActive && "bg-main text-main-foreground")}>
-          <MoreHorizontal className="size-5" />
-          {t("nav.more")}
-        </NavLink>
+        {!restricted && (
+          <NavLink to="/more" data-tour="nav-more" className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-heading", isActive && "bg-main text-main-foreground")}>
+            <MoreHorizontal className="size-5" />
+            {t("nav.more")}
+          </NavLink>
+        )}
       </nav>
 
       <QuickAddSheet open={adding} transaction={null} onClose={() => setAdding(false)} />

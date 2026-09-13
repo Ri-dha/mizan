@@ -2,6 +2,7 @@ package iq.mizan.common.tenancy;
 
 import iq.mizan.common.security.CurrentUser;
 import iq.mizan.common.security.CurrentUserAccessor;
+import iq.mizan.common.security.Permission;
 
 import lombok.AllArgsConstructor;
 import org.aspectj.lang.annotation.Aspect;
@@ -46,6 +47,9 @@ public class TenantTransactionBinder {
     private void bind(CurrentUser user) {
         jdbcClient.sql("set local role " + APP_ROLE).update();
         tenantSession.bind(user.userId(), user.householdId());
+        if (!user.permissions().contains(Permission.HOUSEHOLD_VIEW)) {
+            tenantSession.restrict();
+        }
 
         TransactionSynchronizationManager.bindResource(BOUND_MARKER, Boolean.TRUE);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

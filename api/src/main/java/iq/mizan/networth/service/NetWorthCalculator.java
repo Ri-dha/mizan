@@ -57,16 +57,19 @@ public class NetWorthCalculator {
 
     private record Prices(long usdIqdMicros, String rateKind, Map<Instrument, Long> spotMicros,
                           Map<Instrument, Long> overridePerGram24k, int goldPremiumBp, int silverPremiumBp,
-                          Map<String, Object> rateSet) {
+                          int goldDiscountBp, int silverDiscountBp, Map<String, Object> rateSet) {
     }
 
     private Prices prices(UUID householdId) {
-        Map<String, Object> setting = jdbc.sql("select rate_kind, gold_premium_basis_points, silver_premium_basis_points "
+        Map<String, Object> setting = jdbc.sql("select rate_kind, gold_premium_basis_points, silver_premium_basis_points, valuation_basis, gold_buyback_basis_points, silver_buyback_basis_points "
                         + "from market_setting where household_id = ? and deleted_at is null limit 1")
                 .param(householdId).query().listOfRows().stream().findFirst().orElse(Map.of());
         String rateKind = String.valueOf(setting.getOrDefault("rate_kind", "PARALLEL"));
         int goldPremium = ((Number) setting.getOrDefault("gold_premium_basis_points", 0)).intValue();
         int silverPremium = ((Number) setting.getOrDefault("silver_premium_basis_points", 0)).intValue();
+        boolean buyback = "BUYBACK".equals(setting.getOrDefault("valuation_basis", "MARKET"));
+        int goldDiscount = buyback ? ((Number) setting.getOrDefault("gold_buyback_basis_points", 0)).intValue() : 0;
+        int silverDiscount = buyback ? ((Number) setting.getOrDefault("silver_buyback_basis_points", 0)).intValue() : 0;
 
         Map<String, Long> overrides = new HashMap<>();
         Map<String, LocalDate> overrideDates = new HashMap<>();
@@ -108,7 +111,8 @@ public class NetWorthCalculator {
         }
         rateSet.put("goldPremiumBasisPoints", goldPremium);
         rateSet.put("silverPremiumBasisPoints", silverPremium);
-        return new Prices(usdIqd, rateKind, spot, perGramOverride, goldPremium, silverPremium, rateSet);
+        rateSet.put("valuationBasis", buyback ? "BUYBACK" : "MARKET");
+        return new Prices(usdIqd, rateKind, spot, perGramOverride, goldPremium, silverPremium, goldDiscount, silverDiscount, rateSet);
     }
 
     private static long halfUp(long numerator, long divisor) {
@@ -153,7 +157,7 @@ public class NetWorthCalculator {
                     prices.spotMicros().getOrDefault(instrument, 0L), prices.usdIqdMicros(),
                     ((Number) lot.get("purity_basis_points")).intValue(),
                     gold ? prices.goldPremiumBp() : prices.silverPremiumBp(), 0, remaining,
-                    prices.overridePerGram24k().get(instrument))).value();
+                    prices.overridePerGram24k().get(instrument), gold ? prices.goldDiscountBp() : prices.silverDiscountBp())).value();
         }
         return total;
     }

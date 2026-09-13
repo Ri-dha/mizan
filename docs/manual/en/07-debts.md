@@ -15,6 +15,10 @@ Enter the original amount, the yearly rate (0 for an interest-free loan), the mo
 
 Open a debt and record a payment. Interest for the month is charged on the balance before the payment and shown separately from principal. The balance always comes from the payment ledger; **Undo** removes a payment.
 
+## Which debt first
+
+With more than one debt, the Debts screen compares two orders: **snowball** clears the smallest balance first, **avalanche** the highest rate first. Both pay every debt its own payment and roll the freed payments, plus any extra you enter, into the next debt in line. You see the months to debt-free and the total interest for each. It is a comparison of outcomes, not advice.
+
 ## Payoff
 
 The debt card shows the months left and the total interest at the current payment. If the payment does not cover the interest, Mizan says plainly that the balance will never clear. The **What if I paid extra?** box shows the months and interest saved by a higher payment. This is arithmetic, not advice.

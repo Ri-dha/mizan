@@ -131,6 +131,10 @@ export interface LedgerTransaction extends Syncable {
   counterpartyType: CounterpartyType | null
   counterpartyId: string | null
   attachmentId: string | null
+  /** FR-TRX-06: the parts of one purchase share a group id and sum to its total. */
+  splitGroupId: string | null
+  /** FR-AST-07: a running cost of an asset (fuel, repairs, insurance). */
+  assetId: string | null
 }
 
 export interface Attachment extends Syncable {
@@ -214,6 +218,7 @@ export type WeightUnit = "GRAM" | "MITHQAL" | "TOLA" | "TROY_OUNCE" | "KILOGRAM"
 export type DisposalMethod = "FIFO" | "SPECIFIC" | "WEIGHTED_AVERAGE"
 export type MarketInstrument = "XAU" | "XAG" | "USDIQD"
 export type RateKind = "OFFICIAL" | "PARALLEL"
+export type ValuationBasis = "MARKET" | "BUYBACK"
 
 export interface MetalLot extends Syncable {
   visibility: Visibility
@@ -276,6 +281,9 @@ export interface MarketSetting extends Syncable {
   silverPremiumBasisPoints: number
   goldMethod: DisposalMethod
   silverMethod: DisposalMethod
+  valuationBasis: ValuationBasis
+  goldBuybackBasisPoints: number
+  silverBuybackBasisPoints: number
 }
 
 export interface CashAdjustment extends Syncable {
@@ -516,6 +524,9 @@ export class MizanDatabase extends Dexie {
     })
     this.version(10).stores({
       notificationSettings: "id, deletedAt",
+    })
+    this.version(11).stores({
+      transactions: "id, deletedAt, monthKey, occurredOn, bucketId, type, [monthKey+bucketId], splitGroupId, assetId",
     })
   }
 }

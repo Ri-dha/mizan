@@ -43,6 +43,9 @@ public class Membership {
     @Column(name = "is_current", nullable = false)
     private boolean current;
 
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
     public static Membership owner(UUID householdId, UUID userId) {
         Membership membership = new Membership();
         membership.id = UUID.randomUUID();
@@ -55,7 +58,7 @@ public class Membership {
         return membership;
     }
 
-    public static Membership join(UUID householdId, UUID userId, HouseholdRole role) {
+    public static Membership join(UUID householdId, UUID userId, HouseholdRole role, Instant expiresAt) {
         Membership membership = new Membership();
         membership.id = UUID.randomUUID();
         membership.householdId = householdId;
@@ -63,11 +66,17 @@ public class Membership {
         membership.role = role;
         membership.status = MembershipStatus.ACTIVE;
         membership.joinedAt = Instant.now();
+        membership.expiresAt = expiresAt;
         return membership;
     }
 
     public boolean isActive() {
         return status == MembershipStatus.ACTIVE;
+    }
+
+    /** Advisors are let in for a while (§4.2 P4); everyone else until removed. */
+    public boolean isActiveAt(Instant now) {
+        return isActive() && (expiresAt == null || expiresAt.isAfter(now));
     }
 
     public void changeRole(HouseholdRole role) {
@@ -79,9 +88,10 @@ public class Membership {
         this.current = false;
     }
 
-    public void reactivate(HouseholdRole role) {
+    public void reactivate(HouseholdRole role, Instant expiresAt) {
         this.status = MembershipStatus.ACTIVE;
         this.role = role;
+        this.expiresAt = expiresAt;
     }
 
     public void makeCurrent(boolean current) {

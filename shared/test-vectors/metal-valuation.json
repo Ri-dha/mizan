@@ -8,7 +8,8 @@
       "premiumBasisPoints": 0,
       "premiumFixedPerGramMicros": 0,
       "weightMg": 5000,
-      "overridePerGram24kMicros": null
+      "overridePerGram24kMicros": null,
+      "discountBasisPoints": 0
     },
     "expected": {
       "perGram24kMicros": 125243139840,
@@ -25,7 +26,8 @@
       "premiumBasisPoints": 0,
       "premiumFixedPerGramMicros": 0,
       "weightMg": 1000,
-      "overridePerGram24kMicros": null
+      "overridePerGram24kMicros": null,
+      "discountBasisPoints": 0
     },
     "expected": {
       "perGram24kMicros": 125243139840,
@@ -42,7 +44,8 @@
       "premiumBasisPoints": 300,
       "premiumFixedPerGramMicros": 0,
       "weightMg": 10000,
-      "overridePerGram24kMicros": null
+      "overridePerGram24kMicros": null,
+      "discountBasisPoints": 0
     },
     "expected": {
       "perGram24kMicros": 125243139840,
@@ -59,7 +62,8 @@
       "premiumBasisPoints": 0,
       "premiumFixedPerGramMicros": 5000000000,
       "weightMg": 2500,
-      "overridePerGram24kMicros": null
+      "overridePerGram24kMicros": null,
+      "discountBasisPoints": 0
     },
     "expected": {
       "perGram24kMicros": 125243139840,
@@ -76,7 +80,8 @@
       "premiumBasisPoints": 0,
       "premiumFixedPerGramMicros": 0,
       "weightMg": 1000000,
-      "overridePerGram24kMicros": null
+      "overridePerGram24kMicros": null,
+      "discountBasisPoints": 0
     },
     "expected": {
       "perGram24kMicros": 1488739209,
@@ -93,7 +98,8 @@
       "premiumBasisPoints": 0,
       "premiumFixedPerGramMicros": 0,
       "weightMg": 5000,
-      "overridePerGram24kMicros": null
+      "overridePerGram24kMicros": null,
+      "discountBasisPoints": 0
     },
     "expected": {
       "perGram24kMicros": 111611233462,
@@ -110,7 +116,8 @@
       "premiumBasisPoints": 0,
       "premiumFixedPerGramMicros": 0,
       "weightMg": 11664,
-      "overridePerGram24kMicros": null
+      "overridePerGram24kMicros": null,
+      "discountBasisPoints": 0
     },
     "expected": {
       "perGram24kMicros": 125243139840,
@@ -127,7 +134,8 @@
       "premiumBasisPoints": 0,
       "premiumFixedPerGramMicros": 0,
       "weightMg": 0,
-      "overridePerGram24kMicros": null
+      "overridePerGram24kMicros": null,
+      "discountBasisPoints": 0
     },
     "expected": {
       "perGram24kMicros": 125243139840,
@@ -144,12 +152,31 @@
       "premiumBasisPoints": 0,
       "premiumFixedPerGramMicros": 0,
       "weightMg": 5000,
-      "overridePerGram24kMicros": 128000000000
+      "overridePerGram24kMicros": 128000000000,
+      "discountBasisPoints": 0
     },
     "expected": {
       "perGram24kMicros": 128000000000,
       "perGramMicros": 112000000000,
       "value": 560000
+    }
+  },
+  {
+    "name": "dealer buy-back at 3% below the market price (FR-MTL-11)",
+    "input": {
+      "spotUsdPerOzMicros": 2650000000,
+      "usdIqdMicros": 1470000000,
+      "purityBasisPoints": 8750,
+      "premiumBasisPoints": 0,
+      "premiumFixedPerGramMicros": 0,
+      "weightMg": 5000,
+      "overridePerGram24kMicros": null,
+      "discountBasisPoints": 300
+    },
+    "expected": {
+      "perGram24kMicros": 125243139840,
+      "perGramMicros": 106300114939,
+      "value": 531501
     }
   }
 ]

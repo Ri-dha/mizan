@@ -36,6 +36,9 @@ export const DEFAULT_SETTING: Omit<MarketSetting, keyof import("@/db/schema").Sy
   silverPremiumBasisPoints: 0,
   goldMethod: "FIFO",
   silverMethod: "FIFO",
+  valuationBasis: "MARKET",
+  goldBuybackBasisPoints: 0,
+  silverBuybackBasisPoints: 0,
 }
 
 export async function liveSetting(): Promise<MarketSetting | undefined> {

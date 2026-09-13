@@ -21,6 +21,14 @@ Local prices differ from world prices. **Enter today's price** takes what the ma
 
 Choose whether the official or the market dollar rate governs conversion, a local premium per metal, and the default cost basis method.
 
+## What a dealer would pay
+
+Dealers buy below the market price. In the valuation settings, enter the buy-back spread per metal and switch on **Value holdings at what a dealer would pay**; every value on the screen and in net worth then uses the lower price, and the portfolio says so.
+
+## Zakat base
+
+**Zakat base** computes, for a date you choose, the pure gold and silver you held, its value at the price on that day (or a price you enter), whether each reaches the nisab you enter (85 g of gold and 595 g of silver by default), and 2.5% of the value. It is a computation of inputs only and makes no ruling; the Hijri date is shown alongside to help with the lunar year.
+
 ## Selling
 
 **Sell** asks for the weight, the amount received, fees and the date. Metal is drawn from your purchases by the chosen method:

@@ -22,6 +22,11 @@ public class TenantSession {
         jdbcClient.sql("select set_config('app.system', 'on', true)").query().singleRow();
     }
 
+    /** §4.2: a dependent sees only what they own; the policies check this flag next to the household. */
+    public void restrict() {
+        jdbcClient.sql("select set_config('app.restricted', 'on', true)").query().singleRow();
+    }
+
     public void bind(UUID userId, UUID householdId) {
         jdbcClient.sql("select set_config('app.user_id', ?, true), set_config('app.household_id', ?, true)")
                 .param(userId.toString())

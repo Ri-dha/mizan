@@ -101,6 +101,7 @@ order every hour; the parallel-market dollar rate comes from `MIZAN_PARALLEL_RAT
 | POST/DELETE | `/api/v1/households/current/deletion-request` | bearer, `HOUSEHOLD_DELETE` | Request (with password) or cancel household deletion; purged after 7 days |
 | GET | `/api/v1/invitations/{token}` | public | Preview an invitation |
 | POST | `/api/v1/invitations/{token}/accept` | bearer | Join the household behind the link |
+| GET | `/api/v1/reports/annual?year` | bearer, `REPORTS_VIEW` | Income, spending, saving rate and closing net worth per month over shared records |
 | GET | `/api/v1/notifications/vapid-key` | bearer | The server's VAPID public key for subscribing a browser |
 | GET/POST/DELETE | `/api/v1/notifications/subscriptions` | bearer | This account's push subscriptions; register or remove one |
 | POST | `/api/v1/notifications/test` | bearer | Send a test notification to every subscribed device |
@@ -124,9 +125,9 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/verify` | Enter the 6-digit contact verification code |
 | `/plan` | Buckets for the selected month with allocated, carried over, committed, spent and free; edit shares, fixed amounts and carry-over with the over/under warning and rebalance; move money between buckets with a reason |
 | `/income` | Income sources with an amount history (record a raise from a date), this month's expected pay dates, mark received, irregular receipts |
-| `/transactions` | The ledger for the selected month: search and filters, edit, recycle bin; the + button anywhere opens quick add |
+| `/transactions` | The ledger for the selected month: search and filters, edit, recycle bin, split purchases, running costs of an asset; the + button anywhere opens quick add |
 | `/bills` | Recurring bills, this month's due dates, mark paid with the actual amount, undo |
-| `/debts` | Debts owed and owing, balance from the payment ledger, payoff and what-if extra payments |
+| `/debts` | Debts owed and owing, balance from the payment ledger, payoff and what-if extra payments, snowball vs avalanche comparison |
 | `/goals` | Savings goals with deposits, withdrawals, progress and projection |
 | `/metals` | Gold and silver: holdings by purity, purchases with cost per gram vs now, sales with realised gain, prices in use, "how is this calculated", enter today's price, valuation settings |
 | `/networth` | Net worth with composition, USD line, trend chart of closed months, close and reopen months with their snapshots |
@@ -135,6 +136,7 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/more` | Links to the less frequent screens |
 | `/accounts` | Cash accounts: add, edit, soft-delete with undo |
 | `/household` | Members and roles, invite by link, pending invitations, switch between your households, leave, transfer ownership, delete the household with password and a 7-day grace |
+| `/advisor` | What an advisor sees: the annual report over shared records, nothing else |
 | `/join/:token` | Landing page of an invitation link: preview, sign in or register, join |
 | `/assets` | Other assets grouped by type: valuation history, depreciation, liquid/illiquid, sell with realised gain, stale-valuation reminder on Home |
 | `/sync` | Sync status, sync now, overridden edits (conflict log) |

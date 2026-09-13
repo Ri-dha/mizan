@@ -2,6 +2,7 @@ package iq.mizan.household.service;
 
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
@@ -104,23 +105,26 @@ public class HouseholdService {
 
     @Transactional(readOnly = true)
     public List<MemberResponse> members(UUID userId, UUID householdId) {
-        return jdbc.sql("select m.user_id, u.display_name, coalesce(u.email, u.phone) as contact, m.role, m.joined_at "
+        return jdbc.sql("select m.user_id, u.display_name, coalesce(u.email, u.phone) as contact, m.role, m.joined_at, m.expires_at "
                         + "from membership m join app_user u on u.id = m.user_id "
-                        + "where m.household_id = ? and m.status = 'ACTIVE' order by m.joined_at")
-                .param(householdId)
+                        + "where m.household_id = ? and m.status = 'ACTIVE' and (m.expires_at is null or m.expires_at > ?) order by m.joined_at")
+                .param(householdId).param(java.sql.Timestamp.from(clock.instant()))
                 .query((rs, i) -> new MemberResponse(rs.getObject("user_id", UUID.class), rs.getString("display_name"),
                         rs.getString("contact"), HouseholdRole.valueOf(rs.getString("role")),
-                        rs.getTimestamp("joined_at").toInstant(), userId.equals(rs.getObject("user_id", UUID.class))))
+                        rs.getTimestamp("joined_at").toInstant(),
+                        rs.getTimestamp("expires_at") == null ? null : rs.getTimestamp("expires_at").toInstant(),
+                        userId.equals(rs.getObject("user_id", UUID.class))))
                 .list();
     }
 
     @Transactional
-    public InvitationResponse invite(UUID userId, UUID householdId, HouseholdRole role, String contact) {
+    public InvitationResponse invite(UUID userId, UUID householdId, HouseholdRole role, String contact, Integer accessDays) {
         Household household = household(householdId);
         requireNotDeleting(household);
         String token = newToken();
         HouseholdInvitation invitation = invitationRepository.save(HouseholdInvitation.issue(
-                householdId, userId, role, blankToNull(contact), hashingService.hash(token), properties.invitation().ttl(), clock.instant()));
+                householdId, userId, role, blankToNull(contact), hashingService.hash(token), properties.invitation().ttl(), clock.instant(),
+                accessDays != null ? accessDays : role == HouseholdRole.ADVISOR ? properties.advisor().defaultAccessDays() : null));
         if (invitation.getContact() != null) {
             invitationSender.send(invitation.getContact(), household.getName(), token);
         }
@@ -161,13 +165,15 @@ public class HouseholdService {
         HouseholdInvitation invitation = openInvitation(token);
         UUID householdId = invitation.getHouseholdId();
         Membership membership = membershipRepository.findByHouseholdIdAndUserId(householdId, userId).orElse(null);
-        if (membership != null && membership.isActive()) {
+        Instant now = clock.instant();
+        if (membership != null && membership.isActiveAt(now)) {
             throw ApiException.of(ErrorCode.ALREADY_A_MEMBER, "You are already a member of this household");
         }
+        Instant expiresAt = invitation.getAccessDays() == null ? null : now.plus(Duration.ofDays(invitation.getAccessDays()));
         if (membership == null) {
-            membership = membershipRepository.save(Membership.join(householdId, userId, invitation.getRole()));
+            membership = membershipRepository.save(Membership.join(householdId, userId, invitation.getRole(), expiresAt));
         } else {
-            membership.reactivate(invitation.getRole());
+            membership.reactivate(invitation.getRole(), expiresAt);
         }
         invitation.accept(userId, clock.instant());
         makeCurrent(userId, membership);
@@ -237,6 +243,7 @@ public class HouseholdService {
     @Transactional(readOnly = true)
     public List<MembershipResponse> memberships(UUID userId) {
         return membershipRepository.findByUserIdAndStatusOrderByJoinedAtAsc(userId, MembershipStatus.ACTIVE).stream()
+                .filter(m -> m.isActiveAt(clock.instant()))
                 .map(m -> new MembershipResponse(m.getHouseholdId(), household(m.getHouseholdId()).getName(), m.getRole(), m.isCurrent()))
                 .toList();
     }
@@ -292,14 +299,17 @@ public class HouseholdService {
     // --- helpers ---
 
     private Membership currentMembership(UUID userId) {
+        Instant now = clock.instant();
         return membershipRepository.findFirstByUserIdAndStatusAndCurrentTrue(userId, MembershipStatus.ACTIVE)
-                .or(() -> membershipRepository.findFirstByUserIdAndStatusOrderByJoinedAtAsc(userId, MembershipStatus.ACTIVE))
+                .filter(m -> m.isActiveAt(now))
+                .or(() -> membershipRepository.findByUserIdAndStatusOrderByJoinedAtAsc(userId, MembershipStatus.ACTIVE).stream()
+                        .filter(m -> m.isActiveAt(now)).findFirst())
                 .orElseThrow(HouseholdService::notFound);
     }
 
     private Membership activeMember(UUID householdId, UUID userId) {
         return membershipRepository.findByHouseholdIdAndUserId(householdId, userId)
-                .filter(Membership::isActive)
+                .filter(m -> m.isActiveAt(clock.instant()))
                 .orElseThrow(() -> ApiException.of(ErrorCode.MEMBER_NOT_FOUND, "No such member in this household"));
     }
 

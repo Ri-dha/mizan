@@ -41,7 +41,7 @@ public class SyncController {
 
     @Operation(summary = "Register the calling device")
     @PostMapping("/devices")
-    @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
+    @PreAuthorize("hasAnyAuthority('HOUSEHOLD_VIEW', 'RECORD_WRITE')")
     public ResponseEntity<DeviceResponse> registerDevice(
             @AuthenticationPrincipal CurrentUser user, @Valid @RequestBody RegisterDeviceRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(deviceService.register(user, request.name()));
@@ -58,7 +58,7 @@ public class SyncController {
 
     @Operation(summary = "Pull changes after a sequence number")
     @GetMapping("/pull")
-    @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
+    @PreAuthorize("hasAnyAuthority('HOUSEHOLD_VIEW', 'RECORD_WRITE')")
     public ResponseEntity<SyncPullResponse> pull(
             @AuthenticationPrincipal CurrentUser user,
             @RequestParam UUID deviceId,
@@ -69,7 +69,7 @@ public class SyncController {
 
     @Operation(summary = "Conflicts recorded for a device")
     @GetMapping("/conflicts")
-    @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
+    @PreAuthorize("hasAnyAuthority('HOUSEHOLD_VIEW', 'RECORD_WRITE')")
     public ResponseEntity<List<ConflictResponse>> conflicts(
             @AuthenticationPrincipal CurrentUser user, @RequestParam UUID deviceId) {
         return ResponseEntity.ok(syncService.conflicts(user, deviceId));

@@ -19,6 +19,8 @@ import { restore, softDelete } from "@/db/write"
 import { todayIso } from "@/domain/calendar/month"
 import { formatMoney, toMinorUnits } from "@/domain/money/format"
 import { useScreenTour } from "@/tours/useTour"
+import { useDateFormat } from "@/app/dates"
+import { db } from "@/db/schema"
 import { AssetSheet } from "./AssetSheet"
 
 const TYPE_ORDER: AssetType[] = ["VEHICLE", "PROPERTY", "ELECTRONICS", "EQUIPMENT", "FURNITURE", "LIVESTOCK", "OTHER"]
@@ -32,6 +34,12 @@ export function AssetsPage() {
   const prefs = usePreferences()
   const assets = useLiveQuery(liveAssets, [], [])
   const valuations = useLiveQuery(liveValuations, [], [])
+  const runningCosts = useLiveQuery(async () => {
+    const rows = await db.transactions.filter((x) => x.deletedAt === null && x.type === "EXPENSE" && x.assetId !== null && x.assetId !== undefined).toArray()
+    const totals: Record<string, number> = {}
+    for (const row of rows) totals[row.assetId!] = (totals[row.assetId!] ?? 0) + row.baseAmount
+    return totals
+  }, [], {} as Record<string, number>)
   const [editing, setEditing] = useState<Asset | null | "new">(null)
   const [action, setAction] = useState<Action>(null)
   const [amount, setAmount] = useState("")
@@ -42,7 +50,7 @@ export function AssetsPage() {
   useScreenTour("assets")
 
   const money = (v: number, currency = base) => formatMoney(v, currency, i18n.language)
-  const date = (iso: string) => new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso))
+  const date = useDateFormat()
   const held = assets.filter((a) => a.status === "HELD")
   const sold = assets.filter((a) => a.status === "SOLD")
   const totalBase = held.reduce((sum, a) => sum + currentValue(a, valuations, today).baseValue, 0)
@@ -127,6 +135,9 @@ export function AssetsPage() {
                   <p className={`text-sm tabular-nums ${change < 0 ? "text-chart-2" : ""}`}>
                     {t("assets.sincePurchase", { amount: (change > 0 ? "+" : "") + money(change, asset.currency) })}
                   </p>
+                  {(runningCosts[asset.id] ?? 0) > 0 && (
+                    <p className="text-sm tabular-nums">{t("assets.tco", { costs: money(runningCosts[asset.id]), total: money(asset.purchasePrice + runningCosts[asset.id] - value.value, asset.currency) })}</p>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" data-tour={asset.id === held[0]?.id ? "assets-value" : undefined} onClick={() => openAction("value", asset)}>{t("assets.addValuation")}</Button>
                     <Button size="sm" variant="neutral" onClick={() => openAction("sell", asset)}>{t("assets.sell")}</Button>

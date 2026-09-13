@@ -15,6 +15,8 @@ import { MarketSettingsDialog } from "./MarketSettingsDialog"
 import { OverrideSheet } from "./OverrideSheet"
 import { PriceExplainer } from "./PriceExplainer"
 import { SellSheet } from "./SellSheet"
+import { ZakatDialog } from "./ZakatDialog"
+import { perGramFor } from "@/db/metals"
 import { useMetals } from "./useMetals"
 import { HelpButton } from "@/components/HelpButton"
 import { useScreenTour } from "@/tours/useTour"
@@ -33,6 +35,7 @@ export function MetalsPage() {
   const [overriding, setOverriding] = useState(false)
   const [settings, setSettings] = useState(false)
   const [explaining, setExplaining] = useState(false)
+  const [zakat, setZakat] = useState(false)
   useScreenTour("metals")
 
   const money = (v: number) => formatMoney(v, base, i18n.language)
@@ -56,6 +59,7 @@ export function MetalsPage() {
           <CardTitle>{t("metals.portfolio")}</CardTitle>
           <CardDescription>
             {t("metals.costBasis")}: {money(totals.cost)} · {t("metals.valueNow")}: {money(totals.value)}
+            {view.setting?.valuationBasis === "BUYBACK" && <> · <Badge variant="neutral">{t("metals.buybackBadge")}</Badge></>}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -89,6 +93,7 @@ export function MetalsPage() {
           <div className="flex gap-2">
             <Button size="sm" variant="neutral" onClick={() => setExplaining(true)}>{t("metals.howCalculated")}</Button>
             <Button size="sm" variant="neutral" onClick={() => setOverriding(true)}>{t("metals.enterPrice")}</Button>
+            <Button size="sm" variant="neutral" onClick={() => setZakat(true)}>{t("zakat.open")}</Button>
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">
@@ -147,6 +152,7 @@ export function MetalsPage() {
       <LotSheet open={editing !== null} lot={editing === "new" ? null : editing} onClose={() => setEditing(null)} />
       <SellSheet metal={selling} view={view} onClose={() => setSelling(null)} />
       <OverrideSheet open={overriding} view={view} onClose={() => setOverriding(false)} />
+      <ZakatDialog open={zakat} valued={view.valued} perGram24k={{ GOLD: perGramFor("GOLD", 9990, view.prices, view.setting), SILVER: perGramFor("SILVER", 9990, view.prices, view.setting) }} currency={base} onClose={() => setZakat(false)} />
       <MarketSettingsDialog open={settings} setting={view.setting} onClose={() => setSettings(false)} />
       <PriceExplainer open={explaining} view={view} onClose={() => setExplaining(false)} />
     </div>

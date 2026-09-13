@@ -2,13 +2,13 @@ import { api, refreshAccessToken, unwrap } from "./client"
 import { rememberFromServer, clearLocalData } from "./auth"
 import { resetSyncState, syncNow } from "@/sync/engine"
 
-export type Role = "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT"
+export type Role = "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR"
 
 export const listMembers = () => unwrap(api.GET("/api/v1/households/current/members"))
 export const listInvitations = () => unwrap(api.GET("/api/v1/households/current/invitations"))
 export const listMemberships = () => unwrap(api.GET("/api/v1/households"))
-export const createInvitation = (role: Role, contact: string | null) =>
-  unwrap(api.POST("/api/v1/households/current/invitations", { body: { role, contact: contact ?? undefined } }))
+export const createInvitation = (role: Role, contact: string | null, accessDays: number | null = null) =>
+  unwrap(api.POST("/api/v1/households/current/invitations", { body: { role, contact: contact ?? undefined, accessDays: accessDays ?? undefined } }))
 export const revokeInvitation = (id: string) => unwrap(api.DELETE("/api/v1/households/current/invitations/{invitationId}", { params: { path: { invitationId: id } } }))
 export const changeRole = (userId: string, role: Role) =>
   unwrap(api.PATCH("/api/v1/households/current/members/{userId}", { params: { path: { userId } }, body: { role } }))

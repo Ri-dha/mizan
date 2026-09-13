@@ -20,7 +20,8 @@ import { liveGoals } from "@/db/goals"
 import { RATE_SCALE } from "@/db/income"
 import { liveBucketsOf, livePlans, planFor } from "@/db/plan"
 import type { Bucket, CounterpartyType, LedgerTransaction, TransactionType } from "@/db/schema"
-import { createTransaction, deleteTransaction, knownCategories, liveTransactionsFor, updateTransaction } from "@/db/transactions"
+import { createSplit, createTransaction, deleteTransaction, knownCategories, liveTransactionsFor, updateTransaction } from "@/db/transactions"
+import { liveAssets } from "@/db/assets"
 import { isMonthClosed, liveMonthCloses } from "@/db/networth"
 import { formatMonthKey } from "@/app/month"
 import { monthKeyFor, todayIso } from "@/domain/calendar/month"
@@ -59,6 +60,10 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
   const [note, setNote] = useState("")
   const [isPrivate, setIsPrivate] = useState(false)
   const [attachmentId, setAttachmentId] = useState<string | null>(null)
+  const [split, setSplit] = useState(false)
+  const [parts, setParts] = useState<{ bucketId: string; amount: string }[]>([])
+  const [assetId, setAssetId] = useState<string>("")
+  const assets = useLiveQuery(liveAssets, [], [])
   const [preview, setPreview] = useState<string | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -82,6 +87,9 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
     setNote(transaction?.note ?? "")
     setIsPrivate(transaction ? transaction.visibility === "PRIVATE" : privacy.transactions === "PRIVATE")
     setAttachmentId(transaction?.attachmentId ?? null)
+    setSplit(false)
+    setParts([])
+    setAssetId(transaction?.assetId ?? "")
   }, [open, transaction, base, privacy])
 
   useEffect(() => {
@@ -117,10 +125,21 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
       attachmentId,
       visibility: isPrivate ? ("PRIVATE" as const) : ("SHARED" as const),
     }
-    if (transaction) await updateTransaction(transaction.id, input)
-    else await createTransaction(input)
+    const withAsset = { ...input, assetId: type === "EXPENSE" && assetId ? assetId : null }
+    if (transaction) await updateTransaction(transaction.id, withAsset)
+    else if (split && type === "EXPENSE") {
+      const splitParts = parts.filter((p) => p.bucketId && p.amount).map((p) => ({ bucketId: p.bucketId, amount: toMinorUnits(p.amount, currency) }))
+      if (splitParts.reduce((s, p) => s + p.amount, 0) !== withAsset.amount) {
+        toast(t("transactions.splitMismatch"))
+        return
+      }
+      await createSplit(withAsset, splitParts)
+    } else await createTransaction(withAsset)
     onClose()
   }
+
+  const splitTotal = parts.reduce((s, p) => s + (p.amount ? toMinorUnits(p.amount, currency) : 0), 0)
+  const splitRemainder = toMinorUnits(amount || "0", currency) - splitTotal
 
   async function pickPhoto(file: File | undefined) {
     if (!file) return
@@ -168,7 +187,30 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
             </Field>
           )}
 
-          {type !== "INCOME" && (
+          {type === "EXPENSE" && !transaction && (
+            <div className="flex items-center gap-2">
+              <Switch id="split" checked={split} onCheckedChange={(on) => { setSplit(on); if (on && parts.length === 0) setParts([{ bucketId: bucketId ?? "", amount: "" }, { bucketId: "", amount: "" }]) }} />
+              <Label htmlFor="split">{t("transactions.split")}</Label>
+            </div>
+          )}
+          {split && type === "EXPENSE" && !transaction ? (
+            <div className="flex flex-col gap-2">
+              {parts.map((part, i) => (
+                <div key={i} className="grid grid-cols-[1fr_7rem_auto] gap-2">
+                  <Select value={part.bucketId} onValueChange={(v) => setParts(parts.map((p, j) => (j === i ? { ...p, bucketId: v } : p)))}>
+                    <SelectTrigger><SelectValue placeholder={t("transactions.bucket")} /></SelectTrigger>
+                    <SelectContent>{buckets.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Input inputMode="decimal" dir="ltr" placeholder="0" value={part.amount} onChange={(e) => setParts(parts.map((p, j) => (j === i ? { ...p, amount: e.target.value } : p)))} />
+                  <Button type="button" variant="neutral" size="icon" onClick={() => setParts(parts.filter((_, j) => j !== i))}><X /></Button>
+                </div>
+              ))}
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <Button type="button" variant="neutral" size="sm" onClick={() => setParts([...parts, { bucketId: "", amount: splitRemainder > 0 ? fromMinorUnits(splitRemainder, currency) : "" }])}>{t("transactions.addPart")}</Button>
+                <span className={splitRemainder === 0 ? "opacity-70" : "text-chart-2"}>{t("transactions.splitRemainder", { amount: fromMinorUnits(splitRemainder, currency) })}</span>
+              </div>
+            </div>
+          ) : type !== "INCOME" && (
             <div className="flex flex-col gap-1.5">
               <Label>{type === "TRANSFER" ? t("transactions.fromBucket") : t("transactions.bucket")}</Label>
               <div className="flex flex-wrap gap-2">
@@ -218,6 +260,18 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
           <Field id="note" label={t("income.note")}>
             <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} />
           </Field>
+          {type === "EXPENSE" && assets.some((a) => a.status === "HELD") && (
+            <Field id="asset" label={t("transactions.relatedAsset")} hint={t("transactions.relatedAssetHint")}>
+              <Select value={assetId || "__none__"} onValueChange={(v) => setAssetId(v === "__none__" ? "" : v)}>
+                <SelectTrigger id="asset"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">{t("bills.noBucket")}</SelectItem>
+                  {assets.filter((a) => a.status === "HELD").map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
+          {transaction?.splitGroupId && <p className="text-xs opacity-70">{t("transactions.partOfSplit")}</p>}
 
           <div className="flex flex-col gap-2">
             <Label>{t("transactions.receipt")}</Label>
@@ -243,7 +297,7 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
 
           <SheetFooter className="flex-row justify-between px-0">
             {transaction && <Button type="button" variant="neutral" onClick={() => void remove()}>{t("accounts.delete")}</Button>}
-            <Button type="submit" disabled={!amount || (type !== "INCOME" && !bucketId && buckets.length > 0)}>{t("accounts.save")}</Button>
+            <Button type="submit" disabled={!amount || (type !== "INCOME" && !split && !bucketId && buckets.length > 0) || (split && (parts.length < 2 || splitRemainder !== 0))}>{t("accounts.save")}</Button>
           </SheetFooter>
         </form>
       </SheetContent>

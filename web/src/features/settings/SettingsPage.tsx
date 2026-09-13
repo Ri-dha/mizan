@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { applyImport, buildExport, downloadJson, ImportError, validateImport, type ImportPreview } from "@/data/export"
 import { assetsTable, downloadBlob, lotsTable, toCsv, toXlsx, transactionsTable, type Table } from "@/data/tabular"
 import { db, type Attachment } from "@/db/schema"
+import { CsvImportDialog } from "./CsvImportDialog"
 import { clearBackupPassphrase, createBackup, openBackup, setAutomaticBackup, setBackupPassphrase, useBackupState, useBackups } from "@/backup/store"
 import { todayIso } from "@/domain/calendar/month"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -105,6 +106,8 @@ export function SettingsPage() {
   const [preview, setPreview] = useState<ImportPreview | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
+  const csvInput = useRef<HTMLInputElement>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
   useScreenTour("settings")
 
   useEffect(() => {
@@ -233,6 +236,10 @@ export function SettingsPage() {
             </Select>
           </Field>
           <div className="flex items-center gap-2">
+            <Switch id="showHijri" checked={prefs.showHijri} onCheckedChange={(on) => setPreferences({ showHijri: on })} />
+            <Label htmlFor="showHijri">{t("settings.showHijri")}</Label>
+          </div>
+          <div className="flex items-center gap-2">
             <Switch id="showUsd" checked={prefs.showUsd} onCheckedChange={(on) => setPreferences({ showUsd: on })} />
             <Label htmlFor="showUsd">{t("settings.showUsd")}</Label>
           </div>
@@ -329,6 +336,8 @@ export function SettingsPage() {
             <Button variant="neutral" onClick={() => void exportData()}>{t("data.export")}</Button>
             <Button variant="neutral" onClick={() => fileInput.current?.click()}>{t("data.import")}</Button>
             <input ref={fileInput} type="file" accept="application/json,.json" hidden onChange={(e) => void pickImport(e.target.files?.[0])} />
+            <Button variant="neutral" onClick={() => csvInput.current?.click()}>{t("csv.button")}</Button>
+            <input ref={csvInput} type="file" accept="text/csv,.csv" hidden onChange={(e) => { setCsvFile(e.target.files?.[0] ?? null); e.target.value = "" }} />
           </div>
                   <div className="flex flex-col gap-2">
             <p className="text-sm opacity-70">{t("exports.body")}</p>
@@ -395,6 +404,7 @@ export function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <CsvImportDialog file={csvFile} onClose={() => setCsvFile(null)} />
     </div>
   )
 }

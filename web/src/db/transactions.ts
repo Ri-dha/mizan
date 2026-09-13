@@ -17,12 +17,32 @@ export interface TransactionInput {
   counterpartyId: string | null
   attachmentId: string | null
   visibility: Visibility
+  splitGroupId?: string | null
+  assetId?: string | null
 }
 
 export async function createTransaction(input: TransactionInput): Promise<string> {
   const id = crypto.randomUUID()
-  await writeFields<LedgerTransaction>("ledger_transaction", id, { ...input, baseAmount: toBaseAmount(input.amount, input.fxRateMicros) })
+  await writeFields<LedgerTransaction>("ledger_transaction", id, { splitGroupId: null, assetId: null, ...input, baseAmount: toBaseAmount(input.amount, input.fxRateMicros) })
   return id
+}
+
+/** FR-TRX-06: one purchase as several rows, one per bucket, sharing a group id; the parts must sum to the total. */
+export async function createSplit(base: Omit<TransactionInput, "bucketId" | "amount">, parts: { bucketId: string; amount: number }[]): Promise<string> {
+  if (parts.some((p) => p.amount <= 0)) throw new Error("SPLIT_PART_NOT_POSITIVE")
+  const splitGroupId = crypto.randomUUID()
+  await db.transaction("rw", db.tables, async () => {
+    for (const part of parts) await createTransaction({ ...base, bucketId: part.bucketId, amount: part.amount, splitGroupId })
+  })
+  return splitGroupId
+}
+
+export const liveSplitGroup = (splitGroupId: string) => db.transactions.where("splitGroupId").equals(splitGroupId).filter((t) => t.deletedAt === null).toArray()
+
+/** FR-AST-07: expenses linked to an asset, all months, in base units. */
+export async function runningCostsOf(assetId: string): Promise<number> {
+  const rows = await db.transactions.where("assetId").equals(assetId).filter((t) => t.deletedAt === null && t.type === "EXPENSE").toArray()
+  return rows.reduce((sum, t) => sum + t.baseAmount, 0)
 }
 
 export async function updateTransaction(id: string, input: Partial<TransactionInput>) {

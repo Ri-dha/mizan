@@ -7,6 +7,10 @@ summary: "Language and digits, lock timeout, household month start, export and i
 
 Switch between English and Arabic at any time. In Arabic you can choose Western or Eastern Arabic digits. Light and dark themes follow the system by default.
 
+## Dates
+
+**Show Hijri dates alongside** adds the Umm al-Qura date next to the Gregorian one in the ledger, the month picker and the asset and zakat screens.
+
 ## Security
 
 Set how long the app may stay in the background before it locks, lock it now, or remove the PIN.

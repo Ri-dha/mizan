@@ -79,7 +79,8 @@
     "metalsTitle": "Gold & silver",
     "metalsNone": "No metal recorded.",
     "netWorth": "Net worth",
-    "openNetWorth": "Breakdown"
+    "openNetWorth": "Breakdown",
+    "dependentBody": "You are a dependent in {{household}}: your goals and your spending are yours alone; the household's records stay with its members."
   },
   "accounts": {
     "title": "Cash accounts",
@@ -161,7 +162,8 @@
       "metalPrice": "Gold and silver price moves",
       "monthClose": "Month-end close reminder"
     },
-    "householdBody": "{{name}} · you are {{role}}"
+    "householdBody": "{{name}} · you are {{role}}",
+    "showHijri": "Show Hijri dates alongside"
   },
   "common": {
     "cancel": "Cancel",
@@ -308,7 +310,15 @@
     "min": "Min",
     "max": "Max",
     "recentlyDeleted": "Recently deleted (30 days)",
-    "loadMore": "Show more ({{shown}} of {{total}})"
+    "loadMore": "Show more ({{shown}} of {{total}})",
+    "split": "Split across buckets",
+    "addPart": "Add a part",
+    "splitRemainder": "Remaining to assign: {{amount}}",
+    "splitMismatch": "The parts must add up to the total.",
+    "splitBadge": "Split",
+    "partOfSplit": "Part of a split purchase; edit each part on its own.",
+    "relatedAsset": "Running cost of",
+    "relatedAssetHint": "Fuel, repairs or insurance for an asset count towards its total cost of ownership."
   },
   "bills": {
     "title": "Bills",
@@ -381,7 +391,19 @@
     "ledger": "Payments",
     "noPayments": "No payments yet.",
     "principalPart": "{{amount}} principal",
-    "interestPart": "{{amount}} interest"
+    "interestPart": "{{amount}} interest",
+    "strategyTitle": "Which debt first?",
+    "strategyBody": "The same debts paid in two orders, with the freed payments rolling into the next debt. A comparison of outcomes, not advice.",
+    "strategies": {
+      "snowball": "Snowball",
+      "avalanche": "Avalanche"
+    },
+    "strategyHints": {
+      "snowball": "Smallest balance first: quick wins.",
+      "avalanche": "Highest rate first: least interest."
+    },
+    "strategyOutcome": "Debt-free in {{months}} months · {{interest}} interest",
+    "strategyDifference": "The difference between the two orders is {{amount}} in interest."
   },
   "goals": {
     "title": "Goals",
@@ -503,7 +525,11 @@
       "premium": "Local premium {{percent}}%: {{amount}} per gram.",
       "mithqal": "One mithqal (5 g) of 21k = {{amount}}.",
       "overrideActive": "A price you entered is currently in use instead of the feed."
-    }
+    },
+    "buybackBasis": "Value holdings at what a dealer would pay",
+    "buybackSpread": "{{metal}} buy-back spread (%)",
+    "buybackHint": "How far below the market price a dealer buys, typically 2 to 5%.",
+    "buybackBadge": "dealer buy-back"
   },
   "networth": {
     "title": "Net worth",
@@ -534,7 +560,16 @@
     "snapshotLine": "Snapshot {{value}} taken {{at}} at {{rate}} per dollar",
     "monthClosed": "{{month}} is closed. Reopen it on the Net worth page to change it.",
     "liquidLine": "Liquid {{liquid}} · illiquid {{illiquid}}",
-    "householdFigure": "Household total including other members' private records: {{value}}"
+    "householdFigure": "Household total including other members' private records: {{value}}",
+    "attributionTitle": "What moved it since {{month}}",
+    "attributionBody": "Saving is the change in cash and money owed to you; price movement is the change in gold, silver and assets not explained by buying or selling. The four parts add up to the total.",
+    "attribution": {
+      "total": "Total change",
+      "saving": "Saving",
+      "priceMovement": "Price movement",
+      "debtRepayment": "Debt repayment",
+      "newPurchases": "New purchases"
+    }
   },
   "report": {
     "title": "Monthly report",
@@ -844,7 +879,8 @@
     "soldLine": "Sold {{date}} for {{price}}",
     "deleted": "Asset deleted",
     "stalePrompt_one": "{{name}} has not been valued for {{months}} months.",
-    "stalePrompt_other": "{{count}} assets have not been valued for {{months}} months."
+    "stalePrompt_other": "{{count}} assets have not been valued for {{months}} months.",
+    "tco": "Running costs {{costs}} · total cost of ownership so far {{total}}"
   },
   "privacy": {
     "title": "Privacy",
@@ -869,9 +905,10 @@
       "OWNER": "Owner",
       "MEMBER": "Member",
       "VIEWER": "Viewer",
-      "DEPENDENT": "Dependent"
+      "DEPENDENT": "Dependent",
+      "ADVISOR": "Advisor"
     },
-    "rolesHint": "Owner: everything. Member: records and plan. Viewer: read only. Dependent: logs own spending only.",
+    "rolesHint": "Owner: everything. Member: records and plan. Viewer: read only. Dependent: their own goals and spending only. Advisor: the annual report only, for a limited time.",
     "roleChanged": "Role changed",
     "makeOwner": "Make owner",
     "transferred": "Ownership transferred. You are now a member.",
@@ -911,7 +948,10 @@
     "deletionRequested": "Deletion requested",
     "deletionPending": "This household will be deleted seven days after {{date}}.",
     "cancelDeletion": "Keep the household",
-    "deletionCancelled": "Deletion cancelled"
+    "deletionCancelled": "Deletion cancelled",
+    "accessDays": "Access for (days)",
+    "accessDaysHint": "Leave empty for no end date; advisors get 30 days by default.",
+    "until": "until {{date}}"
   },
   "notifications": {
     "onThisDevice": "Push notifications on this device",
@@ -980,5 +1020,55 @@
     "restoreHint": "Enter the passphrase this backup was made with. You will see what it contains before anything is written.",
     "open": "Open",
     "wrongPassphrase": "That passphrase does not open this backup."
+  },
+  "zakat": {
+    "open": "Zakat base",
+    "title": "Zakat base helper",
+    "disclaimer": "This is a computation of weight and value against thresholds you enter. It is not a religious ruling; ask a scholar for that.",
+    "asOf": "As of",
+    "nisab": "{{metal}} nisab (grams, pure)",
+    "price": "{{metal}} price per gram, pure (optional)",
+    "priceHint": "Today: {{price}}",
+    "pureWeight": "Pure metal held: {{weight}}",
+    "value": "Value {{value}} on {{date}}",
+    "reaches": "Reaches the nisab",
+    "below": "Below the nisab",
+    "base": "2.5% of the value: {{amount}}",
+    "footer": "Only lots bought on or before the chosen date count. Jewellery in daily use, debts and the lunar year are matters for the ruling, not for this calculation."
+  },
+  "csv": {
+    "button": "Import transactions CSV",
+    "title": "Import transactions from CSV",
+    "body": "Tell Mizan which column is which. Rows that already exist with the same date, amount and payee are marked as duplicates.",
+    "column": "Column {{n}}",
+    "fields": {
+      "ignore": "Ignore",
+      "date": "Date",
+      "amount": "Amount",
+      "type": "Type",
+      "payee": "Payee",
+      "category": "Category",
+      "note": "Note"
+    },
+    "positiveIs": "Positive amounts are",
+    "bucket": "Bucket for imported expenses",
+    "status": "Status",
+    "ok": "Ready",
+    "duplicate": "Duplicate",
+    "errors": {
+      "date": "Bad date",
+      "amount": "Bad amount"
+    },
+    "summary": "{{total}} rows: {{ok}} ready, {{duplicates}} duplicates, {{errors}} with errors.",
+    "skipDuplicates": "Skip duplicates",
+    "import_one": "Import {{count}} row",
+    "import_other": "Import {{count}} rows",
+    "imported_one": "{{count}} transaction imported",
+    "imported_other": "{{count}} transactions imported"
+  },
+  "advisor": {
+    "nav": "Report",
+    "title": "{{household}}: annual report",
+    "body": "You see totals over the household's shared records for the period you were given access. Individual transactions are never shown."
   }
 }

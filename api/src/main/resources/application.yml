@@ -98,6 +98,8 @@ mizan:
       # FR-ACC-07: household deletion needs the owner's password and waits this long.
       grace-period: 7d
       purge-cron: "0 15 4 * * *"
+    advisor:
+      default-access-days: 30
 
   # FR-PLN-02: the split a new household starts with. Shares are basis points (5500 = 55.0%).
   plan:

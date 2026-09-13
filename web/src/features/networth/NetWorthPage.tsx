@@ -15,6 +15,9 @@ import { formatMoney } from "@/domain/money/format"
 import { syncNow } from "@/sync/engine"
 import { usePreferences } from "@/app/preferences"
 import { useNetWorth } from "./useNetWorth"
+import { useMetals } from "@/features/metals/useMetals"
+import { attributeChange, type Reading } from "@/domain/networth/attribution"
+import { toBaseAmount } from "@/db/income"
 import { HelpButton } from "@/components/HelpButton"
 import { useScreenTour } from "@/tours/useTour"
 
@@ -34,6 +37,24 @@ export function NetWorthPage() {
   }, [view.current.netWorth])
   const prefs = usePreferences()
   useScreenTour("networth")
+  const metals = useMetals()
+  const lastClosed = trendPoints(view.closes, view.snapshots).at(-1)
+  const attribution = (() => {
+    if (!lastClosed) return null
+    const from = lastClosed.takenAt.slice(0, 10)
+    const amount = (cls: string) => lastClosed.composition.find((c) => c.assetClass === cls)?.amount ?? 0
+    const before: Reading = { cash: amount("CASH"), metals: amount("METALS"), receivables: amount("RECEIVABLES"), otherAssets: amount("VEHICLES") + amount("PROPERTY") + amount("OTHER_ASSETS"), liabilities: lastClosed.totalLiabilities }
+    const now = view.current
+    const nowAmount = (cls: string) => now.composition.find((c) => c.assetClass === cls)?.amount ?? 0
+    const after: Reading = { cash: nowAmount("CASH"), metals: nowAmount("METALS"), receivables: nowAmount("RECEIVABLES"), otherAssets: nowAmount("VEHICLES") + nowAmount("PROPERTY") + nowAmount("OTHER_ASSETS"), liabilities: now.totalLiabilities }
+    const lotCost = (lot: typeof metals.lots[number]) => toBaseAmount(lot.metalCost + lot.makingCharge + lot.fees, lot.fxRateMicros)
+    const purchases = metals.lots.filter((l) => l.purchaseDate > from).reduce((s, l) => s + lotCost(l), 0)
+      + view.assets.filter((a) => a.purchaseDate !== null && a.purchaseDate > from).reduce((s, a) => s + toBaseAmount(a.purchasePrice, a.fxRateMicros), 0)
+    const soldLots = new Set(metals.disposals.filter((d) => d.soldOn > from).map((d) => d.id))
+    const disposals = metals.disposalLots.filter((dl) => soldLots.has(dl.disposalId)).reduce((s, dl) => s + dl.metalCost + dl.makingCharge + dl.fees, 0)
+      + view.assets.filter((a) => a.status === "SOLD" && a.soldOn !== null && a.soldOn > from).reduce((s, a) => s + toBaseAmount(a.purchasePrice, a.fxRateMicros), 0)
+    return { since: lastClosed.monthKey, ...attributeChange(before, after, { purchases, disposals }) }
+  })()
   const usdIqd = Number(view.rateSet.usdIqdMicros) / 1e6
   const inUsd = (v: number) => formatMoney(Math.round((v / usdIqd) * 100), "USD", i18n.language)
   const money = (v: number) => formatMoney(v, base, i18n.language)
@@ -98,6 +119,23 @@ export function NetWorthPage() {
           </div>
         </CardContent>
       </Card>
+
+      {attribution && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("networth.attributionTitle", { month: formatMonthKey(attribution.since, i18n.language) })}</CardTitle>
+            <CardDescription>{t("networth.attributionBody")}</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            {(["total", "saving", "priceMovement", "debtRepayment", "newPurchases"] as const).map((key) => (
+              <div key={key} className={`rounded-base border-2 border-border p-3 ${key === "total" ? "bg-secondary-background" : ""}`}>
+                <p className="text-xs opacity-70">{t(`networth.attribution.${key}`)}</p>
+                <p className={`font-heading tabular-nums ${attribution[key] < 0 ? "text-chart-2" : ""}`}>{(attribution[key] > 0 ? "+" : "") + money(attribution[key])}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card data-tour="networth-trend">
         <CardHeader>

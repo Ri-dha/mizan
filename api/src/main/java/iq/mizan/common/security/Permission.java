@@ -7,5 +7,7 @@ public enum Permission {
     PLAN_EDIT,
     MEMBERS_MANAGE,
     DATA_EXPORT,
-    HOUSEHOLD_DELETE
+    HOUSEHOLD_DELETE,
+    /** Aggregated reports over shared records; what an advisor gets and nothing more. */
+    REPORTS_VIEW
 }

@@ -17,6 +17,7 @@ import { formatMoney, toMinorUnits } from "@/domain/money/format"
 import { useMonthView } from "@/features/plan/useMonthFigures"
 import { QuickAddSheet } from "./QuickAddSheet"
 import { HelpButton } from "@/components/HelpButton"
+import { useDateFormat } from "@/app/dates"
 import { useScreenTour } from "@/tours/useTour"
 
 const ALL = "__all__"
@@ -38,7 +39,8 @@ export function TransactionsPage() {
   const matching = filterTransactions(view.transactions, filter)
   const rows = matching.slice(0, limit)
   const money = (amount: number) => formatMoney(amount, base, i18n.language)
-  const day = (iso: string) => new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { weekday: "short", day: "numeric", month: "short" }).format(new Date(iso))
+  const formatDay = useDateFormat()
+  const day = (iso: string) => formatDay(iso, { weekday: "short", day: "numeric", month: "short" })
   const bucketName = (id: string | null) => view.buckets.find((b) => b.id === id)?.name
 
   const byDay = rows.reduce<Record<string, LedgerTransaction[]>>((groups, row) => {
@@ -90,6 +92,7 @@ export function TransactionsPage() {
                 <div className="flex shrink-0 items-center gap-2">
                   {row.type !== "EXPENSE" && <Badge variant="neutral">{t(`transactions.types.${row.type}`)}</Badge>}
                   {row.attachmentId && <Badge variant="neutral">📎</Badge>}
+                  {row.splitGroupId && <Badge variant="neutral">{t("transactions.splitBadge")}</Badge>}
                   <span className="tabular-nums font-heading">{row.type === "INCOME" ? "+" : ""}{money(row.baseAmount)}</span>
                 </div>
               </div>

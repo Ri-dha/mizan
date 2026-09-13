@@ -9,6 +9,8 @@ export interface Preferences {
   toursSeen: string[]
   /** FR-AST-04: months after which an asset without a fresh valuation is flagged on Home. */
   valuationReminderMonths: number
+  /** FR-SET-04: Hijri date alongside the Gregorian one. */
+  showHijri: boolean
 }
 
 
@@ -18,6 +20,7 @@ const DEFAULTS: Preferences = {
   showUsd: false,
   toursSeen: [],
   valuationReminderMonths: 6,
+  showHijri: false,
 }
 
 let current: Preferences = load()

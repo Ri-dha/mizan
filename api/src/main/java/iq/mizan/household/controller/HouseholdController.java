@@ -113,7 +113,7 @@ public class HouseholdController {
     public ResponseEntity<InvitationResponse> invite(
             @AuthenticationPrincipal CurrentUser user, @Valid @RequestBody CreateInvitationRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(householdService.invite(user.userId(), user.householdId(), request.role(), request.contact()));
+                .body(householdService.invite(user.userId(), user.householdId(), request.role(), request.contact(), request.accessDays()));
     }
 
     @Operation(summary = "Invitations not yet accepted, revoked or expired")

@@ -13,6 +13,10 @@ At the end of a month press **Close month**. Mizan asks the server for a snapsho
 
 A closed month refuses new entries. **Reopen** if you need to correct something; the reopening is recorded, and closing again takes a fresh snapshot.
 
+## What moved it
+
+Since the last closed month, the change is split four ways: **saving** (the change in cash and money owed to you), **price movement** (gold, silver and assets moving in value while you held them), **debt repayment** (what you owe going down) and **new purchases** (gold and assets bought, less any sold). The four always add up to the total change.
+
 ## Over time
 
 The chart shows one point per closed month plus today, so you can see whether last month's decisions moved the number.

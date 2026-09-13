@@ -20,7 +20,13 @@ public final class MetalValuation {
 
     /** {@code overridePerGram24kMicros}, when present, is a user-entered IQD price per gram of pure metal that replaces spot × rate (FR-MTL-09). */
     public record Input(long spotUsdPerOzMicros, long usdIqdMicros, int purityBasisPoints,
-                        int premiumBasisPoints, long premiumFixedPerGramMicros, long weightMg, Long overridePerGram24kMicros) {
+                        int premiumBasisPoints, long premiumFixedPerGramMicros, long weightMg, Long overridePerGram24kMicros,
+                        int discountBasisPoints) {
+
+        public Input(long spotUsdPerOzMicros, long usdIqdMicros, int purityBasisPoints, int premiumBasisPoints,
+                     long premiumFixedPerGramMicros, long weightMg, Long overridePerGram24kMicros) {
+            this(spotUsdPerOzMicros, usdIqdMicros, purityBasisPoints, premiumBasisPoints, premiumFixedPerGramMicros, weightMg, overridePerGram24kMicros, 0);
+        }
     }
 
     public record Result(long perGram24kMicros, long perGramMicros, long value) {
@@ -31,8 +37,11 @@ public final class MetalValuation {
                 ? in.overridePerGram24kMicros()
                 : halfUp(BigInteger.valueOf(in.spotUsdPerOzMicros()).multiply(BigInteger.valueOf(in.usdIqdMicros())), MICROGRAMS_PER_TROY_OUNCE);
         long perGramPurity = halfUp(BigInteger.valueOf(perGram24k).multiply(BigInteger.valueOf(in.purityBasisPoints())), BASIS_POINTS);
-        long perGram = halfUp(BigInteger.valueOf(perGramPurity).multiply(BigInteger.valueOf(BASIS_POINTS + in.premiumBasisPoints())), BASIS_POINTS)
+        long perGramMarket = halfUp(BigInteger.valueOf(perGramPurity).multiply(BigInteger.valueOf(BASIS_POINTS + in.premiumBasisPoints())), BASIS_POINTS)
                 + in.premiumFixedPerGramMicros();
+        // FR-MTL-11: what a dealer would pay is the market price less the buy-back spread.
+        long perGram = in.discountBasisPoints() == 0 ? perGramMarket
+                : halfUp(BigInteger.valueOf(perGramMarket).multiply(BigInteger.valueOf(BASIS_POINTS - in.discountBasisPoints())), BASIS_POINTS);
         long value = halfUp(BigInteger.valueOf(perGram).multiply(BigInteger.valueOf(in.weightMg())), MICROS_PER_GRAM_MILLIGRAM);
         return new Result(perGram24k, perGram, value);
     }

@@ -28,6 +28,8 @@ public class LedgerTransactionSyncTable implements SyncTable {
             Map.entry("counterpartyType", SyncColumnType.TEXT),
             Map.entry("counterpartyId", SyncColumnType.UUID_VALUE),
             Map.entry("attachmentId", SyncColumnType.UUID_VALUE),
+            Map.entry("splitGroupId", SyncColumnType.UUID_VALUE),
+            Map.entry("assetId", SyncColumnType.UUID_VALUE),
             Map.entry("deletedAt", SyncColumnType.TIMESTAMP));
 
     @Override

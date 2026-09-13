@@ -468,6 +468,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/annual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Income, spending, saving rate and closing net worth per month of a year (FR-RPT-03) */
+        get: operations["annual"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications/vapid-key": {
         parameters: {
             query?: never;
@@ -750,7 +767,7 @@ export interface components {
             /** Format: int32 */
             monthStartDay?: number;
             /** @enum {string} */
-            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR";
             /** Format: date-time */
             deletionRequestedAt?: string;
         };
@@ -760,14 +777,16 @@ export interface components {
         };
         CreateInvitationRequest: {
             /** @enum {string} */
-            role: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            role: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR";
             contact?: string;
+            /** Format: int32 */
+            accessDays?: number;
         };
         InvitationResponse: {
             /** Format: uuid */
             id?: string;
             /** @enum {string} */
-            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR";
             contact?: string;
             /** Format: date-time */
             expiresAt?: string;
@@ -819,7 +838,7 @@ export interface components {
         };
         ChangeRoleRequest: {
             /** @enum {string} */
-            role: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            role: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR";
         };
         MemberResponse: {
             /** Format: uuid */
@@ -827,9 +846,11 @@ export interface components {
             displayName?: string;
             contact?: string;
             /** @enum {string} */
-            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR";
             /** Format: date-time */
             joinedAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
             you?: boolean;
         };
         SyncPullResponse: {
@@ -852,6 +873,35 @@ export interface components {
             };
             /** Format: int64 */
             seq?: number;
+        };
+        AnnualReportResponse: {
+            /** Format: int32 */
+            year?: number;
+            baseCurrency?: string;
+            months?: components["schemas"]["Month"][];
+            /** Format: int64 */
+            received?: number;
+            /** Format: int64 */
+            spent?: number;
+            /** Format: double */
+            savingRate?: number;
+            snapshots?: components["schemas"]["Snapshot"][];
+        };
+        Month: {
+            monthKey?: string;
+            /** Format: int64 */
+            received?: number;
+            /** Format: int64 */
+            spent?: number;
+            /** Format: int64 */
+            saved?: number;
+            /** Format: double */
+            savingRate?: number;
+        };
+        Snapshot: {
+            monthKey?: string;
+            /** Format: int64 */
+            netWorth?: number;
         };
         VapidKeyResponse: {
             publicKey?: string;
@@ -905,7 +955,7 @@ export interface components {
             householdName?: string;
             invitedBy?: string;
             /** @enum {string} */
-            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR";
             /** Format: date-time */
             expiresAt?: string;
         };
@@ -914,7 +964,7 @@ export interface components {
             householdId?: string;
             householdName?: string;
             /** @enum {string} */
-            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR";
             current?: boolean;
         };
         UnsubscribeRequest: {
@@ -1657,6 +1707,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ConflictResponse"][];
+                };
+            };
+        };
+    };
+    annual: {
+        parameters: {
+            query: {
+                year: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnnualReportResponse"];
                 };
             };
         };

@@ -55,8 +55,12 @@ public class HouseholdInvitation {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /** How long the membership lasts once accepted; null means until removed. */
+    @Column(name = "access_days")
+    private Integer accessDays;
+
     public static HouseholdInvitation issue(UUID householdId, UUID invitedBy, HouseholdRole role, String contact,
-                                            String tokenHash, Duration ttl, Instant now) {
+                                            String tokenHash, Duration ttl, Instant now, Integer accessDays) {
         HouseholdInvitation invitation = new HouseholdInvitation();
         invitation.id = UUID.randomUUID();
         invitation.householdId = householdId;
@@ -66,6 +70,7 @@ public class HouseholdInvitation {
         invitation.tokenHash = tokenHash;
         invitation.expiresAt = now.plus(ttl);
         invitation.createdAt = now;
+        invitation.accessDays = accessDays;
         return invitation;
     }
 
