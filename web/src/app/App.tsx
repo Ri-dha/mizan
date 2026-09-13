@@ -22,6 +22,9 @@ import { BillsPage } from "@/features/bills/BillsPage"
 import { DebtsPage } from "@/features/debts/DebtsPage"
 import { GoalsPage } from "@/features/goals/GoalsPage"
 import { MorePage } from "@/features/more/MorePage"
+import { MetalsPage } from "@/features/metals/MetalsPage"
+import { NetWorthPage } from "@/features/networth/NetWorthPage"
+import { ReportPage } from "@/features/report/ReportPage"
 import { SyncPage } from "@/features/sync/SyncPage"
 import { SettingsPage } from "@/features/settings/SettingsPage"
 
@@ -49,6 +52,9 @@ const router = createBrowserRouter([
       { path: "bills", element: <BillsPage /> },
       { path: "debts", element: <DebtsPage /> },
       { path: "goals", element: <GoalsPage /> },
+      { path: "metals", element: <MetalsPage /> },
+      { path: "networth", element: <NetWorthPage /> },
+      { path: "report", element: <ReportPage /> },
       { path: "more", element: <MorePage /> },
       { path: "income", element: <IncomePage /> },
       { path: "accounts", element: <AccountsPage /> },

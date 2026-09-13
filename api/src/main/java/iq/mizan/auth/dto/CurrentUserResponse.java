@@ -11,5 +11,6 @@ public record CurrentUserResponse(
         String displayName,
         String locale,
         boolean verified,
+        java.time.Instant deletionRequestedAt,
         HouseholdResponse household) {
 }

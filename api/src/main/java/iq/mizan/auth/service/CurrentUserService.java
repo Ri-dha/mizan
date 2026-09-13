@@ -5,6 +5,8 @@ import java.util.UUID;
 import iq.mizan.auth.dto.CurrentUserResponse;
 import iq.mizan.auth.mapper.UserMapper;
 import iq.mizan.auth.repository.AppUserRepository;
+import iq.mizan.common.exception.ApiException;
+import iq.mizan.common.exception.ErrorCode;
 import iq.mizan.household.service.HouseholdService;
 
 import lombok.AllArgsConstructor;
@@ -22,7 +24,7 @@ public class CurrentUserService {
     @Transactional(readOnly = true)
     public CurrentUserResponse describe(UUID userId) {
         return userMapper.toResponse(
-                userRepository.findById(userId).orElseThrow(),
+                userRepository.findById(userId).orElseThrow(() -> ApiException.of(ErrorCode.USER_NOT_FOUND, "This account no longer exists")),
                 householdService.summaryFor(userId));
     }
 }

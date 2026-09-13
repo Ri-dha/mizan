@@ -15,6 +15,7 @@ export interface LocalSession {
   role: string
   baseCurrency: string
   monthStartDay: number
+  deletionRequestedAt: string | null
 }
 
 type Listener = () => void
@@ -70,6 +71,7 @@ async function rememberFromServer(accessToken: string) {
     role: me.household.role,
     baseCurrency: me.household.baseCurrency,
     monthStartDay: me.household.monthStartDay,
+    deletionRequestedAt: me.deletionRequestedAt ?? null,
   })
 }
 
@@ -87,7 +89,18 @@ export async function login(identifier: string, password: string) {
 export async function refreshProfile() {
   const me = await unwrap(api.GET("/api/v1/me"))
   if (!session) return
-  await persist({ ...session, verified: me.verified, householdName: me.household.name, monthStartDay: me.household.monthStartDay })
+  await persist({ ...session, verified: me.verified, householdName: me.household.name, monthStartDay: me.household.monthStartDay, deletionRequestedAt: me.deletionRequestedAt ?? null })
+}
+
+/** FR-ACC-08: the account and household are purged after the grace period unless withdrawn. */
+export async function requestAccountDeletion() {
+  const me = await unwrap(api.POST("/api/v1/me/deletion-request"))
+  if (session) await persist({ ...session, deletionRequestedAt: me.deletionRequestedAt ?? null })
+}
+
+export async function cancelAccountDeletion() {
+  const me = await unwrap(api.DELETE("/api/v1/me/deletion-request"))
+  if (session) await persist({ ...session, deletionRequestedAt: me.deletionRequestedAt ?? null })
 }
 
 export async function verifyContact(code: string) {

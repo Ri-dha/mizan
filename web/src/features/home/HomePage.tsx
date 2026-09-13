@@ -10,6 +10,8 @@ import { liveCashAccounts, totalsByCurrency } from "@/db/cashAccounts"
 import { formatMoney } from "@/domain/money/format"
 import { currentMonthKey } from "@/app/month"
 import { useMonthView } from "@/features/plan/useMonthFigures"
+import { useMetals } from "@/features/metals/useMetals"
+import { useNetWorth } from "@/features/networth/useNetWorth"
 
 export function HomePage() {
   const { t, i18n } = useTranslation()
@@ -19,6 +21,9 @@ export function HomePage() {
   const startDay = session?.monthStartDay ?? 1
   const base = session?.baseCurrency ?? "IQD"
   const month = useMonthView(currentMonthKey(startDay), startDay)
+  const metals = useMetals()
+  const worth = useNetWorth()
+  const metalTotals = metals.lines.reduce((acc, l) => ({ value: acc.value + l.valueNow, gain: acc.gain + l.gain }), { value: 0, gain: 0 })
 
   return (
     <div className="flex flex-col gap-6">
@@ -32,6 +37,17 @@ export function HomePage() {
           </AlertDescription>
         </Alert>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("home.netWorth")}</CardTitle>
+          <CardDescription>{t("networth.assets")}: {formatMoney(worth.current.totalAssets, base, i18n.language)} · {t("networth.liabilities")}: {formatMoney(worth.current.totalLiabilities, base, i18n.language)}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-2">
+          <span className={`text-3xl font-heading tabular-nums ${worth.current.netWorth < 0 ? "text-chart-2" : ""}`}>{formatMoney(worth.current.netWorth, base, i18n.language)}</span>
+          <Button asChild variant="neutral"><Link to="/networth">{t("home.openNetWorth")}</Link></Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -54,6 +70,17 @@ export function HomePage() {
             )
           })}
           <Button asChild variant="neutral" className="self-start"><Link to="/plan">{t("home.viewPlan")}</Link></Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("home.metalsTitle")}</CardTitle>
+          <CardDescription>{metals.lines.length === 0 ? t("home.metalsNone") : t("metals.valueNow") + ": " + formatMoney(metalTotals.value, base, i18n.language)}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-2">
+          <span className={`text-2xl font-heading tabular-nums ${metalTotals.gain < 0 ? "text-chart-2" : ""}`}>{(metalTotals.gain > 0 ? "+" : "") + formatMoney(metalTotals.gain, base, i18n.language)}</span>
+          <Button asChild variant="neutral"><Link to="/metals">{t("nav.metals")}</Link></Button>
         </CardContent>
       </Card>
 

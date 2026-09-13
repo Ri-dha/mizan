@@ -3,6 +3,7 @@ import { useSyncExternalStore } from "react"
 import { api, ApiError, unwrap } from "@/api/client"
 import { uploadPendingBlobs } from "@/attachments/store"
 import { purgeExpiredDeletions } from "@/db/transactions"
+import { refreshQuotes } from "@/market/store"
 import { db, localTableFor, SYNC_TABLES, type SyncTableName } from "@/db/schema"
 import { META_KEYS, readMeta, writeMeta } from "@/db/meta"
 import { newNodeId, observe, type HlcState } from "./hlc"
@@ -139,6 +140,7 @@ export async function syncNow(): Promise<void> {
       await uploadPendingBlobs()
       await push(device)
       await purgeExpiredDeletions()
+      await refreshQuotes()
       const now = Date.now()
       await writeMeta(META_KEYS.lastSyncAt, now)
       update({ phase: "idle", lastSyncAt: now })

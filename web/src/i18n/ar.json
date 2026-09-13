@@ -14,7 +14,10 @@
     "bills": "الفواتير",
     "debts": "الديون",
     "goals": "الأهداف",
-    "more": "المزيد"
+    "more": "المزيد",
+    "metals": "الذهب والفضة",
+    "networth": "صافي الثروة",
+    "report": "التقرير"
   },
   "auth": {
     "identifier": "البريد الإلكتروني أو رقم الهاتف",
@@ -75,7 +78,11 @@
     "viewPlan": "فتح الخطة",
     "upcomingBills": "قادم",
     "noUpcoming": "لا فواتير مستحقة قريباً.",
-    "quickAdd": "إضافة"
+    "quickAdd": "إضافة",
+    "metalsTitle": "الذهب والفضة",
+    "metalsNone": "لا معادن مسجلة.",
+    "netWorth": "صافي الثروة",
+    "openNetWorth": "التفاصيل"
   },
   "accounts": {
     "title": "الحسابات النقدية",
@@ -96,7 +103,10 @@
       "BANK": "بنك",
       "CASH_AT_HOME": "نقد في البيت",
       "OTHER": "أخرى"
-    }
+    },
+    "adjustmentNote": "سبب التغيير",
+    "adjustments": "تغييرات الرصيد",
+    "adjustmentLine": "{{date}}: {{from}} ← {{to}}"
   },
   "sync": {
     "title": "المزامنة",
@@ -139,7 +149,25 @@
     "monthStartDay": "يبدأ الشهر في اليوم",
     "saved": "تم الحفظ",
     "install": "ثبّت ميزان على هذا الجهاز",
-    "account": "الحساب"
+    "account": "الحساب",
+    "display": "العرض",
+    "digits": "الأرقام",
+    "digitsHint": "ينطبق على العربية فقط.",
+    "digitStyles": {
+      "western": "0 1 2 3 (غربية)",
+      "eastern": "٠ ١ ٢ ٣ (عربية مشرقية)"
+    },
+    "showUsd": "إظهار صافي الثروة بالدولار أيضاً",
+    "notifications": "الإشعارات",
+    "notificationsBody": "سيأتي الإرسال في إصدار لاحق؛ اختياراتك محفوظة، والإيقاف يعني الإيقاف.",
+    "quietMode": "وضع الهدوء (إيقاف الكل)",
+    "notificationClasses": {
+      "billDue": "تذكير باستحقاق الفواتير",
+      "payDay": "تنبيه يوم الراتب لتخطيط الشهر",
+      "overspend": "تنبيه تجاوز القسم",
+      "metalPrice": "تحركات أسعار الذهب والفضة",
+      "monthClose": "تذكير بإقفال الشهر"
+    }
   },
   "common": {
     "cancel": "إلغاء",
@@ -203,7 +231,19 @@
     "endsOn": "ينتهي {{date}}",
     "endSource": "إنهاء هذا المصدر",
     "receivedOnLabel": "تاريخ الاستلام",
-    "note": "ملاحظة"
+    "note": "ملاحظة",
+    "sourcesHint": "اضغط تعديل على مصدر لتغييره. إنهاؤه يحتفظ بسجله.",
+    "edit": "تعديل",
+    "end": "إنهاء",
+    "ended": "منتهٍ",
+    "history": "سجل المبلغ",
+    "historyFrom": "{{amount}} من {{date}}",
+    "recordRaise": "تسجيل زيادة أو تغيير",
+    "newAmount": "المبلغ الجديد",
+    "effectiveFrom": "اعتباراً من",
+    "raiseSaved": "تم تسجيل التغيير",
+    "amountLocked": "استخدم «تسجيل زيادة أو تغيير» أدناه لتحتفظ الأشهر السابقة بأرقامها.",
+    "currentAmount": "آخر مبلغ"
   },
   "plan": {
     "title": "الخطة",
@@ -349,5 +389,159 @@
     "required": "يحتاج {{amount}} شهرياً لبلوغه في {{date}}",
     "noProjection": "أضف إيداعاً شهرياً أو تاريخاً لترى التوقع.",
     "archive": "أرشفة"
+  },
+  "metals": {
+    "title": "الذهب والفضة",
+    "addLot": "إضافة شراء",
+    "editLot": "تعديل الشراء",
+    "portfolio": "الممتلكات",
+    "costBasis": "التكلفة",
+    "valueNow": "القيمة الآن",
+    "gain": "الربح",
+    "excludingMaking": "{{amount}} دون أجور الصياغة",
+    "noLots": "لا معادن مسجلة بعد. أضف عملية شراء لترى قيمتها اليوم.",
+    "weight": "الوزن",
+    "unit": "الوحدة",
+    "units": {
+      "GRAM": "غرام",
+      "MITHQAL": "مثقال",
+      "TOLA": "تولة",
+      "TROY_OUNCE": "أونصة",
+      "KILOGRAM": "كغم"
+    },
+    "inGrams": "= {{grams}} غ",
+    "metal": {
+      "GOLD": "ذهب",
+      "SILVER": "فضة"
+    },
+    "purity": "العيار",
+    "form": "الشكل",
+    "forms": {
+      "COIN": "عملة",
+      "BAR": "سبيكة",
+      "JEWELLERY": "مصوغات",
+      "SCRAP": "كسر"
+    },
+    "purchaseDate": "تاريخ الشراء",
+    "metalCost": "سعر المعدن المدفوع",
+    "makingCharge": "أجور الصياغة",
+    "makingHint": "تُحسب في التكلفة وغالباً تضيع عند البيع",
+    "fees": "الرسوم",
+    "dealer": "الصائغ",
+    "location": "مكان الحفظ",
+    "serial": "الرقم التسلسلي",
+    "heldFor": "محفوظ لصالح (إن لم يكن لك)",
+    "lots": "المشتريات",
+    "perGram": "{{cost}}/غ مدفوع · {{now}}/غ الآن",
+    "sell": "بيع {{metal}}",
+    "sales": "المبيعات",
+    "proceeds": "بيع بمبلغ",
+    "buyer": "المشتري",
+    "method": "طريقة احتساب التكلفة",
+    "methodHint": "من أي مشتريات يُؤخذ المعدن المباع؛ تُحفظ مع عملية البيع.",
+    "methods": {
+      "FIFO": "الأقدم أولاً",
+      "SPECIFIC": "دفعات محددة",
+      "WEIGHTED_AVERAGE": "المتوسط المرجح"
+    },
+    "chooseLots": "الدفعات المباع منها بالترتيب",
+    "notEnough": "لا تملك هذا القدر.",
+    "costLeaving": "التكلفة الخارجة: {{amount}}",
+    "realised": "الربح المحقق: {{amount}}",
+    "confirmSale": "تسجيل البيع",
+    "sold": "تم تسجيل البيع",
+    "prices": "الأسعار المستخدمة",
+    "howCalculated": "كيف يُحسب هذا؟",
+    "enterPrice": "إدخال سعر اليوم",
+    "stale": "قديم",
+    "sources": {
+      "override": "سعرك",
+      "none": "لا سعر"
+    },
+    "rateKinds": {
+      "OFFICIAL": "السعر الرسمي",
+      "PARALLEL": "سعر السوق"
+    },
+    "overrideBody": "سعرك يحلّ محل المصدر حتى تُدخل سعراً أحدث. ستشير كل الشاشات إلى أنه سعرك.",
+    "priceOf": "سعر",
+    "localPrice": "السعر المحلي ({{base}})",
+    "ratePrice": "{{base}} لكل دولار",
+    "perGram24k": "= {{amount}} للغرام من المعدن الخالص",
+    "overrideNoteHint": "مثلاً: سوق الذهب في بغداد",
+    "overrideCount": "{{count}} إدخالات سعر حتى الآن",
+    "priceSaved": "تم حفظ السعر",
+    "settings": "إعدادات التقييم",
+    "rateKind": "سعر الدولار للتقييم",
+    "rateKindHint": "السعر الرسمي وسعر السوق يختلفان؛ يظهر الاختيار حيثما تظهر القيم المحوّلة.",
+    "premium": "علاوة {{metal}} المحلية %",
+    "premiumHint": "ما يضيفه الصاغة المحليون فوق السعر العالمي",
+    "defaultMethod": "طريقة {{metal}} الافتراضية",
+    "methodLocked": "تغيير الافتراضي لا يعيد كتابة المبيعات المسجلة.",
+    "explain": {
+      "spot": "سعر الذهب العالمي: ${{spot}} للأونصة (المصدر: {{source}}).",
+      "rate": "سعر الدولار: {{rate}} للدولار، {{kind}} (المصدر: {{source}}).",
+      "perGram": "للغرام من الذهب الخالص: السعر ÷ {{ounce}} غ × سعر الدولار = {{amount}}.",
+      "purity": "معامل عيار {{purity}}: × {{factor}}.",
+      "premium": "علاوة محلية {{percent}}%: {{amount}} للغرام.",
+      "mithqal": "مثقال واحد (5 غ) عيار 21 = {{amount}}.",
+      "overrideActive": "يُستخدم حالياً سعر أدخلته أنت بدلاً من المصدر."
+    }
+  },
+  "networth": {
+    "title": "صافي الثروة",
+    "headline": "كم تساوي اليوم",
+    "formula": "النقد + الذهب والفضة + ما لك عند الآخرين − ما عليك (BR-05)",
+    "assets": "الأصول",
+    "liabilities": "الالتزامات",
+    "classes": {
+      "CASH": "النقد",
+      "METALS": "الذهب والفضة",
+      "RECEIVABLES": "لك عند الآخرين"
+    },
+    "ratesInUse": "الدولار بـ{{rate}} ({{kind}})؛ الذهب من {{gold}}",
+    "trend": "عبر الزمن",
+    "trendBody": "نقطة لكل شهر مُقفل، إضافة إلى اليوم.",
+    "now": "الآن",
+    "months": "الأشهر",
+    "monthsBody": "إقفال الشهر يأخذ لقطة لا تتغير أبداً. أعد فتحه للتعديل ثم أقفله مجدداً للقطة جديدة.",
+    "closedBadge": "مقفل",
+    "close": "إقفال الشهر",
+    "reopen": "إعادة فتح",
+    "closed": "أُقفل {{month}}",
+    "reopened": "أُعيد فتح {{month}}",
+    "needsOnline": "إقفال الشهر يحتاج اتصالاً.",
+    "snapshotLine": "لقطة {{value}} أُخذت {{at}} بسعر {{rate}} للدولار",
+    "monthClosed": "{{month}} مقفل. أعد فتحه من صفحة صافي الثروة لتعديله."
+  },
+  "report": {
+    "title": "التقرير الشهري",
+    "summary": "الملخص",
+    "savingRate": "نسبة الادخار {{rate}}%",
+    "monthOverMonth": "الإنفاق مقارنة بالشهر الماضي: {{delta}}",
+    "plannedVsActual": "المخطط مقابل الفعلي لكل قسم",
+    "topCategories": "أعلى الفئات",
+    "uncategorised": "بلا فئة"
+  },
+  "data": {
+    "title": "بياناتك",
+    "body": "صدّر كل شيء كملف JSON تحتفظ به أو تستورده على جهاز جديد. الاستيراد يفحص الملف قبل كتابة أي شيء.",
+    "export": "تصدير JSON",
+    "import": "استيراد JSON",
+    "invalid": "رُفض الملف: {{reason}}",
+    "notJson": "الملف ليس JSON صالحاً",
+    "previewTitle": "معاينة الاستيراد",
+    "previewBody": "ستُكتب الصفوف ثم تُزامن كتعديلاتك.",
+    "skipped": "تم تخطي (يكتبها الخادم): {{tables}}",
+    "confirmImport": "استيراد",
+    "imported": "تم استيراد {{count}} صفاً"
+  },
+  "account": {
+    "delete": "حذف حسابي",
+    "deleteBody": "يُحذف حسابك وأسرتك بعد 30 يوماً من التأكيد. يمكنك تسجيل الدخول والإلغاء حتى ذلك الحين. صدّر بياناتك أولاً إن أردت نسخة.",
+    "confirmDelete": "حذف بعد 30 يوماً",
+    "deletionRequested": "تم طلب الحذف",
+    "deletionPending": "سيُحذف هذا الحساب في {{date}} ما لم تُلغِ الطلب.",
+    "cancelDeletion": "إلغاء الحذف",
+    "deletionCancelled": "أُلغي الحذف"
   }
 }

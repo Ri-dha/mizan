@@ -10,7 +10,8 @@ public record AuthProperties(
         Lockout lockout,
         Verification verification,
         PasswordReset passwordReset,
-        RateLimit rateLimit) {
+        RateLimit rateLimit,
+        Deletion deletion) {
 
     public record Lockout(int maxAttempts, Duration duration) {
     }
@@ -22,5 +23,8 @@ public record AuthProperties(
     }
 
     public record RateLimit(int capacity, Duration refillPeriod) {
+    }
+
+    public record Deletion(Duration gracePeriod, String purgeCron) {
     }
 }

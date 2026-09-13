@@ -19,11 +19,15 @@ class PlannedIncomeVectorTest {
     private record Window(String from, String toExclusive) {
     }
 
+    private record Step(String effectiveFrom, long baseAmount) {
+    }
+
     private record Source(long baseAmount, Frequency frequency, Integer payDay, String anchorDate,
-                          String activeFrom, String activeTo) {
+                          String activeFrom, String activeTo, List<Step> amountSteps) {
 
         PlannedIncome.Source toDomain() {
-            return new PlannedIncome.Source(baseAmount, frequency, payDay, parse(anchorDate), parse(activeFrom), parse(activeTo));
+            return new PlannedIncome.Source(baseAmount, frequency, payDay, parse(anchorDate), parse(activeFrom), parse(activeTo),
+                    amountSteps.stream().map(step -> new PlannedIncome.AmountStep(parse(step.effectiveFrom()), step.baseAmount())).toList());
         }
     }
 

@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
-import { createCashAccount, updateCashAccount } from "@/db/cashAccounts"
+import { createCashAccount, liveAdjustmentsOf, updateCashAccount } from "@/db/cashAccounts"
+import { useLiveQuery } from "dexie-react-hooks"
 import type { CashAccount, CashAccountKind } from "@/db/schema"
-import { fromMinorUnits, toMinorUnits } from "@/domain/money/format"
+import { formatMoney, fromMinorUnits, toMinorUnits } from "@/domain/money/format"
 
 const KINDS: CashAccountKind[] = ["WALLET", "BANK", "CASH_AT_HOME", "OTHER"]
 const CURRENCIES = ["IQD", "USD"]
@@ -24,9 +25,11 @@ interface Props {
 }
 
 export function AccountSheet({ open, account, onClose, onDelete }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const session = useSession()
   const [name, setName] = useState("")
+  const [adjustmentNote, setAdjustmentNote] = useState("")
+  const adjustments = useLiveQuery(() => (account ? liveAdjustmentsOf(account.id) : Promise.resolve([])), [account?.id], [])
   const [kind, setKind] = useState<CashAccountKind>("WALLET")
   const [institution, setInstitution] = useState("")
   const [currency, setCurrency] = useState("IQD")
@@ -41,6 +44,7 @@ export function AccountSheet({ open, account, onClose, onDelete }: Props) {
     setCurrency(account?.currency ?? session?.baseCurrency ?? "IQD")
     setBalance(account ? fromMinorUnits(account.balance, account.currency) : "0")
     setIsPrivate(account?.visibility === "PRIVATE")
+    setAdjustmentNote("")
   }, [open, account, session])
 
   async function submit(event: FormEvent) {
@@ -53,7 +57,7 @@ export function AccountSheet({ open, account, onClose, onDelete }: Props) {
       balance: toMinorUnits(balance, currency),
       visibility: isPrivate ? ("PRIVATE" as const) : ("SHARED" as const),
     }
-    if (account) await updateCashAccount(account.id, input)
+    if (account) await updateCashAccount(account.id, input, adjustmentNote.trim() || null)
     else await createCashAccount(input)
     onClose()
   }
@@ -92,10 +96,26 @@ export function AccountSheet({ open, account, onClose, onDelete }: Props) {
               </Select>
             </Field>
           </div>
+          {account && (
+            <Field id="adjustmentNote" label={t("accounts.adjustmentNote")}>
+              <Input id="adjustmentNote" value={adjustmentNote} onChange={(e) => setAdjustmentNote(e.target.value)} maxLength={120} />
+            </Field>
+          )}
           <div className="flex items-center gap-2">
             <Switch id="private" checked={isPrivate} onCheckedChange={setIsPrivate} />
             <Label htmlFor="private">{t("accounts.private")}</Label>
           </div>
+          {account && adjustments.length > 0 && (
+            <div className="flex flex-col gap-1 text-sm">
+              <p className="font-heading">{t("accounts.adjustments")}</p>
+              {adjustments.map((a) => (
+                <p key={a.id} className="opacity-80">
+                  {t("accounts.adjustmentLine", { date: a.adjustedOn, from: formatMoney(a.previousBalance, account.currency, i18n.language), to: formatMoney(a.newBalance, account.currency, i18n.language) })}
+                  {a.note ? ` · ${a.note}` : ""}
+                </p>
+              ))}
+            </div>
+          )}
           <SheetFooter className="flex-row justify-between px-0">
             {account && (
               <Button type="button" variant="neutral" onClick={() => onDelete(account)}>{t("accounts.delete")}</Button>

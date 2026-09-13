@@ -18,12 +18,25 @@ public final class PlannedIncome {
     private PlannedIncome() {
     }
 
+    /** One entry of a source's amount history: what it paid from a given date. */
+    public record AmountStep(LocalDate effectiveFrom, long baseAmount) {
+    }
+
     public record Source(
             long baseAmount, Frequency frequency, Integer payDay, LocalDate anchorDate,
-            LocalDate activeFrom, LocalDate activeTo) {
+            LocalDate activeFrom, LocalDate activeTo, List<AmountStep> amountSteps) {
 
         boolean isActiveOn(LocalDate date) {
             return !date.isBefore(activeFrom) && (activeTo == null || !date.isAfter(activeTo));
+        }
+
+        /** The amount in force on a pay date; sources without a history fall back to their current amount. */
+        long amountOn(LocalDate date) {
+            return amountSteps.stream()
+                    .filter(step -> !step.effectiveFrom().isAfter(date))
+                    .max(Comparator.comparing(AmountStep::effectiveFrom))
+                    .map(AmountStep::baseAmount)
+                    .orElse(baseAmount);
         }
     }
 
@@ -39,7 +52,7 @@ public final class PlannedIncome {
             Source source = sources.get(i);
             for (LocalDate date : payDates(source, window)) {
                 if (source.isActiveOn(date)) {
-                    occurrences.add(new Occurrence(i, date, source.baseAmount()));
+                    occurrences.add(new Occurrence(i, date, source.amountOn(date)));
                 }
             }
         }

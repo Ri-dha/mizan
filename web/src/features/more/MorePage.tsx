@@ -1,12 +1,15 @@
-import { Banknote, HandCoins, PiggyBank, Receipt, RefreshCw, Settings, Wallet } from "lucide-react"
+import { Banknote, BarChart3, Gem, HandCoins, PiggyBank, Receipt, RefreshCw, Scale, Settings, Wallet } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 
 import { Card, CardContent } from "@/components/ui/card"
 
 export const MORE_LINKS = [
+  { to: "/networth", key: "nav.networth", icon: Scale },
+  { to: "/report", key: "nav.report", icon: BarChart3 },
   { to: "/income", key: "nav.income", icon: Wallet },
   { to: "/bills", key: "nav.bills", icon: Receipt },
+  { to: "/metals", key: "nav.metals", icon: Gem },
   { to: "/accounts", key: "nav.accounts", icon: Banknote },
   { to: "/debts", key: "nav.debts", icon: HandCoins },
   { to: "/goals", key: "nav.goals", icon: PiggyBank },

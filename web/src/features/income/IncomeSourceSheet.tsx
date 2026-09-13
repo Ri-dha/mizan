@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
+import { toast } from "sonner"
 
 import { useSession } from "@/api/auth"
 import { Field } from "@/components/Field"
@@ -9,10 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
-import { createIncomeSource, RATE_SCALE, updateIncomeSource } from "@/db/income"
-import type { Frequency, IncomeSource } from "@/db/schema"
+import { createIncomeSource, historyOf, RATE_SCALE, recordAmountChange, removeAmountChange, updateIncomeSource } from "@/db/income"
+import type { Frequency, IncomeSource, IncomeSourceAmount } from "@/db/schema"
 import { todayIso } from "@/domain/calendar/month"
-import { fromMinorUnits, toMinorUnits } from "@/domain/money/format"
+import { formatMoney, fromMinorUnits, toMinorUnits } from "@/domain/money/format"
 
 const FREQUENCIES: Frequency[] = ["MONTHLY", "BIWEEKLY", "WEEKLY", "ONE_OFF"]
 const CURRENCIES = ["IQD", "USD"]
@@ -20,11 +21,12 @@ const CURRENCIES = ["IQD", "USD"]
 interface Props {
   open: boolean
   source: IncomeSource | null
+  history: IncomeSourceAmount[]
   onClose: () => void
 }
 
-export function IncomeSourceSheet({ open, source, onClose }: Props) {
-  const { t } = useTranslation()
+export function IncomeSourceSheet({ open, source, history, onClose }: Props) {
+  const { t, i18n } = useTranslation()
   const session = useSession()
   const base = session?.baseCurrency ?? "IQD"
   const [name, setName] = useState("")
@@ -37,6 +39,9 @@ export function IncomeSourceSheet({ open, source, onClose }: Props) {
   const [activeFrom, setActiveFrom] = useState(todayIso())
   const [activeTo, setActiveTo] = useState("")
   const [isPrivate, setIsPrivate] = useState(false)
+  const [raiseAmount, setRaiseAmount] = useState("")
+  const [raiseFrom, setRaiseFrom] = useState(todayIso())
+  const [raiseNote, setRaiseNote] = useState("")
 
   useEffect(() => {
     if (!open) return
@@ -50,7 +55,22 @@ export function IncomeSourceSheet({ open, source, onClose }: Props) {
     setActiveFrom(source?.activeFrom ?? todayIso())
     setActiveTo(source?.activeTo ?? "")
     setIsPrivate(source?.visibility === "PRIVATE")
+    setRaiseAmount("")
+    setRaiseFrom(todayIso())
+    setRaiseNote("")
   }, [open, source, base])
+
+  const timeline = source ? historyOf(source, history) : []
+  const date = (iso: string) => new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso))
+
+  async function submitRaise(event: FormEvent) {
+    event.preventDefault()
+    if (!source) return
+    await recordAmountChange(source, toMinorUnits(raiseAmount, source.currency), raiseFrom, raiseNote.trim() || null)
+    toast(t("income.raiseSaved"))
+    setRaiseAmount("")
+    setRaiseNote("")
+  }
 
   const needsRate = currency !== base
   const usesPayDay = frequency === "MONTHLY"
@@ -59,7 +79,7 @@ export function IncomeSourceSheet({ open, source, onClose }: Props) {
     event.preventDefault()
     const input = {
       name: name.trim(),
-      amount: toMinorUnits(amount, currency),
+      amount: source ? source.amount : toMinorUnits(amount, currency),
       currency,
       fxRateMicros: needsRate ? Math.round(Number(rate) * RATE_SCALE) : RATE_SCALE,
       frequency,
@@ -92,8 +112,8 @@ export function IncomeSourceSheet({ open, source, onClose }: Props) {
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} />
           </Field>
           <div className="grid grid-cols-[1fr_auto] gap-2">
-            <Field id="amount" label={t("income.amount")}>
-              <Input id="amount" inputMode="decimal" dir="ltr" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+            <Field id="amount" label={source ? t("income.currentAmount") : t("income.amount")} hint={source ? t("income.amountLocked") : undefined}>
+              <Input id="amount" inputMode="decimal" dir="ltr" value={amount} onChange={(e) => setAmount(e.target.value)} required disabled={source !== null} />
             </Field>
             <Field id="currency" label={t("accounts.currency")}>
               <Select value={currency} onValueChange={setCurrency}>
@@ -141,6 +161,39 @@ export function IncomeSourceSheet({ open, source, onClose }: Props) {
             <Button type="submit">{t("accounts.save")}</Button>
           </SheetFooter>
         </form>
+
+        {source && (
+          <div className="flex flex-col gap-3 px-4 pb-6">
+            <p className="font-heading">{t("income.history")}</p>
+            {timeline.length === 0 && <p className="text-sm opacity-70">{t("income.historyFrom", { amount: formatMoney(source.amount, source.currency, i18n.language), date: date(source.activeFrom) })}</p>}
+            {[...timeline].reverse().map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between gap-2 rounded-base border-2 border-border p-2 text-sm">
+                <span>
+                  {t("income.historyFrom", { amount: formatMoney(entry.amount, entry.currency, i18n.language), date: date(entry.effectiveFrom) })}
+                  {entry.note ? <span className="opacity-70"> · {entry.note}</span> : null}
+                </span>
+                {timeline.length > 1 && (
+                  <Button size="sm" variant="neutral" onClick={() => void removeAmountChange(entry, source, history)}>{t("accounts.delete")}</Button>
+                )}
+              </div>
+            ))}
+            <form onSubmit={submitRaise} className="flex flex-col gap-3 rounded-base border-2 border-border p-3">
+              <p className="font-heading">{t("income.recordRaise")}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Field id="raiseAmount" label={t("income.newAmount")}>
+                  <Input id="raiseAmount" inputMode="decimal" dir="ltr" value={raiseAmount} onChange={(e) => setRaiseAmount(e.target.value)} required />
+                </Field>
+                <Field id="raiseFrom" label={t("income.effectiveFrom")}>
+                  <Input id="raiseFrom" type="date" dir="ltr" value={raiseFrom} onChange={(e) => setRaiseFrom(e.target.value)} required />
+                </Field>
+              </div>
+              <Field id="raiseNote" label={t("income.note")}>
+                <Input id="raiseNote" value={raiseNote} onChange={(e) => setRaiseNote(e.target.value)} maxLength={120} />
+              </Field>
+              <Button type="submit" className="self-start" disabled={!raiseAmount}>{t("income.recordRaise")}</Button>
+            </form>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   )

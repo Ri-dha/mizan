@@ -41,6 +41,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/months/{monthKey}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reopen a closed month; recorded in the audit trail */
+        post: operations["reopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/months/{monthKey}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close a month: takes an immutable net worth snapshot (BR-14) */
+        post: operations["close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/deletion-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask for the account and its household to be deleted after the grace period (FR-ACC-08) */
+        post: operations["requestDeletion"];
+        /** Withdraw a pending deletion request */
+        delete: operations["cancelDeletion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/verify": {
         parameters: {
             query?: never;
@@ -258,6 +310,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/networth/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Net worth right now, computed on the server from the synced ledgers */
+        get: operations["current_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/months": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Which months are closed */
+        get: operations["months"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -267,6 +353,40 @@ export interface paths {
         };
         /** The signed-in account and its household */
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest quote per instrument; stale after 24 hours without a refresh */
+        get: operations["quotes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Daily price history for charts and snapshots */
+        get: operations["history"];
         put?: never;
         post?: never;
         delete?: never;
@@ -344,6 +464,38 @@ export interface components {
             /** Format: date-time */
             lastSeenAt?: string;
         };
+        MonthCloseResponse: {
+            monthKey?: string;
+            /** Format: uuid */
+            snapshotId?: string;
+            /** Format: date-time */
+            closedAt?: string;
+            /** Format: date-time */
+            reopenedAt?: string;
+            closed?: boolean;
+        };
+        CurrentUserResponse: {
+            /** Format: uuid */
+            id?: string;
+            email?: string;
+            phone?: string;
+            displayName?: string;
+            locale?: string;
+            verified?: boolean;
+            /** Format: date-time */
+            deletionRequestedAt?: string;
+            household?: components["schemas"]["HouseholdResponse"];
+        };
+        HouseholdResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            baseCurrency?: string;
+            /** Format: int32 */
+            monthStartDay?: number;
+            /** @enum {string} */
+            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
+        };
         VerifyRequest: {
             code: string;
         };
@@ -385,16 +537,6 @@ export interface components {
             /** Format: int32 */
             monthStartDay?: number;
         };
-        HouseholdResponse: {
-            /** Format: uuid */
-            id?: string;
-            name?: string;
-            baseCurrency?: string;
-            /** Format: int32 */
-            monthStartDay?: number;
-            /** @enum {string} */
-            role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT";
-        };
         SyncPullResponse: {
             records?: components["schemas"]["SyncRecordResponse"][];
             /** Format: int64 */
@@ -416,15 +558,46 @@ export interface components {
             /** Format: int64 */
             seq?: number;
         };
-        CurrentUserResponse: {
-            /** Format: uuid */
-            id?: string;
-            email?: string;
-            phone?: string;
-            displayName?: string;
-            locale?: string;
-            verified?: boolean;
-            household?: components["schemas"]["HouseholdResponse"];
+        NetWorthResponse: {
+            /** Format: int64 */
+            totalAssets?: number;
+            /** Format: int64 */
+            totalLiabilities?: number;
+            /** Format: int64 */
+            netWorth?: number;
+            composition?: components["schemas"]["Share"][];
+            rateSet?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            computedAt?: string;
+        };
+        Share: {
+            /** @enum {string} */
+            assetClass?: "CASH" | "METALS" | "RECEIVABLES";
+            /** Format: int64 */
+            amount?: number;
+            /** Format: double */
+            percent?: number;
+        };
+        QuoteResponse: {
+            /** @enum {string} */
+            instrument?: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL";
+            /** Format: int64 */
+            priceMicros?: number;
+            source?: string;
+            /** Format: date-time */
+            quotedAt?: string;
+            /** Format: date-time */
+            fetchedAt?: string;
+            stale?: boolean;
+        };
+        HistoryPointResponse: {
+            /** Format: date */
+            day?: string;
+            /** Format: int64 */
+            priceMicros?: number;
+            source?: string;
         };
     };
     responses: never;
@@ -479,6 +652,90 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["DeviceResponse"];
+                };
+            };
+        };
+    };
+    reopen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                monthKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthCloseResponse"];
+                };
+            };
+        };
+    };
+    close: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                monthKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthCloseResponse"];
+                };
+            };
+        };
+    };
+    requestDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CurrentUserResponse"];
+                };
+            };
+        };
+    };
+    cancelDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CurrentUserResponse"];
                 };
             };
         };
@@ -773,6 +1030,46 @@ export interface operations {
             };
         };
     };
+    current_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NetWorthResponse"];
+                };
+            };
+        };
+    };
+    months: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthCloseResponse"][];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -789,6 +1086,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CurrentUserResponse"];
+                };
+            };
+        };
+    };
+    quotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuoteResponse"][];
+                };
+            };
+        };
+    };
+    history: {
+        parameters: {
+            query: {
+                instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL";
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HistoryPointResponse"][];
                 };
             };
         };

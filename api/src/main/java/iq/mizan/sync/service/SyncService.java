@@ -121,6 +121,10 @@ public class SyncService {
 
     private List<ConflictResponse> apply(CurrentUser user, SyncDevice device, SyncOp op) {
         SyncTable table = registry.require(op.table());
+        if (table.readOnly()) {
+            throw ApiException.of(ErrorCode.SYNC_TABLE_READ_ONLY,
+                    "Table '%s' is written by the server only".formatted(op.table())).property("opId", op.opId());
+        }
         Map<String, Object> incoming = normalised(table, op);
         Map<String, String> clocks = op.fields().keySet().stream().collect(Collectors.toMap(
                 Function.identity(), field -> HybridLogicalClock.validated(op.clocks().get(field), field),

@@ -52,6 +52,14 @@ docker compose --profile full up --build
 Every credential above is a dev default from `.env.example` and `application.yml`. Deployed
 environments override them with `MIZAN_*`, `DB_*` and `MINIO_*` environment variables.
 
+### Price feeds
+
+Locally the API serves fixed stub prices (see `application-dev.yml`). To use real providers set
+any of `MIZAN_METALS_DEV_API_KEY`, `MIZAN_GOLD_API_KEY`, `MIZAN_OPEN_EXCHANGE_RATES_APP_ID`,
+or `MIZAN_EXCHANGE_RATE_API_URL=https://open.er-api.com` (keyless). Providers are tried in that
+order every hour; the parallel-market dollar rate comes from `MIZAN_PARALLEL_RATE_IQD_MICROS`
+(1470 IQD/USD = `1470000000`) or from a price the user enters in the app.
+
 ### API endpoints (v1)
 
 | Method | Path | Auth | Purpose |
@@ -73,6 +81,14 @@ environments override them with `MIZAN_*`, `DB_*` and `MINIO_*` environment vari
 | GET | `/api/v1/sync/conflicts?deviceId` | bearer | Edits from this device that lost to newer values |
 | POST | `/api/v1/attachments/{id}/upload-url` | bearer, `RECORD_WRITE` | Presigned PUT for the encrypted bytes of a synced attachment row |
 | GET | `/api/v1/attachments/{id}/download-url` | bearer | Presigned GET for the same |
+| GET | `/api/v1/market/quotes` | bearer | Latest XAU, XAG and USD→IQD quotes with source, time and stale flag |
+| GET | `/api/v1/market/history?instrument&from&to` | bearer | Daily price history for charts and snapshots |
+| GET | `/api/v1/networth/current` | bearer | Net worth computed on the server from the synced ledgers, with the rate set used |
+| GET | `/api/v1/months` | bearer | Which months are closed |
+| POST | `/api/v1/months/{monthKey}/close` | bearer, `PLAN_EDIT` | Close a month: immutable snapshot |
+| POST | `/api/v1/months/{monthKey}/reopen` | bearer, `PLAN_EDIT` | Reopen a closed month (audited) |
+| POST | `/api/v1/me/deletion-request` | bearer | Request account deletion; purged after 30 days |
+| DELETE | `/api/v1/me/deletion-request` | bearer | Withdraw the request |
 
 The access token goes in `Authorization: Bearer <token>` and lives 15 minutes. The refresh token
 is a 30-day httpOnly cookie scoped to `/api/v1/auth`, and is also returned in the body for
@@ -86,15 +102,18 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/` | Home: greeting, cash on hand, verification prompt |
 | `/verify` | Enter the 6-digit contact verification code |
 | `/plan` | Buckets for the selected month with allocated, committed, spent and free; edit shares with the over/under warning and rebalance |
-| `/income` | Income sources, this month's expected pay dates, mark received, irregular receipts |
+| `/income` | Income sources with an amount history (record a raise from a date), this month's expected pay dates, mark received, irregular receipts |
 | `/transactions` | The ledger for the selected month: search and filters, edit, recycle bin; the + button anywhere opens quick add |
 | `/bills` | Recurring bills, this month's due dates, mark paid with the actual amount, undo |
 | `/debts` | Debts owed and owing, balance from the payment ledger, payoff and what-if extra payments |
 | `/goals` | Savings goals with deposits, withdrawals, progress and projection |
+| `/metals` | Gold and silver: holdings by purity, purchases with cost per gram vs now, sales with realised gain, prices in use, "how is this calculated", enter today's price, valuation settings |
+| `/networth` | Net worth with composition, USD line, trend chart of closed months, close and reopen months with their snapshots |
+| `/report` | Monthly report: planned vs actual per bucket, top categories, month-over-month, saving rate |
 | `/more` | Links to the less frequent screens |
 | `/accounts` | Cash accounts: add, edit, soft-delete with undo |
 | `/sync` | Sync status, sync now, overridden edits (conflict log) |
-| `/settings` | Language, theme, lock timeout, PIN, household settings, sync page, install, sign out |
+| `/settings` | Language, theme, digits, USD line, notification switches, lock timeout, PIN, household settings, export and import JSON, account deletion, install, sign out |
 
 A PIN screen appears after first sign-in and whenever the app has been in the background longer
 than the configured timeout (30 seconds by default).

@@ -22,9 +22,19 @@ public class SyncWriter {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void insert(SyncTable table, UUID rowId, UUID householdId, UUID ownerId, Map<String, Object> fields) {
+        rows.insert(table, rowId, householdId, ownerId, fields, stamped(fields));
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void update(SyncTable table, UUID rowId, Map<String, Object> fields) {
+        StoredRow stored = rows.lockForUpdate(table, rowId).orElseThrow();
+        Map<String, String> clocks = new java.util.LinkedHashMap<>(stored.clocks());
+        clocks.putAll(stamped(fields));
+        rows.update(table, rowId, fields, clocks);
+    }
+
+    private Map<String, String> stamped(Map<String, Object> fields) {
         String stamp = serverClock.next();
-        Map<String, String> clocks = fields.keySet().stream()
-                .collect(Collectors.toMap(Function.identity(), field -> stamp));
-        rows.insert(table, rowId, householdId, ownerId, fields, clocks);
+        return fields.keySet().stream().collect(Collectors.toMap(Function.identity(), field -> stamp));
     }
 }

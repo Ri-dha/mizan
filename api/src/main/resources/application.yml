@@ -1,6 +1,11 @@
 spring:
   application:
     name: mizan
+  http:
+    client:
+      # Outbound price-feed calls are bounded so a slow provider cannot hold the refresh thread.
+      connect-timeout: 10s
+      read-timeout: 10s
   profiles:
     active: "${SPRING_PROFILES_ACTIVE:dev}"
   threads:
@@ -61,6 +66,10 @@ mizan:
       # Per client address on the unauthenticated auth endpoints (NFR-04).
       capacity: 20
       refill-period: 1m
+    # FR-ACC-08: the account and its household are purged this long after the request.
+    deletion:
+      grace-period: 30d
+      purge-cron: "0 45 3 * * *"
 
   household:
     default-currency: IQD
@@ -81,6 +90,38 @@ mizan:
     # BR-15: how long a soft-deleted record can still be restored.
     recycle-bin-retention: 30d
     purge-cron: "0 30 3 * * *"
+
+  # --- Market data (FR-MKT-01..06) ---
+  # Providers are tried in order; each is only registered when its key is set. The stub
+  # (dev/test) answers last with fixed prices. The parallel dollar rate has no public API, so
+  # an operator supplies it in micros (1470 IQD/USD = 1470000000); 0 leaves it unset.
+  market:
+    refresh-interval: 1h
+    stale-after: 24h
+    history-default-days: 365
+    history-max-days: 1830
+    feeds:
+      metals-dev:
+        url: "${MIZAN_METALS_DEV_URL:https://api.metals.dev/v1/latest}"
+        api-key: "${MIZAN_METALS_DEV_API_KEY:}"
+      gold-api:
+        url: "${MIZAN_GOLD_API_URL:https://www.goldapi.io}"
+        api-key: "${MIZAN_GOLD_API_KEY:}"
+      open-exchange-rates:
+        url: "${MIZAN_OPEN_EXCHANGE_RATES_URL:https://openexchangerates.org}"
+        app-id: "${MIZAN_OPEN_EXCHANGE_RATES_APP_ID:}"
+      exchange-rate-api:
+        url: "${MIZAN_EXCHANGE_RATE_API_URL:}"
+      parallel-rate-iqd-micros: "${MIZAN_PARALLEL_RATE_IQD_MICROS:0}"
+    stub:
+      enabled: false
+      prices-micros: {}
+
+  # --- Net worth (FR-NET-03) ---
+  # The month that ended is snapshotted shortly after midnight; a month someone already closed
+  # by hand is left alone.
+  networth:
+    auto-close-cron: "0 15 0 * * *"
 
   storage:
     bucket: "${MIZAN_STORAGE_BUCKET:mizan-attachments}"

@@ -14,7 +14,10 @@
     "bills": "Bills",
     "debts": "Debts",
     "goals": "Goals",
-    "more": "More"
+    "more": "More",
+    "metals": "Gold & silver",
+    "networth": "Net worth",
+    "report": "Report"
   },
   "auth": {
     "identifier": "Email or phone",
@@ -71,7 +74,11 @@
     "viewPlan": "Open plan",
     "upcomingBills": "Coming up",
     "noUpcoming": "No bills due soon.",
-    "quickAdd": "Add"
+    "quickAdd": "Add",
+    "metalsTitle": "Gold & silver",
+    "metalsNone": "No metal recorded.",
+    "netWorth": "Net worth",
+    "openNetWorth": "Breakdown"
   },
   "accounts": {
     "title": "Cash accounts",
@@ -92,7 +99,10 @@
       "BANK": "Bank",
       "CASH_AT_HOME": "Cash at home",
       "OTHER": "Other"
-    }
+    },
+    "adjustmentNote": "Reason for the change",
+    "adjustments": "Balance changes",
+    "adjustmentLine": "{{date}}: {{from}} → {{to}}"
   },
   "sync": {
     "title": "Sync",
@@ -131,7 +141,25 @@
     "monthStartDay": "Month starts on day",
     "saved": "Saved",
     "install": "Install Mizan on this device",
-    "account": "Account"
+    "account": "Account",
+    "display": "Display",
+    "digits": "Digits",
+    "digitsHint": "Applies to Arabic only.",
+    "digitStyles": {
+      "western": "0 1 2 3 (Western)",
+      "eastern": "٠ ١ ٢ ٣ (Eastern Arabic)"
+    },
+    "showUsd": "Also show net worth in US dollars",
+    "notifications": "Notifications",
+    "notificationsBody": "Delivery arrives in a later release; your choices are kept and off means off.",
+    "quietMode": "Quiet mode (all off)",
+    "notificationClasses": {
+      "billDue": "Bill due reminders",
+      "payDay": "Pay-day prompt to plan the month",
+      "overspend": "Bucket overspend alerts",
+      "metalPrice": "Gold and silver price moves",
+      "monthClose": "Month-end close reminder"
+    }
   },
   "common": {
     "cancel": "Cancel",
@@ -195,7 +223,19 @@
     "endsOn": "ends {{date}}",
     "endSource": "End this source",
     "receivedOnLabel": "Received on",
-    "note": "Note"
+    "note": "Note",
+    "sourcesHint": "Tap Edit on a source to change it. Ending it keeps its history.",
+    "edit": "Edit",
+    "end": "End",
+    "ended": "Ended",
+    "history": "Amount history",
+    "historyFrom": "{{amount}} from {{date}}",
+    "recordRaise": "Record a raise or change",
+    "newAmount": "New amount",
+    "effectiveFrom": "From",
+    "raiseSaved": "Change recorded",
+    "amountLocked": "Use 'Record a raise or change' below so earlier months keep their figures.",
+    "currentAmount": "Latest amount"
   },
   "plan": {
     "title": "Plan",
@@ -341,5 +381,159 @@
     "required": "Needs {{amount}} a month to reach it by {{date}}",
     "noProjection": "Add a monthly deposit or a target date to see a projection.",
     "archive": "Archive"
+  },
+  "metals": {
+    "title": "Gold & silver",
+    "addLot": "Add purchase",
+    "editLot": "Edit purchase",
+    "portfolio": "Holdings",
+    "costBasis": "Cost",
+    "valueNow": "Worth now",
+    "gain": "Gain",
+    "excludingMaking": "{{amount}} excluding making charges",
+    "noLots": "No metal recorded yet. Add a purchase to see what it is worth today.",
+    "weight": "Weight",
+    "unit": "Unit",
+    "units": {
+      "GRAM": "gram",
+      "MITHQAL": "mithqal",
+      "TOLA": "tola",
+      "TROY_OUNCE": "troy oz",
+      "KILOGRAM": "kg"
+    },
+    "inGrams": "= {{grams}} g",
+    "metal": {
+      "GOLD": "Gold",
+      "SILVER": "Silver"
+    },
+    "purity": "Purity",
+    "form": "Form",
+    "forms": {
+      "COIN": "Coin",
+      "BAR": "Bar",
+      "JEWELLERY": "Jewellery",
+      "SCRAP": "Scrap"
+    },
+    "purchaseDate": "Bought on",
+    "metalCost": "Metal price paid",
+    "makingCharge": "Making charge",
+    "makingHint": "Counted in cost, usually lost on sale",
+    "fees": "Fees",
+    "dealer": "Dealer",
+    "location": "Kept at",
+    "serial": "Serial / assay",
+    "heldFor": "Held for (if not yours)",
+    "lots": "Purchases",
+    "perGram": "{{cost}}/g paid · {{now}}/g now",
+    "sell": "Sell {{metal}}",
+    "sales": "Sales",
+    "proceeds": "Sold for",
+    "buyer": "Buyer",
+    "method": "Cost basis method",
+    "methodHint": "Which purchases the sold metal is taken from; stored with the sale.",
+    "methods": {
+      "FIFO": "First in, first out",
+      "SPECIFIC": "Specific lots",
+      "WEIGHTED_AVERAGE": "Weighted average"
+    },
+    "chooseLots": "Lots to sell from, in order",
+    "notEnough": "You do not hold that much.",
+    "costLeaving": "Cost basis leaving: {{amount}}",
+    "realised": "Realised gain: {{amount}}",
+    "confirmSale": "Record sale",
+    "sold": "Sale recorded",
+    "prices": "Prices in use",
+    "howCalculated": "How is this calculated?",
+    "enterPrice": "Enter today's price",
+    "stale": "Stale",
+    "sources": {
+      "override": "Your price",
+      "none": "No price"
+    },
+    "rateKinds": {
+      "OFFICIAL": "official rate",
+      "PARALLEL": "market rate"
+    },
+    "overrideBody": "Your price replaces the feed until you enter a newer one. Every screen will say it is yours.",
+    "priceOf": "Price of",
+    "localPrice": "Local price ({{base}})",
+    "ratePrice": "{{base}} per US dollar",
+    "perGram24k": "= {{amount}} per gram of pure metal",
+    "overrideNoteHint": "e.g. Baghdad gold market",
+    "overrideCount": "{{count}} price entries so far",
+    "priceSaved": "Price saved",
+    "settings": "Valuation settings",
+    "rateKind": "Dollar rate for valuation",
+    "rateKindHint": "Official and market rates differ; the choice shows wherever converted values appear.",
+    "premium": "{{metal}} local premium %",
+    "premiumHint": "What local dealers charge over spot",
+    "defaultMethod": "{{metal}} default method",
+    "methodLocked": "Changing the default never rewrites sales already recorded.",
+    "explain": {
+      "spot": "Spot gold: ${{spot}} per troy ounce (source: {{source}}).",
+      "rate": "Dollar rate: {{rate}} per USD, {{kind}} (source: {{source}}).",
+      "perGram": "Per gram of pure gold: spot ÷ {{ounce}} g × rate = {{amount}}.",
+      "purity": "{{purity}} purity factor: × {{factor}}.",
+      "premium": "Local premium {{percent}}%: {{amount}} per gram.",
+      "mithqal": "One mithqal (5 g) of 21k = {{amount}}.",
+      "overrideActive": "A price you entered is currently in use instead of the feed."
+    }
+  },
+  "networth": {
+    "title": "Net worth",
+    "headline": "What you are worth today",
+    "formula": "Cash + gold and silver + money owed to you − what you owe (BR-05)",
+    "assets": "Assets",
+    "liabilities": "Liabilities",
+    "classes": {
+      "CASH": "Cash",
+      "METALS": "Gold & silver",
+      "RECEIVABLES": "Owed to you"
+    },
+    "ratesInUse": "Dollar at {{rate}} ({{kind}}); gold from {{gold}}",
+    "trend": "Over time",
+    "trendBody": "One point per closed month, plus today.",
+    "now": "Now",
+    "months": "Months",
+    "monthsBody": "Closing a month takes a snapshot that never changes. Reopen to edit, then close again for a fresh one.",
+    "closedBadge": "Closed",
+    "close": "Close month",
+    "reopen": "Reopen",
+    "closed": "{{month}} closed",
+    "reopened": "{{month}} reopened",
+    "needsOnline": "Closing a month needs a connection.",
+    "snapshotLine": "Snapshot {{value}} taken {{at}} at {{rate}} per dollar",
+    "monthClosed": "{{month}} is closed. Reopen it on the Net worth page to change it."
+  },
+  "report": {
+    "title": "Monthly report",
+    "summary": "Summary",
+    "savingRate": "saving rate {{rate}}%",
+    "monthOverMonth": "Spending vs last month: {{delta}}",
+    "plannedVsActual": "Planned vs actual per bucket",
+    "topCategories": "Top categories",
+    "uncategorised": "Uncategorised"
+  },
+  "data": {
+    "title": "Your data",
+    "body": "Export everything as a JSON file you can keep or import on a new device. Import checks the file before writing anything.",
+    "export": "Export JSON",
+    "import": "Import JSON",
+    "invalid": "That file was rejected: {{reason}}",
+    "notJson": "That file is not valid JSON",
+    "previewTitle": "Import preview",
+    "previewBody": "Rows will be written and then synced like your own edits.",
+    "skipped": "Skipped (server-written): {{tables}}",
+    "confirmImport": "Import",
+    "imported": "{{count}} rows imported"
+  },
+  "account": {
+    "delete": "Delete my account",
+    "deleteBody": "Your account and household are deleted 30 days after you confirm. You can sign in and cancel until then. Export your data first if you want a copy.",
+    "confirmDelete": "Delete in 30 days",
+    "deletionRequested": "Deletion requested",
+    "deletionPending": "This account will be deleted on {{date}} unless you cancel.",
+    "cancelDeletion": "Cancel deletion",
+    "deletionCancelled": "Deletion cancelled"
   }
 }

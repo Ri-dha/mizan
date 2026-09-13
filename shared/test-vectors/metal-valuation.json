@@ -1,0 +1,155 @@
+[
+  {
+    "name": "one mithqal of 21k at 2,650 USD/oz and 1,470 IQD/USD, no premium",
+    "input": {
+      "spotUsdPerOzMicros": 2650000000,
+      "usdIqdMicros": 1470000000,
+      "purityBasisPoints": 8750,
+      "premiumBasisPoints": 0,
+      "premiumFixedPerGramMicros": 0,
+      "weightMg": 5000,
+      "overridePerGram24kMicros": null
+    },
+    "expected": {
+      "perGram24kMicros": 125243139840,
+      "perGramMicros": 109587747360,
+      "value": 547939
+    }
+  },
+  {
+    "name": "24k gram uses the 0.999 factor",
+    "input": {
+      "spotUsdPerOzMicros": 2650000000,
+      "usdIqdMicros": 1470000000,
+      "purityBasisPoints": 9990,
+      "premiumBasisPoints": 0,
+      "premiumFixedPerGramMicros": 0,
+      "weightMg": 1000,
+      "overridePerGram24kMicros": null
+    },
+    "expected": {
+      "perGram24kMicros": 125243139840,
+      "perGramMicros": 125117896700,
+      "value": 125118
+    }
+  },
+  {
+    "name": "22k with a three percent local premium",
+    "input": {
+      "spotUsdPerOzMicros": 2650000000,
+      "usdIqdMicros": 1470000000,
+      "purityBasisPoints": 9160,
+      "premiumBasisPoints": 300,
+      "premiumFixedPerGramMicros": 0,
+      "weightMg": 10000,
+      "overridePerGram24kMicros": null
+    },
+    "expected": {
+      "perGram24kMicros": 125243139840,
+      "perGramMicros": 118164397576,
+      "value": 1181644
+    }
+  },
+  {
+    "name": "fixed premium of 5,000 IQD per gram on 18k",
+    "input": {
+      "spotUsdPerOzMicros": 2650000000,
+      "usdIqdMicros": 1470000000,
+      "purityBasisPoints": 7500,
+      "premiumBasisPoints": 0,
+      "premiumFixedPerGramMicros": 5000000000,
+      "weightMg": 2500,
+      "overridePerGram24kMicros": null
+    },
+    "expected": {
+      "perGram24kMicros": 125243139840,
+      "perGramMicros": 98932354880,
+      "value": 247331
+    }
+  },
+  {
+    "name": "silver 925 by the kilogram",
+    "input": {
+      "spotUsdPerOzMicros": 31500000,
+      "usdIqdMicros": 1470000000,
+      "purityBasisPoints": 9250,
+      "premiumBasisPoints": 0,
+      "premiumFixedPerGramMicros": 0,
+      "weightMg": 1000000,
+      "overridePerGram24kMicros": null
+    },
+    "expected": {
+      "perGram24kMicros": 1488739209,
+      "perGramMicros": 1377083768,
+      "value": 1377084
+    }
+  },
+  {
+    "name": "official rate makes the same gold worth less",
+    "input": {
+      "spotUsdPerOzMicros": 2650000000,
+      "usdIqdMicros": 1310000000,
+      "purityBasisPoints": 8750,
+      "premiumBasisPoints": 0,
+      "premiumFixedPerGramMicros": 0,
+      "weightMg": 5000,
+      "overridePerGram24kMicros": null
+    },
+    "expected": {
+      "perGram24kMicros": 111611233462,
+      "perGramMicros": 97659829279,
+      "value": 488299
+    }
+  },
+  {
+    "name": "tola of 21k rounds to the nearest milligram",
+    "input": {
+      "spotUsdPerOzMicros": 2650000000,
+      "usdIqdMicros": 1470000000,
+      "purityBasisPoints": 8750,
+      "premiumBasisPoints": 0,
+      "premiumFixedPerGramMicros": 0,
+      "weightMg": 11664,
+      "overridePerGram24kMicros": null
+    },
+    "expected": {
+      "perGram24kMicros": 125243139840,
+      "perGramMicros": 109587747360,
+      "value": 1278231
+    }
+  },
+  {
+    "name": "zero weight is worth nothing",
+    "input": {
+      "spotUsdPerOzMicros": 2650000000,
+      "usdIqdMicros": 1470000000,
+      "purityBasisPoints": 8750,
+      "premiumBasisPoints": 0,
+      "premiumFixedPerGramMicros": 0,
+      "weightMg": 0,
+      "overridePerGram24kMicros": null
+    },
+    "expected": {
+      "perGram24kMicros": 125243139840,
+      "perGramMicros": 109587747360,
+      "value": 0
+    }
+  },
+  {
+    "name": "a user-entered price replaces spot and rate entirely (FR-MTL-09)",
+    "input": {
+      "spotUsdPerOzMicros": 2650000000,
+      "usdIqdMicros": 1470000000,
+      "purityBasisPoints": 8750,
+      "premiumBasisPoints": 0,
+      "premiumFixedPerGramMicros": 0,
+      "weightMg": 5000,
+      "overridePerGram24kMicros": 128000000000
+    },
+    "expected": {
+      "perGram24kMicros": 128000000000,
+      "perGramMicros": 112000000000,
+      "value": 560000
+    }
+  }
+]

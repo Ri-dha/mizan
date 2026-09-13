@@ -38,6 +38,17 @@ export interface IncomeSource extends Syncable {
   sortOrder: number
 }
 
+/** One entry of a source's amount history: what it paid from a given date. */
+export interface IncomeSourceAmount extends Syncable {
+  visibility: Visibility
+  incomeSourceId: string
+  effectiveFrom: string
+  amount: number
+  currency: string
+  fxRateMicros: number
+  note: string | null
+}
+
 export interface IncomeReceipt extends Syncable {
   visibility: Visibility
   incomeSourceId: string | null
@@ -195,6 +206,104 @@ export interface GoalDeposit extends Syncable {
   note: string | null
 }
 
+export type Metal = "GOLD" | "SILVER"
+export type MetalForm = "COIN" | "BAR" | "JEWELLERY" | "SCRAP"
+export type WeightUnit = "GRAM" | "MITHQAL" | "TOLA" | "TROY_OUNCE" | "KILOGRAM"
+export type DisposalMethod = "FIFO" | "SPECIFIC" | "WEIGHTED_AVERAGE"
+export type MarketInstrument = "XAU" | "XAG" | "USDIQD"
+export type RateKind = "OFFICIAL" | "PARALLEL"
+
+export interface MetalLot extends Syncable {
+  visibility: Visibility
+  metal: Metal
+  purityLabel: string
+  purityBasisPoints: number
+  weightMg: number
+  weightUnitEntered: WeightUnit
+  quantityEntered: string
+  purchaseDate: string
+  metalCost: number
+  makingCharge: number
+  fees: number
+  currency: string
+  fxRateMicros: number
+  form: MetalForm
+  dealer: string | null
+  location: string | null
+  serial: string | null
+  heldFor: string | null
+  note: string | null
+}
+
+export interface MetalDisposal extends Syncable {
+  visibility: Visibility
+  metal: Metal
+  soldOn: string
+  weightMg: number
+  proceeds: number
+  fees: number
+  currency: string
+  fxRateMicros: number
+  method: DisposalMethod
+  buyer: string | null
+  note: string | null
+}
+
+export interface MetalDisposalLot extends Syncable {
+  visibility: Visibility
+  disposalId: string
+  lotId: string
+  weightMg: number
+  metalCost: number
+  makingCharge: number
+  fees: number
+}
+
+export interface MarketOverride extends Syncable {
+  visibility: Visibility
+  instrument: MarketInstrument
+  priceMicros: number
+  effectiveFrom: string
+  note: string | null
+}
+
+export interface MarketSetting extends Syncable {
+  visibility: Visibility
+  rateKind: RateKind
+  goldPremiumBasisPoints: number
+  silverPremiumBasisPoints: number
+  goldMethod: DisposalMethod
+  silverMethod: DisposalMethod
+}
+
+export interface CashAdjustment extends Syncable {
+  visibility: Visibility
+  cashAccountId: string
+  adjustedOn: string
+  previousBalance: number
+  newBalance: number
+  note: string | null
+}
+
+export interface NetWorthSnapshot extends Syncable {
+  visibility: Visibility
+  monthKey: string
+  takenAt: string
+  totalAssets: number
+  totalLiabilities: number
+  netWorth: number
+  composition: { assetClass: string; amount: number; percent: number }[]
+  rateSet: Record<string, unknown>
+}
+
+export interface MonthClose extends Syncable {
+  visibility: Visibility
+  monthKey: string
+  snapshotId: string | null
+  closedAt: string | null
+  reopenedAt: string | null
+}
+
 export interface OutboxOp {
   opId: string
   table: SyncTableName
@@ -223,6 +332,7 @@ export interface MetaEntry {
 export const SYNC_TABLES = {
   cash_account: "cashAccounts",
   income_source: "incomeSources",
+  income_source_amount: "incomeSourceAmounts",
   income_receipt: "incomeReceipts",
   plan: "plans",
   bucket: "buckets",
@@ -234,6 +344,14 @@ export const SYNC_TABLES = {
   debt_payment: "debtPayments",
   goal: "goals",
   goal_deposit: "goalDeposits",
+  metal_lot: "metalLots",
+  metal_disposal: "metalDisposals",
+  metal_disposal_lot: "metalDisposalLots",
+  market_override: "marketOverrides",
+  market_setting: "marketSettings",
+  cash_adjustment: "cashAdjustments",
+  net_worth_snapshot: "netWorthSnapshots",
+  month_close: "monthCloses",
 } as const
 
 export type SyncTableName = keyof typeof SYNC_TABLES
@@ -241,6 +359,7 @@ export type SyncTableName = keyof typeof SYNC_TABLES
 export class MizanDatabase extends Dexie {
   cashAccounts!: EntityTable<CashAccount, "id">
   incomeSources!: EntityTable<IncomeSource, "id">
+  incomeSourceAmounts!: EntityTable<IncomeSourceAmount, "id">
   incomeReceipts!: EntityTable<IncomeReceipt, "id">
   plans!: EntityTable<Plan, "id">
   buckets!: EntityTable<Bucket, "id">
@@ -253,6 +372,14 @@ export class MizanDatabase extends Dexie {
   debtPayments!: EntityTable<DebtPayment, "id">
   goals!: EntityTable<Goal, "id">
   goalDeposits!: EntityTable<GoalDeposit, "id">
+  metalLots!: EntityTable<MetalLot, "id">
+  metalDisposals!: EntityTable<MetalDisposal, "id">
+  metalDisposalLots!: EntityTable<MetalDisposalLot, "id">
+  marketOverrides!: EntityTable<MarketOverride, "id">
+  marketSettings!: EntityTable<MarketSetting, "id">
+  cashAdjustments!: EntityTable<CashAdjustment, "id">
+  netWorthSnapshots!: EntityTable<NetWorthSnapshot, "id">
+  monthCloses!: EntityTable<MonthClose, "id">
   outbox!: EntityTable<OutboxOp, "opId">
   conflicts!: EntityTable<LocalConflict, "id">
   meta!: EntityTable<MetaEntry, "key">
@@ -281,6 +408,21 @@ export class MizanDatabase extends Dexie {
       debtPayments: "id, deletedAt, debtId, monthKey",
       goals: "id, deletedAt, status, sortOrder",
       goalDeposits: "id, deletedAt, goalId, monthKey",
+    })
+    this.version(4).stores({
+      metalLots: "id, deletedAt, metal, purchaseDate",
+      metalDisposals: "id, deletedAt, metal, soldOn",
+      metalDisposalLots: "id, deletedAt, disposalId, lotId",
+      marketOverrides: "id, deletedAt, instrument, effectiveFrom",
+      marketSettings: "id, deletedAt",
+    })
+    this.version(5).stores({
+      incomeSourceAmounts: "id, deletedAt, incomeSourceId, effectiveFrom",
+    })
+    this.version(6).stores({
+      cashAdjustments: "id, deletedAt, cashAccountId, adjustedOn",
+      netWorthSnapshots: "id, deletedAt, monthKey, takenAt",
+      monthCloses: "id, deletedAt, monthKey",
     })
   }
 }

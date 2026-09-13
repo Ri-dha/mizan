@@ -2,6 +2,12 @@ import { addDays, daysBetween, daysInMonth, inWindow, type MonthWindow } from "@
 
 export type Frequency = "MONTHLY" | "BIWEEKLY" | "WEEKLY" | "ONE_OFF"
 
+/** One entry of a source's amount history: what it paid from a given date. */
+export interface AmountStep {
+  effectiveFrom: string
+  baseAmount: number
+}
+
 export interface PlannedSource {
   baseAmount: number
   frequency: Frequency
@@ -9,6 +15,13 @@ export interface PlannedSource {
   anchorDate: string | null
   activeFrom: string
   activeTo: string | null
+  amountSteps: AmountStep[]
+}
+
+/** The amount in force on a pay date; sources without a history fall back to their current amount. */
+export function amountOn(source: Pick<PlannedSource, "baseAmount" | "amountSteps">, date: string): number {
+  const step = source.amountSteps.filter((s) => s.effectiveFrom <= date).sort((a, b) => (a.effectiveFrom < b.effectiveFrom ? 1 : -1))[0]
+  return step ? step.baseAmount : source.baseAmount
 }
 
 export interface Occurrence {
@@ -30,7 +43,7 @@ export function plannedIncome(sources: PlannedSource[], window: MonthWindow): Pl
   const occurrences: Occurrence[] = []
   sources.forEach((source, sourceIndex) => {
     for (const date of payDates(source, window)) {
-      if (isActiveOn(source, date)) occurrences.push({ sourceIndex, date, amount: source.baseAmount })
+      if (isActiveOn(source, date)) occurrences.push({ sourceIndex, date, amount: amountOn(source, date) })
     }
   })
   occurrences.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.sourceIndex - b.sourceIndex))

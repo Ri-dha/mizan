@@ -12,4 +12,9 @@ public interface SyncTable {
 
     /** Field name on the wire (camelCase) to column type; column names derive from it. */
     Map<String, SyncColumnType> fields();
+
+    /** Server-written rows (snapshots, month closes) that devices pull but may never push. */
+    default boolean readOnly() {
+        return false;
+    }
 }

@@ -19,6 +19,8 @@ import { RATE_SCALE } from "@/db/income"
 import { liveBucketsOf, livePlans, planFor } from "@/db/plan"
 import type { Bucket, CounterpartyType, LedgerTransaction, TransactionType } from "@/db/schema"
 import { createTransaction, deleteTransaction, knownCategories, liveTransactionsFor, updateTransaction } from "@/db/transactions"
+import { isMonthClosed, liveMonthCloses } from "@/db/networth"
+import { formatMonthKey } from "@/app/month"
 import { monthKeyFor, todayIso } from "@/domain/calendar/month"
 import { fromMinorUnits, toMinorUnits } from "@/domain/money/format"
 import { cn } from "@/lib/utils"
@@ -38,7 +40,7 @@ interface Props {
  * today and everything else is optional. Doubles as the editor for an existing row.
  */
 export function QuickAddSheet({ open, transaction, onClose }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const session = useSession()
   const base = session?.baseCurrency ?? "IQD"
   const startDay = session?.monthStartDay ?? 1
@@ -91,6 +93,11 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
 
   async function submit(event: FormEvent) {
     event.preventDefault()
+    const targetMonth = monthKeyFor(occurredOn, startDay)
+    if (isMonthClosed(targetMonth, await liveMonthCloses())) {
+      toast(t("networth.monthClosed", { month: formatMonthKey(targetMonth, i18n.language) }))
+      return
+    }
     const input = {
       type,
       occurredOn,

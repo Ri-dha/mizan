@@ -8,6 +8,7 @@ public enum ErrorCode {
     VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "Validation Failed"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "Forbidden"),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Resource Not Found"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User Not Found"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Error"),
     RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests"),
 
@@ -30,6 +31,9 @@ public enum ErrorCode {
     SYNC_DEVICE_NOT_FOUND(HttpStatus.NOT_FOUND, "Sync Device Not Found"),
     SYNC_TABLE_UNKNOWN(HttpStatus.BAD_REQUEST, "Unknown Sync Table"),
     SYNC_FIELD_UNKNOWN(HttpStatus.BAD_REQUEST, "Unknown Sync Field"),
+    SYNC_TABLE_READ_ONLY(HttpStatus.FORBIDDEN, "Sync Table Is Read Only"),
+    MONTH_ALREADY_CLOSED(HttpStatus.CONFLICT, "Month Already Closed"),
+    MONTH_NOT_CLOSED(HttpStatus.CONFLICT, "Month Not Closed"),
     SYNC_BATCH_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Sync Batch Too Large");
 
     private final HttpStatus status;

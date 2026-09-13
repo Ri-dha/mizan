@@ -1,0 +1,292 @@
+[
+  {
+    "name": "FIFO takes the oldest lot first and prorates a partial lot",
+    "input": {
+      "lots": [
+        {
+          "id": "lot-a",
+          "purchaseDate": "2026-01-10",
+          "weightMg": 5000,
+          "remainingMg": 5000,
+          "metalCost": 500000,
+          "makingCharge": 50000,
+          "fees": 5000
+        },
+        {
+          "id": "lot-b",
+          "purchaseDate": "2026-03-05",
+          "weightMg": 10000,
+          "remainingMg": 10000,
+          "metalCost": 1100000,
+          "makingCharge": 0,
+          "fees": 0
+        }
+      ],
+      "weightMg": 7000,
+      "method": "FIFO",
+      "specificLotIds": [],
+      "proceeds": 900000
+    },
+    "expected": {
+      "allocations": [
+        {
+          "lotId": "lot-a",
+          "weightMg": 5000,
+          "metalCost": 500000,
+          "makingCharge": 50000,
+          "fees": 5000
+        },
+        {
+          "lotId": "lot-b",
+          "weightMg": 2000,
+          "metalCost": 220000,
+          "makingCharge": 0,
+          "fees": 0
+        }
+      ],
+      "costMetal": 720000,
+      "costMaking": 50000,
+      "costFees": 5000,
+      "costBasis": 775000,
+      "realisedGain": 125000,
+      "realisedGainExcludingMaking": 175000
+    }
+  },
+  {
+    "name": "FIFO consumes a whole lot exactly",
+    "input": {
+      "lots": [
+        {
+          "id": "lot-a",
+          "purchaseDate": "2026-01-10",
+          "weightMg": 5000,
+          "remainingMg": 5000,
+          "metalCost": 500000,
+          "makingCharge": 50000,
+          "fees": 5000
+        },
+        {
+          "id": "lot-b",
+          "purchaseDate": "2026-03-05",
+          "weightMg": 10000,
+          "remainingMg": 10000,
+          "metalCost": 1100000,
+          "makingCharge": 0,
+          "fees": 0
+        }
+      ],
+      "weightMg": 5000,
+      "method": "FIFO",
+      "specificLotIds": [],
+      "proceeds": 600000
+    },
+    "expected": {
+      "allocations": [
+        {
+          "lotId": "lot-a",
+          "weightMg": 5000,
+          "metalCost": 500000,
+          "makingCharge": 50000,
+          "fees": 5000
+        }
+      ],
+      "costMetal": 500000,
+      "costMaking": 50000,
+      "costFees": 5000,
+      "costBasis": 555000,
+      "realisedGain": 45000,
+      "realisedGainExcludingMaking": 95000
+    }
+  },
+  {
+    "name": "specific lots are consumed in the order given",
+    "input": {
+      "lots": [
+        {
+          "id": "lot-a",
+          "purchaseDate": "2026-01-10",
+          "weightMg": 5000,
+          "remainingMg": 5000,
+          "metalCost": 500000,
+          "makingCharge": 50000,
+          "fees": 5000
+        },
+        {
+          "id": "lot-b",
+          "purchaseDate": "2026-03-05",
+          "weightMg": 10000,
+          "remainingMg": 10000,
+          "metalCost": 1100000,
+          "makingCharge": 0,
+          "fees": 0
+        }
+      ],
+      "weightMg": 3000,
+      "method": "SPECIFIC",
+      "specificLotIds": [
+        "lot-b"
+      ],
+      "proceeds": 400000
+    },
+    "expected": {
+      "allocations": [
+        {
+          "lotId": "lot-b",
+          "weightMg": 3000,
+          "metalCost": 330000,
+          "makingCharge": 0,
+          "fees": 0
+        }
+      ],
+      "costMetal": 330000,
+      "costMaking": 0,
+      "costFees": 0,
+      "costBasis": 330000,
+      "realisedGain": 70000,
+      "realisedGainExcludingMaking": 70000
+    }
+  },
+  {
+    "name": "weighted average spreads cost across every open lot",
+    "input": {
+      "lots": [
+        {
+          "id": "lot-a",
+          "purchaseDate": "2026-01-10",
+          "weightMg": 5000,
+          "remainingMg": 5000,
+          "metalCost": 500000,
+          "makingCharge": 50000,
+          "fees": 5000
+        },
+        {
+          "id": "lot-b",
+          "purchaseDate": "2026-03-05",
+          "weightMg": 10000,
+          "remainingMg": 10000,
+          "metalCost": 1100000,
+          "makingCharge": 0,
+          "fees": 0
+        }
+      ],
+      "weightMg": 3000,
+      "method": "WEIGHTED_AVERAGE",
+      "specificLotIds": [],
+      "proceeds": 400000
+    },
+    "expected": {
+      "allocations": [
+        {
+          "lotId": "lot-a",
+          "weightMg": 3000,
+          "metalCost": 320000,
+          "makingCharge": 10000,
+          "fees": 1000
+        }
+      ],
+      "costMetal": 320000,
+      "costMaking": 10000,
+      "costFees": 1000,
+      "costBasis": 331000,
+      "realisedGain": 69000,
+      "realisedGainExcludingMaking": 79000
+    }
+  },
+  {
+    "name": "a partially sold lot only offers its remainder",
+    "input": {
+      "lots": [
+        {
+          "id": "lot-c",
+          "purchaseDate": "2026-02-01",
+          "weightMg": 5000,
+          "remainingMg": 2000,
+          "metalCost": 300000,
+          "makingCharge": 30000,
+          "fees": 3000
+        }
+      ],
+      "weightMg": 2000,
+      "method": "FIFO",
+      "specificLotIds": [],
+      "proceeds": 250000
+    },
+    "expected": {
+      "allocations": [
+        {
+          "lotId": "lot-c",
+          "weightMg": 2000,
+          "metalCost": 300000,
+          "makingCharge": 30000,
+          "fees": 3000
+        }
+      ],
+      "costMetal": 300000,
+      "costMaking": 30000,
+      "costFees": 3000,
+      "costBasis": 333000,
+      "realisedGain": -83000,
+      "realisedGainExcludingMaking": -53000
+    }
+  },
+  {
+    "name": "selling more than is held is refused",
+    "input": {
+      "lots": [
+        {
+          "id": "lot-a",
+          "purchaseDate": "2026-01-10",
+          "weightMg": 5000,
+          "remainingMg": 5000,
+          "metalCost": 500000,
+          "makingCharge": 50000,
+          "fees": 5000
+        }
+      ],
+      "weightMg": 6000,
+      "method": "FIFO",
+      "specificLotIds": [],
+      "proceeds": 1
+    },
+    "expected": {
+      "error": "INSUFFICIENT_WEIGHT"
+    }
+  },
+  {
+    "name": "loss shows as a negative gain and making charges widen it",
+    "input": {
+      "lots": [
+        {
+          "id": "lot-a",
+          "purchaseDate": "2026-01-10",
+          "weightMg": 5000,
+          "remainingMg": 5000,
+          "metalCost": 500000,
+          "makingCharge": 50000,
+          "fees": 5000
+        }
+      ],
+      "weightMg": 5000,
+      "method": "FIFO",
+      "specificLotIds": [],
+      "proceeds": 520000
+    },
+    "expected": {
+      "allocations": [
+        {
+          "lotId": "lot-a",
+          "weightMg": 5000,
+          "metalCost": 500000,
+          "makingCharge": 50000,
+          "fees": 5000
+        }
+      ],
+      "costMetal": 500000,
+      "costMaking": 50000,
+      "costFees": 5000,
+      "costBasis": 555000,
+      "realisedGain": -35000,
+      "realisedGainExcludingMaking": 15000
+    }
+  }
+]

@@ -53,6 +53,9 @@ public class AppUser {
     @Column(name = "locked_until")
     private Instant lockedUntil;
 
+    @Column(name = "deletion_requested_at")
+    private Instant deletionRequestedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -82,8 +85,19 @@ public class AppUser {
         return verifiedAt != null;
     }
 
+    /** A pending deletion still signs in, so the person can export or change their mind (FR-ACC-08). */
     public boolean isActive() {
-        return accountStatus == AccountStatus.ACTIVE;
+        return accountStatus != AccountStatus.CLOSED;
+    }
+
+    public void requestDeletion() {
+        accountStatus = AccountStatus.DELETION_REQUESTED;
+        deletionRequestedAt = Instant.now();
+    }
+
+    public void cancelDeletion() {
+        accountStatus = AccountStatus.ACTIVE;
+        deletionRequestedAt = null;
     }
 
     public boolean isLocked() {

@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react"
+import { Pencil, Plus } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -8,6 +8,7 @@ import { MonthPicker } from "@/components/MonthPicker"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { currentAmount, updateIncomeSource } from "@/db/income"
 import type { IncomeReceipt, IncomeSource } from "@/db/schema"
 import { todayIso } from "@/domain/calendar/month"
 import { formatMoney } from "@/domain/money/format"
@@ -100,29 +101,41 @@ export function IncomePage() {
       </Card>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>{t("income.sources")}</CardTitle>
+        <CardHeader className="flex-row items-start justify-between gap-2">
+          <div>
+            <CardTitle>{t("income.sources")}</CardTitle>
+            <CardDescription>{t("income.sourcesHint")}</CardDescription>
+          </div>
           <Button size="sm" onClick={() => setEditingSource("new")}><Plus /> {t("income.addSource")}</Button>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {view.sources.length === 0 && <p className="opacity-70">{t("income.noSources")}</p>}
-          {view.sources.map((source) => (
-            <div key={source.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-base border-2 border-border p-3" onClick={() => setEditingSource(source)}>
-              <div className="flex flex-col">
-                <span className="font-heading">{source.name}</span>
-                <span className="text-sm opacity-70">
-                  {t(`income.frequencies.${source.frequency}`)}
-                  {source.frequency === "MONTHLY" ? ` · ${t("income.payDayShort", { day: source.payDay })}` : ""}
-                  {source.activeTo ? ` · ${t("income.endsOn", { date: date(source.activeTo) })}` : ""}
-                </span>
+          {view.sources.map((source) => {
+            const ended = source.activeTo !== null && source.activeTo < today
+            return (
+              <div key={source.id} className={`flex items-center justify-between gap-3 rounded-base border-2 border-border p-3 ${ended ? "opacity-60" : ""}`}>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate font-heading">{source.name}</span>
+                  <span className="truncate text-sm opacity-70">
+                    {t(`income.frequencies.${source.frequency}`)}
+                    {source.frequency === "MONTHLY" ? ` · ${t("income.payDayShort", { day: source.payDay })}` : ""}
+                    {source.activeTo ? ` · ${ended ? t("income.ended") : t("income.endsOn", { date: date(source.activeTo) })}` : ""}
+                  </span>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="tabular-nums font-heading">{money(currentAmount(source, view.amountHistory, today), source.currency)}</span>
+                  <Button size="sm" variant="neutral" aria-label={t("income.edit")} onClick={() => setEditingSource(source)}><Pencil /> {t("income.edit")}</Button>
+                  {!source.activeTo && source.frequency !== "ONE_OFF" && (
+                    <Button size="sm" variant="neutral" onClick={() => void updateIncomeSource(source.id, { activeTo: today })}>{t("income.end")}</Button>
+                  )}
+                </div>
               </div>
-              <span className="tabular-nums font-heading">{money(source.amount, source.currency)}</span>
-            </div>
-          ))}
+            )
+          })}
         </CardContent>
       </Card>
 
-      <IncomeSourceSheet open={editingSource !== null} source={editingSource === "new" ? null : editingSource} onClose={() => setEditingSource(null)} />
+      <IncomeSourceSheet open={editingSource !== null} source={editingSource === "new" ? null : editingSource} history={view.amountHistory} onClose={() => setEditingSource(null)} />
       <ReceiptSheet draft={receipt} onClose={() => setReceipt(null)} />
     </div>
   )

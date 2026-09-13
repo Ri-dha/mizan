@@ -21,3 +21,13 @@ springdoc:
 mizan:
   web:
     allowed-origins: ${MIZAN_ALLOWED_ORIGINS:http://localhost:5173}
+
+  # No provider keys locally: fixed prices so the metals screens have numbers to show.
+  market:
+    stub:
+      enabled: true
+      prices-micros:
+        XAU: 2650000000
+        XAG: 31500000
+        USDIQD_OFFICIAL: 1310000000
+        USDIQD_PARALLEL: 1470000000

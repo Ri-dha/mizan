@@ -51,6 +51,10 @@ public class ApiClient {
                 .exchange();
     }
 
+    public MvcTestResult delete(String path, String accessToken) {
+        return mvc.delete().uri(path).header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken).exchange();
+    }
+
     public MvcTestResult get(String path, String accessToken) {
         var request = mvc.get().uri(path);
         if (accessToken != null) {

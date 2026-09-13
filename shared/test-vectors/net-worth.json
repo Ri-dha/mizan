@@ -1,0 +1,157 @@
+[
+  {
+    "name": "cash and gold minus a car loan (BR-05)",
+    "input": {
+      "cash": 1250000,
+      "metals": 1095877,
+      "receivables": 0,
+      "liabilities": 4800000
+    },
+    "expected": {
+      "totalAssets": 2345877,
+      "totalLiabilities": 4800000,
+      "netWorth": -2454123,
+      "composition": [
+        {
+          "assetClass": "CASH",
+          "amount": 1250000,
+          "percent": 53.3
+        },
+        {
+          "assetClass": "METALS",
+          "amount": 1095877,
+          "percent": 46.7
+        },
+        {
+          "assetClass": "RECEIVABLES",
+          "amount": 0,
+          "percent": 0.0
+        }
+      ]
+    }
+  },
+  {
+    "name": "money lent out is an asset at its outstanding balance (BR-06)",
+    "input": {
+      "cash": 500000,
+      "metals": 0,
+      "receivables": 300000,
+      "liabilities": 0
+    },
+    "expected": {
+      "totalAssets": 800000,
+      "totalLiabilities": 0,
+      "netWorth": 800000,
+      "composition": [
+        {
+          "assetClass": "CASH",
+          "amount": 500000,
+          "percent": 62.5
+        },
+        {
+          "assetClass": "METALS",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "RECEIVABLES",
+          "amount": 300000,
+          "percent": 37.5
+        }
+      ]
+    }
+  },
+  {
+    "name": "nothing owned and nothing owed",
+    "input": {
+      "cash": 0,
+      "metals": 0,
+      "receivables": 0,
+      "liabilities": 0
+    },
+    "expected": {
+      "totalAssets": 0,
+      "totalLiabilities": 0,
+      "netWorth": 0,
+      "composition": [
+        {
+          "assetClass": "CASH",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "METALS",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "RECEIVABLES",
+          "amount": 0,
+          "percent": 0.0
+        }
+      ]
+    }
+  },
+  {
+    "name": "liabilities can exceed assets",
+    "input": {
+      "cash": 100000,
+      "metals": 0,
+      "receivables": 0,
+      "liabilities": 900000
+    },
+    "expected": {
+      "totalAssets": 100000,
+      "totalLiabilities": 900000,
+      "netWorth": -800000,
+      "composition": [
+        {
+          "assetClass": "CASH",
+          "amount": 100000,
+          "percent": 100.0
+        },
+        {
+          "assetClass": "METALS",
+          "amount": 0,
+          "percent": 0.0
+        },
+        {
+          "assetClass": "RECEIVABLES",
+          "amount": 0,
+          "percent": 0.0
+        }
+      ]
+    }
+  },
+  {
+    "name": "percentages round half-up to one decimal",
+    "input": {
+      "cash": 333333,
+      "metals": 333333,
+      "receivables": 333334,
+      "liabilities": 0
+    },
+    "expected": {
+      "totalAssets": 1000000,
+      "totalLiabilities": 0,
+      "netWorth": 1000000,
+      "composition": [
+        {
+          "assetClass": "CASH",
+          "amount": 333333,
+          "percent": 33.3
+        },
+        {
+          "assetClass": "METALS",
+          "amount": 333333,
+          "percent": 33.3
+        },
+        {
+          "assetClass": "RECEIVABLES",
+          "amount": 333334,
+          "percent": 33.3
+        }
+      ]
+    }
+  }
+]

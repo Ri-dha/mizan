@@ -19,6 +19,7 @@ public interface UserMapper {
     @Mapping(target = "displayName", source = "user.displayName")
     @Mapping(target = "locale", source = "user.locale")
     @Mapping(target = "verified", source = "user.verified")
+    @Mapping(target = "deletionRequestedAt", source = "user.deletionRequestedAt")
     @Mapping(target = "household", source = "household")
     CurrentUserResponse toResponse(AppUser user, HouseholdSummary household);
 }

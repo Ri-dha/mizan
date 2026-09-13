@@ -1,10 +1,13 @@
+import { preferences } from "@/app/preferences"
+
 const ZERO_DECIMAL_CURRENCIES: ReadonlySet<string> = new Set(["IQD"])
 
 /** IQD shows whole dinars with grouping (FR-SET-03); other currencies use their own minor unit. */
 export function formatMoney(minorUnits: number, currency: string, locale: string): string {
   const zeroDecimal = ZERO_DECIMAL_CURRENCIES.has(currency)
   const amount = zeroDecimal ? minorUnits : minorUnits / 100
-  return new Intl.NumberFormat(locale === "ar" ? "ar-IQ" : "en-IQ", {
+  const eastern = preferences().digitStyle === "eastern"
+  return new Intl.NumberFormat(locale === "ar" ? (eastern ? "ar-IQ-u-nu-arab" : "ar-IQ-u-nu-latn") : "en-IQ", {
     style: "currency",
     currency,
     currencyDisplay: "code",
