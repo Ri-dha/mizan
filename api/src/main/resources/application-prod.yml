@@ -1,0 +1,24 @@
+# Deployed environments. Everything secret arrives through the environment; nothing here is
+# a working default on its own.
+spring:
+  docker:
+    compose:
+      enabled: false
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      pool-name: mizan-pool
+      maximum-pool-size: ${DB_POOL_MAX:10}
+
+springdoc:
+  swagger-ui:
+    enabled: false
+
+mizan:
+  web:
+    allowed-origins: ${MIZAN_ALLOWED_ORIGINS:}
+  market:
+    stub:
+      enabled: false

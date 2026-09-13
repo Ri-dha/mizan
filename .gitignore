@@ -29,3 +29,6 @@ web/.env.local
 .DS_Store
 /PLAN.md
 /CLAUDE.md
+
+# jqwik keeps its last failing samples here
+api/.jqwik-database

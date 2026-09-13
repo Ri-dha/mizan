@@ -18,6 +18,7 @@ import { useMonthView } from "@/features/plan/useMonthFigures"
 import { QuickAddSheet } from "./QuickAddSheet"
 
 const ALL = "__all__"
+const PAGE_SIZE = 100
 
 export function TransactionsPage() {
   const { t, i18n } = useTranslation()
@@ -29,8 +30,10 @@ export function TransactionsPage() {
   const deleted = useLiveQuery(liveRecentlyDeleted, [], [])
   const [filter, setFilter] = useState<TransactionFilter>(EMPTY_FILTER)
   const [editing, setEditing] = useState<LedgerTransaction | null | "new">(null)
+  const [limit, setLimit] = useState(PAGE_SIZE)
 
-  const rows = filterTransactions(view.transactions, filter)
+  const matching = filterTransactions(view.transactions, filter)
+  const rows = matching.slice(0, limit)
   const money = (amount: number) => formatMoney(amount, base, i18n.language)
   const day = (iso: string) => new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { weekday: "short", day: "numeric", month: "short" }).format(new Date(iso))
   const bucketName = (id: string | null) => view.buckets.find((b) => b.id === id)?.name
@@ -67,7 +70,7 @@ export function TransactionsPage() {
         <Input placeholder={t("transactions.max")} inputMode="numeric" dir="ltr" onChange={(e) => setFilter({ ...filter, maxAmount: e.target.value ? toMinorUnits(e.target.value, base) : null })} />
       </div>
 
-      {rows.length === 0 && <p className="opacity-70">{t("transactions.none")}</p>}
+      {matching.length === 0 && <p className="opacity-70">{t("transactions.none")}</p>}
       {Object.entries(byDay).map(([date, items]) => (
         <Card key={date}>
           <CardHeader className="py-3"><CardTitle className="text-base">{day(date)}</CardTitle></CardHeader>
@@ -90,6 +93,12 @@ export function TransactionsPage() {
           </CardContent>
         </Card>
       ))}
+
+      {matching.length > rows.length && (
+        <Button variant="neutral" className="self-center" onClick={() => setLimit(limit + PAGE_SIZE)}>
+          {t("transactions.loadMore", { shown: rows.length, total: matching.length })}
+        </Button>
+      )}
 
       {deleted.length > 0 && (
         <Card>

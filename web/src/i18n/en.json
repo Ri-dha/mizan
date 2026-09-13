@@ -287,7 +287,8 @@
     "allTypes": "All types",
     "min": "Min",
     "max": "Max",
-    "recentlyDeleted": "Recently deleted (30 days)"
+    "recentlyDeleted": "Recently deleted (30 days)",
+    "loadMore": "Show more ({{shown}} of {{total}})"
   },
   "bills": {
     "title": "Bills",

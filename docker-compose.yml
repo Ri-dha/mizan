@@ -42,14 +42,15 @@ services:
 
   api:
     build: ./api
-    profiles: ["full"]
+    profiles: ["full", "prod"]
     depends_on:
       postgres:
         condition: service_healthy
       minio:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      # dev inside Docker keeps the stub prices; set prod in .env for a real deployment.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DOCKER_COMPOSE_ENABLED: "false"
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-mizan}
       DB_USERNAME: ${POSTGRES_USER:-mizan}
@@ -59,9 +60,54 @@ services:
       MIZAN_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-mizan-dev-secret}
       MIZAN_JWT_SECRET: ${MIZAN_JWT_SECRET:-dev-only-secret-change-me-in-every-real-environment}
       MIZAN_HASH_PEPPER: ${MIZAN_HASH_PEPPER:-dev-only-pepper-change-me}
+      MIZAN_ALLOWED_ORIGINS: ${MIZAN_ALLOWED_ORIGINS:-}
+      MIZAN_PARALLEL_RATE_IQD_MICROS: ${MIZAN_PARALLEL_RATE_IQD_MICROS:-0}
+      MIZAN_METALS_DEV_API_KEY: ${MIZAN_METALS_DEV_API_KEY:-}
+      MIZAN_GOLD_API_KEY: ${MIZAN_GOLD_API_KEY:-}
+      MIZAN_OPEN_EXCHANGE_RATES_APP_ID: ${MIZAN_OPEN_EXCHANGE_RATES_APP_ID:-}
+      MIZAN_EXCHANGE_RATE_API_URL: ${MIZAN_EXCHANGE_RATE_API_URL:-}
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
+
+  # --- Production profile: `docker compose --profile prod up -d --build` ---
+  # Caddy serves the built PWA, terminates TLS for SITE_ADDRESS and proxies /api to the API.
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    profiles: ["prod"]
+    depends_on:
+      - api
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddydata:/data
+      - caddyconfig:/config
+
+  # Nightly pg_dump into MinIO. Runs once per start and sleeps a day; restart: always keeps
+  # the cadence. Restore instructions are in docs/RUNBOOK.md.
+  backup:
+    build: ./infra/backup
+    profiles: ["prod"]
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mizan}:${POSTGRES_PASSWORD:-mizan}@postgres:5432/${POSTGRES_DB:-mizan}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mizan}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mizan-dev-secret}
+      BACKUP_BUCKET: ${BACKUP_BUCKET:-mizan-backups}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
 
 volumes:
   pgdata:
   miniodata:
+  caddydata:
+  caddyconfig:

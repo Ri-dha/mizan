@@ -1,3 +1,4 @@
+import { lazy } from "react"
 import { DirectionProvider } from "@radix-ui/react-direction"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -12,21 +13,21 @@ import { RequireSession, RedirectIfSession } from "./guards"
 import { LoginPage } from "@/features/auth/LoginPage"
 import { RegisterPage } from "@/features/auth/RegisterPage"
 import { ResetPasswordPage } from "@/features/auth/ResetPasswordPage"
-import { VerifyPage } from "@/features/auth/VerifyPage"
+const VerifyPage = lazy(() => import("@/features/auth/VerifyPage").then((m) => ({ default: m.VerifyPage })))
 import { HomePage } from "@/features/home/HomePage"
-import { AccountsPage } from "@/features/accounts/AccountsPage"
-import { IncomePage } from "@/features/income/IncomePage"
-import { PlanPage } from "@/features/plan/PlanPage"
-import { TransactionsPage } from "@/features/transactions/TransactionsPage"
-import { BillsPage } from "@/features/bills/BillsPage"
-import { DebtsPage } from "@/features/debts/DebtsPage"
-import { GoalsPage } from "@/features/goals/GoalsPage"
-import { MorePage } from "@/features/more/MorePage"
-import { MetalsPage } from "@/features/metals/MetalsPage"
-import { NetWorthPage } from "@/features/networth/NetWorthPage"
-import { ReportPage } from "@/features/report/ReportPage"
-import { SyncPage } from "@/features/sync/SyncPage"
-import { SettingsPage } from "@/features/settings/SettingsPage"
+const AccountsPage = lazy(() => import("@/features/accounts/AccountsPage").then((m) => ({ default: m.AccountsPage })))
+const IncomePage = lazy(() => import("@/features/income/IncomePage").then((m) => ({ default: m.IncomePage })))
+const PlanPage = lazy(() => import("@/features/plan/PlanPage").then((m) => ({ default: m.PlanPage })))
+const TransactionsPage = lazy(() => import("@/features/transactions/TransactionsPage").then((m) => ({ default: m.TransactionsPage })))
+const BillsPage = lazy(() => import("@/features/bills/BillsPage").then((m) => ({ default: m.BillsPage })))
+const DebtsPage = lazy(() => import("@/features/debts/DebtsPage").then((m) => ({ default: m.DebtsPage })))
+const GoalsPage = lazy(() => import("@/features/goals/GoalsPage").then((m) => ({ default: m.GoalsPage })))
+const MorePage = lazy(() => import("@/features/more/MorePage").then((m) => ({ default: m.MorePage })))
+const MetalsPage = lazy(() => import("@/features/metals/MetalsPage").then((m) => ({ default: m.MetalsPage })))
+const NetWorthPage = lazy(() => import("@/features/networth/NetWorthPage").then((m) => ({ default: m.NetWorthPage })))
+const ReportPage = lazy(() => import("@/features/report/ReportPage").then((m) => ({ default: m.ReportPage })))
+const SyncPage = lazy(() => import("@/features/sync/SyncPage").then((m) => ({ default: m.SyncPage })))
+const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })))
 
 const router = createBrowserRouter([
   {

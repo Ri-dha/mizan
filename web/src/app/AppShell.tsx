@@ -1,5 +1,5 @@
 import { House, ListOrdered, MoreHorizontal, PieChart, Plus, Receipt } from "lucide-react"
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, NavLink, Outlet } from "react-router"
 
@@ -48,7 +48,9 @@ export function AppShell() {
           <span className="text-2xl font-heading">{t("app.name")}</span>
           <SyncBadge />
         </div>
-        <Outlet />
+        <Suspense fallback={<p className="opacity-70">{t("common.loading")}</p>}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <Button

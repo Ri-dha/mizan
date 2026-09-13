@@ -35,6 +35,10 @@ To run everything in Docker, including the API image:
 docker compose --profile full up --build
 ```
 
+To deploy, use the `prod` profile: Caddy serves the built PWA with automatic TLS, proxies `/api`,
+and a backup container dumps Postgres nightly into MinIO. Steps, restore, secret rotation and the
+scheduled jobs are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
+
 ## URLs and ports
 
 | What | URL | Notes |

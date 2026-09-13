@@ -295,7 +295,8 @@
     "allTypes": "كل الأنواع",
     "min": "الأدنى",
     "max": "الأعلى",
-    "recentlyDeleted": "المحذوفة مؤخراً (30 يوماً)"
+    "recentlyDeleted": "المحذوفة مؤخراً (30 يوماً)",
+    "loadMore": "عرض المزيد ({{shown}} من {{total}})"
   },
   "bills": {
     "title": "الفواتير",
