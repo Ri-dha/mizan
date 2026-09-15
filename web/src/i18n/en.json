@@ -58,7 +58,11 @@
     "pinMismatch": "PINs do not match",
     "save": "Save PIN",
     "enrollBiometric": "Also allow biometrics on this device",
-    "remove": "Remove PIN"
+    "remove": "Remove PIN",
+    "biometricsSwitch": "Unlock with fingerprint or face on this device",
+    "biometricsEnabled": "Biometrics enabled. The PIN still works.",
+    "biometricsRemoved": "Biometrics removed from this device.",
+    "biometricsUnsupported": "This device's authenticator cannot protect the key; the PIN stays the only unlock."
   },
   "home": {
     "greeting": "Hello, {{name}}",
@@ -175,24 +179,10 @@
     "required": "Required"
   },
   "errors": {
-    "INVALID_CREDENTIALS": "Email, phone or password is incorrect",
-    "IDENTIFIER_ALREADY_REGISTERED": "An account with this email or phone already exists",
-    "INVALID_IDENTIFIER": "Enter a valid email address or phone number",
-    "ACCOUNT_LOCKED": "Too many failed attempts. Try again in a few minutes.",
-    "INVALID_VERIFICATION_CODE": "The code is wrong or has expired",
-    "VERIFICATION_ATTEMPTS_EXHAUSTED": "Too many wrong codes. Request a new one.",
-    "VERIFICATION_RESEND_TOO_SOON": "Please wait before requesting another code",
-    "RATE_LIMIT_EXCEEDED": "Too many attempts. Please wait and try again.",
-    "VALIDATION_FAILED": "Please check the form",
-    "NETWORK": "Can't reach the server",
-    "INVITATION_NOT_FOUND": "This invitation link is not valid.",
-    "INVITATION_EXPIRED": "This invitation has expired. Ask for a new link.",
-    "ALREADY_A_MEMBER": "You are already a member of this household.",
-    "MEMBER_NOT_FOUND": "No such member.",
-    "OWNER_CANNOT_LEAVE": "Transfer ownership first.",
-    "ONLY_HOUSEHOLD": "This is your only household; you cannot leave it.",
-    "HOUSEHOLD_DELETION_PENDING": "This household is scheduled for deletion.",
-    "PUSH_NOT_CONFIGURED": "The server has no push keys configured."
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "There is nothing at this address. The user manual lives under /docs and the app under /.",
+    "goHome": "Go to the app",
+    "openManual": "Open the manual"
   },
   "month": {
     "previous": "Previous month",
@@ -1117,5 +1107,18 @@
     "read": "Read a total of {{total}} dated {{date}}. Check before saving.",
     "nothing": "No total could be read from this receipt.",
     "failed": "Could not read the receipt: {{reason}}"
+  },
+  "install": {
+    "button": "Install app",
+    "title": "Install Mizan",
+    "body": "Installed, Mizan opens full screen from your home screen, keeps its data safe from browser clean-ups and, on iPhone, can receive notifications.",
+    "homePrompt": "Save Mizan as an app on this device.",
+    "ios1": "Tap the Share button at the bottom of Safari.",
+    "ios2": "Choose “Add to Home Screen”.",
+    "ios3": "Tap Add. Mizan appears next to your other apps.",
+    "firefox1": "Open the browser menu.",
+    "firefox2": "Choose “Install” or “Add to Home screen”.",
+    "other1": "Open the browser menu (the three dots).",
+    "other2": "Choose “Install app” or “Add to Home screen”."
   }
 }

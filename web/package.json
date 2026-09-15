@@ -14,7 +14,8 @@
     "api:types": "openapi-typescript ${API_ORIGIN:-http://localhost:8080}/v3/api-docs -o src/api/generated.d.ts",
     "docs": "node scripts/build-docs.mjs",
     "ocr:assets": "node scripts/fetch-ocr-assets.mjs",
-    "predev": "node scripts/fetch-ocr-assets.mjs"
+    "predev": "node scripts/fetch-ocr-assets.mjs",
+    "dev:lan": "VITE_LAN=1 vite"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
@@ -59,6 +60,7 @@
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "axe-core": "^4.13.0",
     "fake-indexeddb": "^6.2.5",

@@ -16,6 +16,8 @@ import { useMonthView } from "@/features/plan/useMonthFigures"
 import { useMetals } from "@/features/metals/useMetals"
 import { useNetWorth } from "@/features/networth/useNetWorth"
 import { HelpButton } from "@/components/HelpButton"
+import { InstallButton } from "@/components/InstallButton"
+import { useInstallState } from "@/pwa/register"
 import { useScreenTour } from "@/tours/useTour"
 
 export function HomePage() {
@@ -29,6 +31,7 @@ export function HomePage() {
   const metals = useMetals()
   const worth = useNetWorth()
   const prefs = usePreferences()
+  const installState = useInstallState()
   const stale = staleAssets(worth.assets, worth.valuations, todayIso(), prefs.valuationReminderMonths)
   useScreenTour("welcome", session !== undefined)
   const metalTotals = metals.lines.reduce((acc, l) => ({ value: acc.value + l.valueNow, gain: acc.gain + l.gain }), { value: 0, gain: 0 })
@@ -59,6 +62,15 @@ export function HomePage() {
           <AlertDescription className="flex items-center justify-between gap-2">
             <span>{t("auth.verifyTitle")}</span>
             <Button asChild size="sm"><Link to="/verify">{t("auth.verify")}</Link></Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {installState !== "installed" && (
+        <Alert>
+          <AlertDescription className="flex items-center justify-between gap-2">
+            <span>{t("install.homePrompt")}</span>
+            <InstallButton size="sm" />
           </AlertDescription>
         </Alert>
       )}

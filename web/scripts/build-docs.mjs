@@ -1,11 +1,13 @@
-// Builds the static manual at dist/docs from docs/manual, the same Markdown the app bundles.
-// Fails when an English page has no Arabic counterpart, so the manual cannot drift by language.
+// Renders the static manual from docs/manual, the same Markdown the app bundles. Run directly it
+// writes dist/docs and fails when an English page has no Arabic counterpart, so the manual cannot
+// drift by language; imported, renderDocs() gives the dev server the same pages in memory.
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from "node:fs"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { marked } from "marked"
 
-const source = resolve(process.cwd(), "../docs/manual")
-const out = resolve(process.cwd(), "dist/docs")
+const here = dirname(fileURLToPath(import.meta.url))
+const source = resolve(here, "../../docs/manual")
 const languages = { en: { dir: "ltr", name: "English", index: "Mizan user manual", other: "العربية" }, ar: { dir: "rtl", name: "العربية", index: "دليل مستخدم ميزان", other: "English" } }
 
 function frontMatter(text) {
@@ -44,23 +46,39 @@ article code{background:var(--card);padding:0 4px;border-radius:4px}
 `
 const shell = (lang, title, body) => `<!doctype html><html lang="${lang}" dir="${languages[lang].dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>${css}</style></head><body><header><a href="/docs/${lang}/">${languages[lang].index}</a><span><a href="/">Mizan</a> · <a href="/docs/${lang === "en" ? "ar" : "en"}/">${languages[lang].other}</a> · <a href="#" onclick="print();return false">PDF</a></span></header><main>${body}</main></body></html>`
 
-const en = pages("en")
-const ar = pages("ar")
-const missing = en.filter((p) => !ar.some((a) => a.slug === p.slug)).map((p) => p.slug)
-if (missing.length) {
-  console.error(`Manual pages without an Arabic version: ${missing.join(", ")}`)
-  process.exit(1)
+/** Every page of the site as path → HTML, e.g. "en/plan.html"; throws when Arabic lags English. */
+export function renderDocs() {
+  const en = pages("en")
+  const ar = pages("ar")
+  const missing = en.filter((p) => !ar.some((a) => a.slug === p.slug)).map((p) => p.slug)
+  if (missing.length) throw new Error(`Manual pages without an Arabic version: ${missing.join(", ")}`)
+  const files = new Map()
+  for (const [lang, list] of [["en", en], ["ar", ar]]) {
+    const index = `<h1>${languages[lang].index}</h1><nav><ul>${list.map((p) => `<li><a href="/docs/${lang}/${p.slug}.html">${p.title}</a><br><small>${p.summary}</small></li>`).join("")}</ul></nav>`
+    files.set(`${lang}/index.html`, shell(lang, languages[lang].index, index))
+    list.forEach((p, i) => {
+      const prev = list[i - 1], next = list[i + 1]
+      const pager = `<div class="pager"><span>${prev ? `<a href="/docs/${lang}/${prev.slug}.html">← ${prev.title}</a>` : ""}</span><span>${next ? `<a href="/docs/${lang}/${next.slug}.html">${next.title} →</a>` : ""}</span></div>`
+      files.set(`${lang}/${p.slug}.html`, shell(lang, p.title, `<article>${p.html}</article>${pager}`))
+    })
+  }
+  files.set("index.html", `<!doctype html><meta http-equiv="refresh" content="0; url=/docs/en/">`)
+  return { files, pageCount: en.length }
 }
 
-for (const [lang, list] of [["en", en], ["ar", ar]]) {
-  mkdirSync(join(out, lang), { recursive: true })
-  const index = `<h1>${languages[lang].index}</h1><nav><ul>${list.map((p) => `<li><a href="/docs/${lang}/${p.slug}.html">${p.title}</a><br><small>${p.summary}</small></li>`).join("")}</ul></nav>`
-  writeFileSync(join(out, lang, "index.html"), shell(lang, languages[lang].index, index))
-  list.forEach((p, i) => {
-    const prev = list[i - 1], next = list[i + 1]
-    const pager = `<div class="pager"><span>${prev ? `<a href="/docs/${lang}/${prev.slug}.html">← ${prev.title}</a>` : ""}</span><span>${next ? `<a href="/docs/${lang}/${next.slug}.html">${next.title} →</a>` : ""}</span></div>`
-    writeFileSync(join(out, lang, `${p.slug}.html`), shell(lang, p.title, `<article>${p.html}</article>${pager}`))
-  })
+const runDirectly = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+if (runDirectly) {
+  const out = resolve(process.cwd(), "dist/docs")
+  let rendered
+  try {
+    rendered = renderDocs()
+  } catch (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
+  for (const [path, html] of rendered.files) {
+    mkdirSync(dirname(join(out, path)), { recursive: true })
+    writeFileSync(join(out, path), html)
+  }
+  console.log(`docs: ${rendered.pageCount} pages × 2 languages → ${out}`)
 }
-writeFileSync(join(out, "index.html"), `<!doctype html><meta http-equiv="refresh" content="0; url=/docs/en/">`)
-console.log(`docs: ${en.length} pages × 2 languages → ${out}`)

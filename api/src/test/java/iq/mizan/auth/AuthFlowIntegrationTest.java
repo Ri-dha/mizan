@@ -163,4 +163,16 @@ class AuthFlowIntegrationTest extends PostgresIntegrationTest {
     private org.springframework.test.web.servlet.assertj.MvcTestResult login(String identifier, String password) {
         return api.post("/api/v1/auth/login", null, Map.of("identifier", identifier, "password", password));
     }
+
+    /** In-app browsers send User-Agent strings past 256 characters; a session must still be issued. */
+    @Test
+    void registrationSurvivesAVeryLongUserAgent() {
+        resetTransactionalData();
+        String longUserAgent = "Mozilla/5.0 (Linux; Android 14) " + "X".repeat(700);
+        var result = api.postWithHeaders("/api/v1/auth/register",
+                Map.of("identifier", "ua@example.test", "password", accounts.ownerPassword(), "displayName", "Long UA"),
+                Map.of("User-Agent", longUserAgent));
+        assertThat(result).hasStatus(HttpStatus.CREATED);
+        assertThat(api.body(result).get("accessToken").asString()).isNotBlank();
+    }
 }

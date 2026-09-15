@@ -19,27 +19,17 @@ spring:
   cache:
     type: caffeine
 
-# One JSON object per line, Logstash style: @timestamp, level, logger_name, thread_name, message,
-# application, plus every MDC key (correlationId, httpMethod, httpPath, userId, traceId, spanId)
-# as a top-level field. Filebeat ships it to Elasticsearch; Kibana searches it as is.
+# Appenders and profiles live in logback-spring.xml; these shape the JSON lines it writes:
+# @timestamp, level, logger_name, thread_name, message, application, plus every MDC key
+# (correlationId, httpMethod, httpPath, userId, traceId, spanId) as a top-level field.
 logging:
   structured:
-    format:
-      console: "${MIZAN_LOG_FORMAT:logstash}"
-      file: logstash
     json:
       add:
         application: mizan
       exclude:
         - "@version"
         - level_value
-  file:
-    # Filebeat tails this in local development, where the API runs outside Docker.
-    name: "${MIZAN_LOG_FILE:logs/mizan.json}"
-  logback:
-    rollingpolicy:
-      max-file-size: 50MB
-      max-history: 7
 
 management:
   endpoints:
@@ -80,6 +70,13 @@ springdoc:
     enabled: "${OPENAPI_DOCS_ENABLED:true}"
 
 mizan:
+  logging:
+    # The JSON file Logstash tails in local development; rolled by size and day.
+    file: "${MIZAN_LOG_FILE:logs/mizan.json}"
+    max-file-size: 50MB
+    max-history: 7
+    total-size-cap: 1GB
+
   api:
     problem:
       base-uri: "${MIZAN_PROBLEM_BASE_URI:https://api.mizan.iq/problems/}"

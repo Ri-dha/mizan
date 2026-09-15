@@ -37,6 +37,14 @@ public class ApiClient {
         return new Session(body.get("accessToken").asString(), body.get("refreshToken").asString());
     }
 
+    public MvcTestResult postWithHeaders(String path, Object body, Map<String, String> headers) {
+        var request = mvc.post().uri(path).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        for (var header : headers.entrySet()) {
+            request = request.header(header.getKey(), header.getValue());
+        }
+        return request.exchange();
+    }
+
     public MvcTestResult post(String path, String accessToken, Object body) {
         var request = mvc.post().uri(path).contentType(MediaType.APPLICATION_JSON);
         if (body != null) {

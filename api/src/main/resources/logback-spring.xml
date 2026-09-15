@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Logging per profile. The JSON encoder is Spring Boot's Logstash-style structured encoder: one
+  object per line with @timestamp, level, logger_name, thread_name, message, application and
+  every MDC key (correlationId, httpMethod, httpPath, userId, traceId, spanId) as top-level
+  fields; logging.structured.json.* in application.yml still applies to it.
+
+  dev   : readable console + JSON file (logs/mizan.json) that Logstash tails
+  prod  : JSON console only; Docker collects stdout
+  test  : readable console only
+  other : JSON console + JSON file
+-->
+<configuration scan="false">
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProperty scope="context" name="LOG_FILE" source="mizan.logging.file" defaultValue="logs/mizan.json"/>
+    <springProperty scope="context" name="LOG_MAX_FILE_SIZE" source="mizan.logging.max-file-size" defaultValue="50MB"/>
+    <springProperty scope="context" name="LOG_MAX_HISTORY" source="mizan.logging.max-history" defaultValue="7"/>
+    <springProperty scope="context" name="LOG_TOTAL_SIZE_CAP" source="mizan.logging.total-size-cap" defaultValue="1GB"/>
+
+    <property name="PLAIN_PATTERN"
+              value="%d{HH:mm:ss.SSS} %clr(%5p) %clr([%15.15t]){faint} %clr(%-8.8X{correlationId:-}){magenta} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"/>
+
+    <appender name="PLAIN_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PLAIN_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
+            <format>logstash</format>
+        </encoder>
+    </appender>
+
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
+            <format>logstash</format>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>${LOG_MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${LOG_TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- The file is written off the request thread; a full queue drops rather than blocks. -->
+    <appender name="ASYNC_JSON_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="JSON_FILE"/>
+        <queueSize>2048</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <!-- Levels: our own code at INFO, the chatty libraries at WARN. -->
+    <logger name="iq.mizan" level="INFO"/>
+    <logger name="iq.mizan.http" level="INFO"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.apache.catalina" level="WARN"/>
+    <logger name="org.apache.tomcat" level="WARN"/>
+    <logger name="org.apache.hc" level="WARN"/>
+    <logger name="software.amazon.awssdk" level="WARN"/>
+    <logger name="org.flywaydb" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.security" level="WARN"/>
+
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="PLAIN_CONSOLE"/>
+            <appender-ref ref="ASYNC_JSON_FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="PLAIN_CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!dev &amp; !prod &amp; !test">
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="ASYNC_JSON_FILE"/>
+        </root>
+    </springProfile>
+</configuration>

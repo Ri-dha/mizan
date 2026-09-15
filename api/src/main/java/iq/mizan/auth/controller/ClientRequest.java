@@ -7,12 +7,15 @@ final class ClientRequest {
 
     private static final String FORWARDED_FOR_HEADER = "X-Forwarded-For";
     private static final String USER_AGENT_HEADER = "User-Agent";
+    /** Matches refresh_token.user_agent; anything longer is only noise for the sessions list. */
+    private static final int MAX_USER_AGENT = 1024;
 
     private ClientRequest() {
     }
 
     static String userAgent(HttpServletRequest request) {
-        return request.getHeader(USER_AGENT_HEADER);
+        String agent = request.getHeader(USER_AGENT_HEADER);
+        return agent != null && agent.length() > MAX_USER_AGENT ? agent.substring(0, MAX_USER_AGENT) : agent;
     }
 
     static String ip(HttpServletRequest request) {

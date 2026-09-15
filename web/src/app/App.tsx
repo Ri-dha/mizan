@@ -33,20 +33,25 @@ const ReportPage = lazy(() => import("@/features/report/ReportPage").then((m) =>
 const YearReportPage = lazy(() => import("@/features/report/YearReportPage").then((m) => ({ default: m.YearReportPage })))
 const AdvisorPage = lazy(() => import("@/features/advisor/AdvisorPage").then((m) => ({ default: m.AdvisorPage })))
 const SyncPage = lazy(() => import("@/features/sync/SyncPage").then((m) => ({ default: m.SyncPage })))
+const RouteError = lazy(() => import("@/app/RouteError").then((m) => ({ default: m.RouteError })))
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })))
+
+const routeError = <Suspense fallback={null}><RouteError /></Suspense>
 
 const router = createBrowserRouter([
   {
     element: <RedirectIfSession />,
+    errorElement: routeError,
     children: [
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
       { path: "/reset", element: <ResetPasswordPage /> },
     ],
   },
-  { path: "/join/:token", element: <Suspense fallback={null}><JoinPage /></Suspense> },
+  { path: "/join/:token", element: <Suspense fallback={null}><JoinPage /></Suspense>, errorElement: routeError },
   {
     path: "/",
+    errorElement: routeError,
     element: (
       <RequireSession>
         <AppShell />

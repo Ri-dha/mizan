@@ -25,8 +25,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { META_KEYS, readMeta, writeMeta } from "@/db/meta"
 import { SUPPORTED_LOCALES } from "@/i18n"
-import { clearLock, DEFAULT_LOCK_AFTER_SECONDS, removePin, lock, useLockState } from "@/lock/store"
-import { canPromptInstall, promptInstall } from "@/pwa/register"
+import { clearLock, currentDataKey, DEFAULT_LOCK_AFTER_SECONDS, removePin, lock, useLockState } from "@/lock/store"
+import { enrollWebAuthn, hasWebAuthnUnlock, removeWebAuthn, webAuthnAvailable } from "@/lock/webauthn"
+import { InstallButton } from "@/components/InstallButton"
 import { resetSyncState } from "@/sync/engine"
 import { HelpButton } from "@/components/HelpButton"
 import { useScreenTour } from "@/tours/useTour"
@@ -42,6 +43,8 @@ export function SettingsPage() {
   const theme = useTheme()
   const lockState = useLockState()
   const [lockAfter, setLockAfter] = useState(DEFAULT_LOCK_AFTER_SECONDS)
+  const [biometricsAvailable, setBiometricsAvailable] = useState(false)
+  const [biometricsOn, setBiometricsOn] = useState(false)
   const privacy = usePrivacyDefaults()
   const notify = useNotificationSettings()
   const backup = useBackupState()
@@ -112,7 +115,28 @@ export function SettingsPage() {
 
   useEffect(() => {
     void readMeta<number>(META_KEYS.lockAfterSeconds).then((value) => value !== undefined && setLockAfter(value))
+    void webAuthnAvailable().then(setBiometricsAvailable)
+    void hasWebAuthnUnlock().then(setBiometricsOn)
   }, [])
+
+  // Biometrics wrap the same data key the PIN unlocks, so enrolling needs the app unlocked, which Settings always is.
+  async function toggleBiometrics(on: boolean) {
+    if (!on) {
+      await removeWebAuthn()
+      setBiometricsOn(false)
+      toast(t("lock.biometricsRemoved"))
+      return
+    }
+    const key = currentDataKey()
+    if (!key || !session) return
+    try {
+      const enrolled = await enrollWebAuthn(key, session.userId, session.displayName)
+      setBiometricsOn(enrolled)
+      toast(enrolled ? t("lock.biometricsEnabled") : t("lock.biometricsUnsupported"))
+    } catch (e) {
+      toast(describeError(e))
+    }
+  }
 
 
 
@@ -195,6 +219,12 @@ export function SettingsPage() {
               </SelectContent>
             </Select>
           </Field>
+          {biometricsAvailable && (
+            <div className="flex items-center gap-2">
+              <Switch id="biometrics" checked={biometricsOn} onCheckedChange={(on) => void toggleBiometrics(on)} disabled={lockState !== "unlocked"} />
+              <Label htmlFor="biometrics">{t("lock.biometricsSwitch")}</Label>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
             <Button variant="neutral" onClick={lock} disabled={lockState !== "unlocked"}>{t("lock.title")}</Button>
             <Button variant="neutral" onClick={() => void removePin()}>{t("lock.remove")}</Button>
@@ -364,7 +394,7 @@ export function SettingsPage() {
             <Button variant="neutral" asChild><Link to="/sync">{t("sync.title")}</Link></Button>
             <Button variant="neutral" asChild><Link to="/help">{t("help.title")}</Link></Button>
             <Button variant="neutral" onClick={() => { forgetAllTours(); toast(t("tours.replayed")) }}>{t("tours.replay")}</Button>
-            {canPromptInstall() && <Button variant="neutral" onClick={() => void promptInstall()}>{t("settings.install")}</Button>}
+            <InstallButton variant="neutral" />
             <Button variant="neutral" onClick={() => void signOut()}>{t("auth.logout")}</Button>
             {session?.deletionRequestedAt ? (
               <Button variant="neutral" onClick={() => void cancelAccountDeletion().then(() => toast(t("account.deletionCancelled")))}>{t("account.cancelDeletion")}</Button>

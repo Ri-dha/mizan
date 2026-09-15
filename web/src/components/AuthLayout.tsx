@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { InstallButton } from "./InstallButton"
 import { LanguageToggle } from "./LanguageToggle"
 
 export function AuthLayout({ title, children }: { title: string; children: ReactNode }) {
@@ -10,7 +11,10 @@ export function AuthLayout({ title, children }: { title: string; children: React
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 p-4">
       <div className="flex w-full max-w-md items-center justify-between">
         <span className="text-3xl font-heading">{t("app.name")}</span>
-        <LanguageToggle />
+        <div className="flex items-center gap-2">
+          <InstallButton variant="neutral" size="sm" />
+          <LanguageToggle />
+        </div>
       </div>
       <Card className="w-full max-w-md">
         <CardHeader>

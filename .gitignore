@@ -20,6 +20,8 @@ web/node_modules/
 web/dist/
 web/dev-dist/
 web/.env.local
+# mkcert certificates for LAN testing
+web/*.pem
 # Tesseract worker, core and models are fetched by web/scripts/fetch-ocr-assets.mjs
 web/public/ocr/
 

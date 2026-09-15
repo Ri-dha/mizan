@@ -13,7 +13,7 @@ Switch between English and Arabic at any time. In Arabic you can choose Western 
 
 ## Security
 
-Set how long the app may stay in the background before it locks, lock it now, or remove the PIN.
+Set how long the app may stay in the background before it locks, switch fingerprint or face unlock on or off for this device, lock it now, or remove the PIN.
 
 ## Household
 

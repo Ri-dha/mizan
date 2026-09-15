@@ -11,13 +11,13 @@ Every account starts its own household with the default plan: Essentials 55%, Gu
 
 ## Set a PIN
 
-After the first sign-in Mizan asks for a PIN of four to eight digits. The PIN locks the app when you leave it for longer than the timeout in Settings (30 seconds by default) and keeps your numbers out of the phone's app switcher. Where the device supports it you can also unlock with a fingerprint or face.
+After the first sign-in Mizan asks for a PIN of four to eight digits. The PIN locks the app when you leave it for longer than the timeout in Settings (30 seconds by default) and keeps your numbers out of the phone's app switcher. Where the device supports it you can also unlock with a fingerprint or face, either when setting the PIN or later from Settings.
 
 If you forget the PIN, sign out from another device or clear the app's data and sign in again; the PIN never leaves the phone and cannot be recovered.
 
 ## Install it
 
-Mizan is a web app that installs like a native one. In the browser menu choose **Add to Home Screen** (iPhone) or **Install app** (Android and desktop). Installed, it opens full screen, keeps its data safe from browser clean-ups and, on iPhone, is the only way to receive notifications later.
+Mizan is a web app that installs like a native one. Press **Install app** on the sign-in screen, the home screen or in Settings: where the browser allows it the install prompt opens directly, elsewhere the steps for your browser are shown (on iPhone: Share, then **Add to Home Screen**). Installed, it opens full screen, keeps its data safe from browser clean-ups and, on iPhone, is the only way to receive notifications later.
 
 ## Offline
 

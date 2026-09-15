@@ -75,6 +75,28 @@ To deploy, use the `prod` profile: Caddy serves the built PWA with automatic TLS
 and a backup container dumps Postgres nightly into MinIO. Steps, restore, secret rotation and the
 scheduled jobs are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
+### On your phone, over the local network
+
+```bash
+cd web && npm run dev:lan
+```
+
+The dev server listens on every interface over HTTPS and prints the network address, for
+example `https://192.168.0.127:5173/`. Open it on the phone (same Wi-Fi), accept the certificate
+warning once, and use **Add to Home Screen**. Requests to `/api` are proxied to the API on your
+machine, so nothing else needs exposing; allow port 5173 if macOS's firewall asks. HTTPS is
+required because the PIN lock, receipts and the service worker use browser APIs that only work
+on a secure origin.
+
+iOS Safari does not trust self-signed certificates for service workers. For iPhone, make a
+locally trusted certificate with [mkcert](https://github.com/FiloSottile/mkcert), install its
+root certificate on the phone (`mkcert -CAROOT` shows the file; AirDrop it, then trust it under
+Settings → General → About → Certificate Trust Settings), and run:
+
+```bash
+mkcert 192.168.0.127 && VITE_SSL_CERT=192.168.0.127.pem VITE_SSL_KEY=192.168.0.127-key.pem npm run dev:lan
+```
+
 ## URLs and ports
 
 | What | URL | Notes |
@@ -113,7 +135,9 @@ line per request (`logger_name: iq.mizan.http`) carrying `httpStatus` and `durat
 Docker, Logstash reads container stdout; on a developer machine it tails `api/logs/mizan.json`,
 which the API writes as well (`api/logs/`, ignored by git). Only output produced after Logstash
 starts is shipped; other containers' lines land in `containers-logs-*` so their fields never
-collide with the API's. Set `MIZAN_LOG_FORMAT=` (empty) for plain console lines locally.
+collide with the API's. Appenders are in `api/src/main/resources/logback-spring.xml`: the `dev`
+profile logs readably to the console and as JSON to the file, `prod` logs JSON to stdout only,
+`test` plainly to the console.
 JVM, HTTP, Hikari and cache metrics go to `mizan-metrics-*` when `MIZAN_METRICS_ELASTIC_ENABLED=true`
 (the default inside the `api` container).
 
