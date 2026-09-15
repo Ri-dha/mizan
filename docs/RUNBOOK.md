@@ -89,6 +89,29 @@ cd api && ./mvnw -q compile && java -cp target/classes iq.mizan.notification.pus
 at `mizan.notifications.daily-cron` in `mizan.notifications.time-zone` (Asia/Baghdad). Set
 `MIZAN_NOTIFICATIONS_TRANSPORT=log` to print instead of sending.
 
+## Logs and performance in Kibana
+
+The `observability` profile runs a single-node Elasticsearch with security off, Kibana bound to
+localhost and Logstash; `--profile containers` adds Metricbeat for per-container resource use. Reach Kibana over an SSH tunnel:
+
+```bash
+ssh -L 5601:localhost:5601 user@host
+```
+
+`kibana-setup` recreates the data views and the "Mizan overview" dashboard on every start
+(`infra/observability/kibana`). Log lines are JSON as the API writes them (see README); search
+by `correlationId` to follow one request through every line, or by `traceId` when several
+services are involved. Retention is manual: delete old indices with
+
+```bash
+curl -X DELETE 'http://localhost:9200/mizan-logs-2026.08.*'
+```
+
+or set an ILM policy on `mizan-logs-*`, `containers-logs-*` and `metricbeat-*` once volumes matter.
+Index templates live in `infra/observability/*-template.json`; Logstash installs them on start,
+so delete an index created before a template change for the new mapping to apply. Give Elasticsearch
+more heap with `ES_JAVA_OPTS` in `.env` when the host has room; 512 MB is the floor.
+
 ## Scheduled jobs
 
 | Job | Default | What it does |

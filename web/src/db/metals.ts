@@ -2,7 +2,7 @@ import { db, type DisposalMethod, type MarketSetting, type Metal, type MetalDisp
 import { softDelete, writeFields } from "./write"
 import { toBaseAmount } from "./income"
 import { planDisposal, type PlannerLot } from "@/domain/metal/disposal"
-import { metalValuation, valueOf } from "@/domain/metal/valuation"
+import { PURITIES, metalValuation, valueOf } from "@/domain/metal/valuation"
 import type { ResolvedPrices } from "@/market/store"
 
 export interface LotInput {
@@ -112,7 +112,7 @@ export function perGramFor(metal: Metal, purityBasisPoints: number, prices: Reso
   return metalValuation({
     spotUsdPerOzMicros: spot.spotUsdPerOzMicros, usdIqdMicros: prices.usdIqdMicros, purityBasisPoints,
     premiumBasisPoints: premiumFor(setting, metal), premiumFixedPerGramMicros: 0, weightMg: 0,
-    overridePerGram24kMicros: spot.perGram24kOverrideMicros, discountBasisPoints: discountFor(setting, metal),
+    overridePerGram24kMicros: spot.perGram24kOverrideMicros, discountBasisPoints: spot.bidFromFeed ? 0 : discountFor(setting, metal),
   }).perGramMicros
 }
 
@@ -195,4 +195,26 @@ export function realisedGain(disposal: MetalDisposal, disposalLots: MetalDisposa
   const costMaking = rows.reduce((s, r) => s + r.makingCharge, 0)
   const costFees = rows.reduce((s, r) => s + r.fees, 0)
   return { proceeds, gain: proceeds - costMetal - costMaking - costFees, gainExcludingMaking: proceeds - costMetal - costFees }
+}
+
+export interface PriceRow {
+  metal: Metal
+  purityLabel: string
+  perGramMicros: number
+  perGramUsdMicros: number
+  perMithqalMicros: number
+  perMithqalUsdMicros: number
+}
+
+const MITHQAL_MG = 5_000
+const MICRO = 1_000_000
+
+/** Today's price of every purity in base currency and dollars, through the same maths valuation uses (BR-08). */
+export function priceTable(prices: ResolvedPrices, setting: MarketSetting | undefined): PriceRow[] {
+  return Object.values(PURITIES).map((p) => {
+    const perGramMicros = perGramFor(p.metal, p.basisPoints, prices, setting)
+    const toUsd = (micros: number) => (prices.usdIqdMicros > 0 ? Math.round((micros / prices.usdIqdMicros) * MICRO) : 0)
+    const perMithqalMicros = Math.round((perGramMicros * MITHQAL_MG) / 1000)
+    return { metal: p.metal, purityLabel: p.label, perGramMicros, perGramUsdMicros: toUsd(perGramMicros), perMithqalMicros, perMithqalUsdMicros: toUsd(perMithqalMicros) }
+  })
 }

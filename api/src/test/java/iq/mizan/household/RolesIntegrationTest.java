@@ -123,7 +123,7 @@ class RolesIntegrationTest extends PostgresIntegrationTest {
                         "weightUnitEntered", "MITHQAL", "quantityEntered", "1", "purchaseDate", "2026-06-01", "metalCost", 520_000,
                         "makingCharge", 30_000, "fees", 0, "currency", "IQD", "fxRateMicros", 1_000_000, "form", "JEWELLERY")),
                 op("market_setting", UUID.randomUUID(), fields("rateKind", "PARALLEL", "goldPremiumBasisPoints", 0, "silverPremiumBasisPoints", 0,
-                        "goldMethod", "FIFO", "silverMethod", "FIFO", "valuationBasis", "BUYBACK", "goldBuybackBasisPoints", 300, "silverBuybackBasisPoints", 0)));
+                        "goldMethod", "FIFO", "silverMethod", "FIFO", "valuationBasis", "BUYBACK", "goldBuybackBasisPoints", 300, "silverBuybackBasisPoints", 0, "priceSource", "WORLD")));
         JsonNode figures = api.body(api.get("/api/v1/networth/current", owner));
         long metals = 0;
         for (JsonNode share : figures.get("composition")) {

@@ -33,7 +33,7 @@ public class OpenExchangeRatesFxSource implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return instrument == Instrument.USDIQD_OFFICIAL;
+        return instrument == Instrument.USDIQD_OFFICIAL && Configured.present(config.appId());
     }
 
     @Override

@@ -494,7 +494,7 @@
     "prices": "Prices in use",
     "howCalculated": "How is this calculated?",
     "enterPrice": "Enter today's price",
-    "stale": "Stale",
+    "stale": "stale",
     "sources": {
       "override": "Your price",
       "none": "No price"
@@ -533,11 +533,39 @@
     "buybackHint": "How far below the market price a dealer buys, typically 2 to 5%.",
     "buybackBadge": "dealer buy-back",
     "priceSource": "Price source",
-    "priceSourceHint": "World: spot in dollars converted at your rate. Local: the local market's own quote per gram, when the server has one.",
+    "priceSourceHint": "World: spot in dollars converted at your rate. Local: Baghdad Bullion House's price per gram, the default.",
     "priceSources": {
       "WORLD": "World spot × dollar rate",
       "LOCAL": "Local market quote"
-    }
+    },
+    "priceTable": "Today's prices",
+    "priceTableBody": "Updated {{at}} from {{source}}, per gram and per mithqal (5 g), in dinars and dollars.",
+    "priceTableNoPrice": "No price yet. Refresh when online.",
+    "refresh": "Refresh",
+    "refreshed": "Prices refreshed.",
+    "usdNote": "Dollar figures use {{rate}} per dollar ({{kind}}).",
+    "todayHint": "Today: {{perGram}} per gram, {{total}} for this weight.",
+    "useToday": "Use today's price",
+    "sellOrHold": "Sell or hold?",
+    "sellOrHoldBody": "What the dealer would pay for your holding today against what it cost, and how that has moved.",
+    "noBid": "No dealer buy-back price yet. Refresh when online.",
+    "verdictGain": "Selling today gains",
+    "verdictLoss": "Selling today loses",
+    "verdictLine": "Dealer pays {{proceeds}} · you paid {{cost}} · source {{source}}",
+    "breakEven": "You break even when the dealer pays {{price}} per gram of pure metal; today they pay {{bid}}.",
+    "seriesNames": {
+      "cost": "What it cost",
+      "valueAsk": "Worth at market",
+      "valueBid": "Dealer would pay"
+    },
+    "seriesGrows": "The chart fills in as daily prices accumulate.",
+    "dealerProducts": "Dealer's bars and coins",
+    "dealerProductsBody": "{{source}} as of {{at}}: what they pay you (bid) and what they charge (ask).",
+    "show": "Show",
+    "hide": "Hide",
+    "product": "Product",
+    "dealerPays": "Dealer pays",
+    "dealerCharges": "Dealer charges"
   },
   "networth": {
     "title": "Net worth",

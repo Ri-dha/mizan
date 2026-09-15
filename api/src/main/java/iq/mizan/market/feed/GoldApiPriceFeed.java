@@ -19,10 +19,11 @@ import org.springframework.web.client.RestClient;
 public class GoldApiPriceFeed implements PriceFeed {
 
     private final RestClient client;
+    private final MarketProperties.GoldApi config;
 
     public GoldApiPriceFeed(RestClient.Builder builder, MarketProperties properties) {
-        MarketProperties.GoldApi config = properties.feeds().goldApi();
-        this.client = builder.baseUrl(config.url()).defaultHeader("x-access-token", config.apiKey()).build();
+        this.config = properties.feeds().goldApi();
+        this.client = builder.baseUrl(this.config.url()).defaultHeader("x-access-token", this.config.apiKey()).build();
     }
 
     @Override
@@ -32,7 +33,7 @@ public class GoldApiPriceFeed implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return instrument == Instrument.XAU || instrument == Instrument.XAG;
+        return (instrument == Instrument.XAU || instrument == Instrument.XAG) && Configured.present(config.apiKey());
     }
 
     @Override

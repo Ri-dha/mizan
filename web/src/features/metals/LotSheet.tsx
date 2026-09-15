@@ -15,7 +15,10 @@ import { RATE_SCALE } from "@/db/income"
 import { createLot, removeLot, updateLot } from "@/db/metals"
 import type { Metal, MetalForm, MetalLot, WeightUnit } from "@/db/schema"
 import { todayIso } from "@/domain/calendar/month"
-import { PURITIES, toMilligrams } from "@/domain/metal/valuation"
+import { PURITIES, toMilligrams, valueOf } from "@/domain/metal/valuation"
+import { perGramFor } from "@/db/metals"
+import { useMetals } from "./useMetals"
+import { formatMoney } from "@/domain/money/format"
 import { fromMinorUnits, toMinorUnits } from "@/domain/money/format"
 
 const UNITS: WeightUnit[] = ["GRAM", "MITHQAL", "TOLA", "TROY_OUNCE", "KILOGRAM"]
@@ -23,7 +26,7 @@ const FORMS: MetalForm[] = ["JEWELLERY", "COIN", "BAR", "SCRAP"]
 const CURRENCIES = ["IQD", "USD"]
 
 export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot | null; onClose: () => void }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const privacy = usePrivacyDefaults()
   const session = useSession()
   const base = session?.baseCurrency ?? "IQD"
@@ -43,9 +46,12 @@ export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot 
   const [serial, setSerial] = useState("")
   const [heldFor, setHeldFor] = useState("")
   const [isPrivate, setIsPrivate] = useState(false)
+  const [costTouched, setCostTouched] = useState(false)
+  const market = useMetals()
 
   useEffect(() => {
     if (!open) return
+    setCostTouched(lot !== null)
     setMetal(lot?.metal ?? "GOLD")
     setPurity(lot?.purityLabel ?? "21k")
     setQuantity(lot?.quantityEntered ?? "1")
@@ -67,6 +73,16 @@ export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot 
   const purities = Object.values(PURITIES).filter((p) => p.metal === metal)
   const weightMg = toMilligrams(Number(quantity) || 0, unit)
   const needsRate = currency !== base
+
+  // Today's price for what is being entered, in the lot's currency; a cost the user has not typed follows it.
+  const perGramMicros = perGramFor(metal, PURITIES[purity]?.basisPoints ?? 0, market.prices, market.setting)
+  const todayBase = valueOf(perGramMicros, weightMg)
+  const todayInCurrency = currency === base ? todayBase : market.prices.usdIqdMicros > 0 ? Math.round((todayBase * 1e6 * 100) / market.prices.usdIqdMicros) : 0
+  const hasPrice = perGramMicros > 0 && weightMg > 0
+  useEffect(() => {
+    if (!open || lot || costTouched || !hasPrice) return
+    setMetalCost(fromMinorUnits(todayInCurrency, currency))
+  }, [open, lot, costTouched, hasPrice, todayInCurrency, currency])
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -133,8 +149,9 @@ export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot 
             <Input id="purchaseDate" type="date" dir="ltr" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} required />
           </Field>
           <div className="grid grid-cols-[1fr_auto] gap-2">
-            <Field id="metalCost" label={t("metals.metalCost")}>
-              <Input id="metalCost" inputMode="decimal" dir="ltr" value={metalCost} onChange={(e) => setMetalCost(e.target.value)} required />
+            <Field id="metalCost" label={t("metals.metalCost")} hint={hasPrice ? t("metals.todayHint", { perGram: formatMoney(Math.round(perGramMicros / 1e6), base, i18n.language), total: formatMoney(todayInCurrency, currency, i18n.language) }) : undefined}>
+              <Input id="metalCost" inputMode="decimal" dir="ltr" value={metalCost} onChange={(e) => { setCostTouched(true); setMetalCost(e.target.value) }} required />
+              {hasPrice && costTouched && <Button type="button" size="sm" variant="neutral" className="mt-1" onClick={() => { setMetalCost(fromMinorUnits(todayInCurrency, currency)); setCostTouched(false) }}>{t("metals.useToday")}</Button>}
             </Field>
             <Field id="currency" label={t("accounts.currency")}>
               <Select value={currency} onValueChange={setCurrency}>

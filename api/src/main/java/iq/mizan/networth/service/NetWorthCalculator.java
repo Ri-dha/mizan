@@ -68,7 +68,7 @@ public class NetWorthCalculator {
         int goldPremium = ((Number) setting.getOrDefault("gold_premium_basis_points", 0)).intValue();
         int silverPremium = ((Number) setting.getOrDefault("silver_premium_basis_points", 0)).intValue();
         boolean buyback = "BUYBACK".equals(setting.getOrDefault("valuation_basis", "MARKET"));
-        boolean local = "LOCAL".equals(setting.getOrDefault("price_source", "WORLD"));
+        boolean local = "LOCAL".equals(setting.getOrDefault("price_source", "LOCAL"));
         int goldDiscount = buyback ? ((Number) setting.getOrDefault("gold_buyback_basis_points", 0)).intValue() : 0;
         int silverDiscount = buyback ? ((Number) setting.getOrDefault("silver_buyback_basis_points", 0)).intValue() : 0;
 
@@ -92,6 +92,7 @@ public class NetWorthCalculator {
 
         Map<Instrument, Long> spot = new HashMap<>();
         Map<Instrument, Long> perGramOverride = new HashMap<>();
+        java.util.Set<Instrument> bidFromFeed = new java.util.HashSet<>();
         Map<String, Object> rateSet = new LinkedHashMap<>();
         rateSet.put("rateKind", rateKind);
         rateSet.put("usdIqdMicros", usdIqd);
@@ -102,8 +103,15 @@ public class NetWorthCalculator {
             Long override = overrides.get(metal.name());
             // Phase 4: the local market quote stands in for spot × rate when the household chose it; a user's own price still wins.
             PriceQuote localQuote = quoted.get(metal == Instrument.XAU ? Instrument.XAU_LOCAL : Instrument.XAG_LOCAL);
+            PriceQuote bidQuote = quoted.get(metal == Instrument.XAU ? Instrument.XAU_LOCAL_BID : Instrument.XAG_LOCAL_BID);
             boolean usesLocal = override == null && local && localQuote != null;
-            if (usesLocal) {
+            // A real buy-back price from the dealer beats a configured spread.
+            boolean usesBid = usesLocal && buyback && bidQuote != null;
+            if (usesBid) {
+                perGramOverride.put(metal, bidQuote.getPriceMicros());
+                bidFromFeed.add(metal);
+                rateSet.put(metal.name().toLowerCase() + "LocalSource", "bid " + source(bidQuote));
+            } else if (usesLocal) {
                 perGramOverride.put(metal, localQuote.getPriceMicros());
                 rateSet.put(metal.name().toLowerCase() + "LocalSource", source(localQuote));
             }
@@ -121,7 +129,8 @@ public class NetWorthCalculator {
         rateSet.put("silverPremiumBasisPoints", silverPremium);
         rateSet.put("valuationBasis", buyback ? "BUYBACK" : "MARKET");
         rateSet.put("priceSource", local ? "LOCAL" : "WORLD");
-        return new Prices(usdIqd, rateKind, spot, perGramOverride, goldPremium, silverPremium, goldDiscount, silverDiscount, rateSet);
+        return new Prices(usdIqd, rateKind, spot, perGramOverride, goldPremium, silverPremium,
+                bidFromFeed.contains(Instrument.XAU) ? 0 : goldDiscount, bidFromFeed.contains(Instrument.XAG) ? 0 : silverDiscount, rateSet);
     }
 
     private static long halfUp(long numerator, long divisor) {

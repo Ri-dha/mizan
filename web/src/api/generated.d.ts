@@ -129,6 +129,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/market/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fetch fresh prices from the feeds now (at most once per cooldown) and return the quotes */
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/invitations/{token}/accept": {
         parameters: {
             query?: never;
@@ -297,7 +314,7 @@ export interface paths {
          * Exchange a refresh token for a new pair
          * @description Replaying an already-rotated token revokes every session for the account.
          */
-        post: operations["refresh"];
+        post: operations["refresh_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -587,6 +604,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/market/catalogue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The local dealer's product list with bid and ask, as last fetched */
+        get: operations["catalogue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/invitations/{token}": {
         parameters: {
             query?: never;
@@ -771,6 +805,18 @@ export interface components {
             /** Format: date-time */
             deletionRequestedAt?: string;
         };
+        QuoteResponse: {
+            /** @enum {string} */
+            instrument?: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL" | "XAU_LOCAL_BID" | "XAG_LOCAL_BID";
+            /** Format: int64 */
+            priceMicros?: number;
+            source?: string;
+            /** Format: date-time */
+            quotedAt?: string;
+            /** Format: date-time */
+            fetchedAt?: string;
+            stale?: boolean;
+        };
         TransferOwnershipRequest: {
             /** Format: uuid */
             userId: string;
@@ -932,24 +978,48 @@ export interface components {
             /** Format: double */
             percent?: number;
         };
-        QuoteResponse: {
-            /** @enum {string} */
-            instrument?: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL";
-            /** Format: int64 */
-            priceMicros?: number;
-            source?: string;
-            /** Format: date-time */
-            quotedAt?: string;
-            /** Format: date-time */
-            fetchedAt?: string;
-            stale?: boolean;
-        };
         HistoryPointResponse: {
             /** Format: date */
             day?: string;
             /** Format: int64 */
             priceMicros?: number;
             source?: string;
+        };
+        CatalogueResponse: {
+            source?: string;
+            /** Format: date-time */
+            fetchedAt?: string;
+            /** Format: date-time */
+            asOf?: string;
+            catalogue?: components["schemas"]["JsonNode"];
+        };
+        JsonNode: {
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            string?: boolean;
+            integralNumber?: boolean;
+            floatingPointNumber?: boolean;
+            missingNode?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
+            pojo?: boolean;
+            int?: boolean;
+            long?: boolean;
+            double?: boolean;
+            bigDecimal?: boolean;
+            bigInteger?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
+            binary?: boolean;
+            number?: boolean;
+            empty?: boolean;
+            array?: boolean;
+            null?: boolean;
+            object?: boolean;
+            float?: boolean;
+            short?: boolean;
+            embeddedValue?: boolean;
         };
         InvitationPreviewResponse: {
             householdName?: string;
@@ -1201,6 +1271,26 @@ export interface operations {
             };
         };
     };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuoteResponse"][];
+                };
+            };
+        };
+    };
     accept: {
         parameters: {
             query?: never;
@@ -1439,7 +1529,7 @@ export interface operations {
             };
         };
     };
-    refresh: {
+    refresh_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1836,7 +1926,7 @@ export interface operations {
     history: {
         parameters: {
             query: {
-                instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL";
+                instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL" | "XAU_LOCAL_BID" | "XAG_LOCAL_BID";
                 from?: string;
                 to?: string;
             };
@@ -1853,6 +1943,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["HistoryPointResponse"][];
+                };
+            };
+        };
+    };
+    catalogue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CatalogueResponse"];
                 };
             };
         };

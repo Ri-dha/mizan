@@ -5,6 +5,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router"
 import { useEffect } from "react"
 
 import { takePendingInvite } from "@/api/household"
+import { fetchLiveQuotes } from "@/market/store"
 
 import { useSession } from "@/api/auth"
 import { Badge } from "@/components/ui/badge"
@@ -25,6 +26,11 @@ export function AppShell() {
     const pending = takePendingInvite()
     if (pending) navigate(`/join/${pending}`)
   }, [navigate])
+
+  // Prices are fetched on request only: once when the app loads, and when the user presses Refresh.
+  useEffect(() => {
+    if (navigator.onLine && session?.role !== "ADVISOR") void fetchLiveQuotes().catch(() => undefined)
+  }, [session?.role])
 
   const role = session?.role
   // §4.2: a dependent gets their own ledger and goals; an advisor gets the report and nothing else.

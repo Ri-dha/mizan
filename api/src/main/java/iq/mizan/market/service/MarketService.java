@@ -10,7 +10,10 @@ import java.util.Optional;
 import iq.mizan.common.exception.ApiException;
 import iq.mizan.common.exception.ErrorCode;
 import iq.mizan.market.MarketProperties;
+import iq.mizan.market.dto.CatalogueResponse;
 import iq.mizan.market.dto.HistoryPointResponse;
+import iq.mizan.market.repository.MarketCatalogueRepository;
+import tools.jackson.databind.json.JsonMapper;
 import iq.mizan.market.dto.QuoteResponse;
 import iq.mizan.market.entity.Instrument;
 import iq.mizan.market.entity.PriceHistory;
@@ -21,7 +24,7 @@ import iq.mizan.market.mapper.MarketMapper;
 import iq.mizan.market.repository.PriceHistoryRepository;
 import iq.mizan.market.repository.PriceQuoteRepository;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
  * the configured age, and is never blanked (FR-MKT-05).
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class MarketService {
 
     private static final Logger log = LoggerFactory.getLogger(MarketService.class);
@@ -41,9 +44,12 @@ public class MarketService {
     private final List<PriceFeed> feeds;
     private final PriceQuoteRepository quotes;
     private final PriceHistoryRepository history;
+    private final MarketCatalogueRepository catalogues;
+    private final JsonMapper json;
     private final MarketMapper mapper;
     private final MarketProperties properties;
     private final Clock clock;
+    private volatile Instant lastManualRefresh = Instant.EPOCH;
 
     @Transactional
     public void refresh() {
@@ -52,12 +58,29 @@ public class MarketService {
         }
     }
 
+    /** A user asking for fresh prices gets them, but not more often than the cooldown, whoever asks. */
+    public List<QuoteResponse> refreshOnRequest() {
+        Instant now = clock.instant();
+        if (lastManualRefresh.plus(properties.manualRefreshCooldown()).isBefore(now)) {
+            lastManualRefresh = now;
+            refresh();
+        }
+        return quotes();
+    }
+
     @Transactional(readOnly = true)
     public List<QuoteResponse> quotes() {
         Instant now = clock.instant();
         return quotes.findAll().stream()
                 .map(quote -> mapper.toResponse(quote, quote.isStaleAt(now, properties.staleAfter())))
                 .toList();
+    }
+
+    /** The dealer's product list as last fetched, or empty when no dealer feed has answered yet. */
+    @Transactional(readOnly = true)
+    public Optional<CatalogueResponse> catalogue() {
+        return catalogues.findAll().stream().findFirst()
+                .map(c -> new CatalogueResponse(c.getSource(), c.getFetchedAt(), c.getAsOf(), json.readTree(c.getPayload())));
     }
 
     @Transactional(readOnly = true)

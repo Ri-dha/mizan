@@ -1,0 +1,20 @@
+# Container and host resource use: CPU, memory, network and disk per container, for the
+# performance panels next to the API's own metrics.
+metricbeat.modules:
+  - module: docker
+    metricsets: ["container", "cpu", "memory", "network", "diskio"]
+    hosts: ["unix:///var/run/docker.sock"]
+    period: 30s
+  - module: system
+    metricsets: ["cpu", "memory", "load", "filesystem"]
+    period: 30s
+
+setup.template.name: "metricbeat"
+setup.template.pattern: "metricbeat-*"
+setup.ilm.enabled: false
+
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTS:http://elasticsearch:9200}"]
+  index: "metricbeat-%{+yyyy.MM.dd}"
+
+logging.level: warning

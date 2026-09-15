@@ -19,11 +19,56 @@ spring:
   cache:
     type: caffeine
 
+# One JSON object per line, Logstash style: @timestamp, level, logger_name, thread_name, message,
+# application, plus every MDC key (correlationId, httpMethod, httpPath, userId, traceId, spanId)
+# as a top-level field. Filebeat ships it to Elasticsearch; Kibana searches it as is.
+logging:
+  structured:
+    format:
+      console: "${MIZAN_LOG_FORMAT:logstash}"
+      file: logstash
+    json:
+      add:
+        application: mizan
+      exclude:
+        - "@version"
+        - level_value
+  file:
+    # Filebeat tails this in local development, where the API runs outside Docker.
+    name: "${MIZAN_LOG_FILE:logs/mizan.json}"
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 7
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
+  tracing:
+    sampling:
+      # Every request gets a trace id in its log lines; nothing is exported, so 1.0 costs nothing.
+      probability: 1.0
+  observations:
+    key-values:
+      application: mizan
+  metrics:
+    tags:
+      application: mizan
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  elastic:
+    metrics:
+      export:
+        # JVM, HTTP, Hikari and cache metrics into mizan-metrics-* for the Kibana performance panels.
+        enabled: "${MIZAN_METRICS_ELASTIC_ENABLED:false}"
+        host: "${MIZAN_ELASTICSEARCH_URL:http://localhost:9200}"
+        index: mizan-metrics
+        index-date-format: yyyy-MM-dd
+        step: 30s
+        auto-create-index: true
 
 springdoc:
   swagger-ui:
@@ -122,7 +167,10 @@ mizan:
   # (dev/test) answers last with fixed prices. The parallel dollar rate has no public API, so
   # an operator supplies it in micros (1470 IQD/USD = 1470000000); 0 leaves it unset.
   market:
-    refresh-interval: 1h
+    # Feeds are called only on request (Refresh button, app load) unless auto-refresh is on.
+    auto-refresh: "${MIZAN_MARKET_AUTO_REFRESH:false}"
+    refresh-interval: 15m
+    manual-refresh-cooldown: 30s
     stale-after: 24h
     history-default-days: 365
     history-max-days: 1830
@@ -137,7 +185,15 @@ mizan:
         url: "${MIZAN_OPEN_EXCHANGE_RATES_URL:https://openexchangerates.org}"
         app-id: "${MIZAN_OPEN_EXCHANGE_RATES_APP_ID:}"
       exchange-rate-api:
-        url: "${MIZAN_EXCHANGE_RATE_API_URL:}"
+        url: "${MIZAN_EXCHANGE_RATE_API_URL:https://open.er-api.com}"
+      # The local market: Baghdad Bullion House publishes bid and ask per gram in IQD and a product list.
+      baghdad-bullion:
+        url: "${MIZAN_BAGHDAD_BULLION_URL:https://prices.baghdadbullionhouse.com/api/prices}"
+        enabled: "${MIZAN_BAGHDAD_BULLION_ENABLED:true}"
+      # Keyless spot in USD per troy ounce; keyed providers above answer first when configured.
+      gold-api-com:
+        url: "${MIZAN_GOLD_API_COM_URL:https://api.gold-api.com}"
+        enabled: "${MIZAN_GOLD_API_COM_ENABLED:true}"
       parallel-rate-iqd-micros: "${MIZAN_PARALLEL_RATE_IQD_MICROS:0}"
       # Phase 4: the local market's own quote. Any JSON endpoint; e.g. {"gold21": 547000} with
       # gold-path=gold21 and gold-unit=MITHQAL_21K. Registered only when the URL is set.

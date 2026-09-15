@@ -35,7 +35,7 @@ public class MetalsDevPriceFeed implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return METALS.containsKey(instrument);
+        return METALS.containsKey(instrument) && Configured.present(config.apiKey());
     }
 
     @Override

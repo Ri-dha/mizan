@@ -3,6 +3,7 @@ package iq.mizan.market.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import iq.mizan.market.dto.CatalogueResponse;
 import iq.mizan.market.dto.HistoryPointResponse;
 import iq.mizan.market.dto.QuoteResponse;
 import iq.mizan.market.entity.Instrument;
@@ -16,6 +17,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +35,20 @@ public class MarketController {
     @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
     public ResponseEntity<List<QuoteResponse>> quotes() {
         return ResponseEntity.ok(marketService.quotes());
+    }
+
+    @Operation(summary = "Fetch fresh prices from the feeds now (at most once per cooldown) and return the quotes")
+    @PostMapping("/refresh")
+    @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
+    public ResponseEntity<List<QuoteResponse>> refresh() {
+        return ResponseEntity.ok(marketService.refreshOnRequest());
+    }
+
+    @Operation(summary = "The local dealer's product list with bid and ask, as last fetched")
+    @GetMapping("/catalogue")
+    @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
+    public ResponseEntity<CatalogueResponse> catalogue() {
+        return marketService.catalogue().map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @Operation(summary = "Daily price history for charts and snapshots")

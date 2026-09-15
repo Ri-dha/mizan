@@ -19,8 +19,8 @@ export interface MetalsView {
 const EMPTY_PRICES: ResolvedPrices = {
   usdIqdMicros: 0, rateKind: "PARALLEL", rateSource: { kind: "none", label: "none", at: null, stale: true },
   spot: {
-    GOLD: { spotUsdPerOzMicros: 0, perGram24kOverrideMicros: null, source: { kind: "none", label: "none", at: null, stale: true } },
-    SILVER: { spotUsdPerOzMicros: 0, perGram24kOverrideMicros: null, source: { kind: "none", label: "none", at: null, stale: true } },
+    GOLD: { spotUsdPerOzMicros: 0, perGram24kOverrideMicros: null, source: { kind: "none", label: "none", at: null, stale: true }, bidFromFeed: false },
+    SILVER: { spotUsdPerOzMicros: 0, perGram24kOverrideMicros: null, source: { kind: "none", label: "none", at: null, stale: true }, bidFromFeed: false },
   },
 }
 

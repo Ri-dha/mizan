@@ -44,6 +44,8 @@ scheduled jobs are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 | What | URL | Notes |
 |---|---|---|
 | Web app (dev) | http://localhost:5173 | Vite dev server with hot reload; `/api` is proxied to the API |
+| Kibana | http://localhost:5601 | `docker compose --profile observability up -d`; dashboard "Mizan overview" |
+| Elasticsearch | http://localhost:9200 | Indices `mizan-logs-*` (API), `containers-logs-*` (everything else), `mizan-metrics-*`, `metricbeat-*` |
 | Web app (built) | http://localhost:4173 | `npm run preview` after `npm run build`; the service worker only runs here or in production |
 | User manual (built) | http://localhost:4173/docs/en/ | Static site rendered from `docs/manual`; Arabic at `/docs/ar/` |
 | API | http://localhost:8080 | REST under `/api/v1` |
@@ -57,6 +59,28 @@ scheduled jobs are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 Every credential above is a dev default from `.env.example` and `application.yml`. Deployed
 environments override them with `MIZAN_*`, `DB_*` and `MINIO_*` environment variables.
 
+### Logs, statistics and performance (Kibana)
+
+```bash
+docker compose --profile observability up -d
+```
+
+Elasticsearch, Kibana (http://localhost:5601, bound to localhost only) and Logstash start
+(add `--profile containers` for Metricbeat's per-container CPU and memory), and a one-shot `kibana-setup` container creates the data views and imports the **Mizan
+overview** dashboard: requests per status, p95 and average latency, slowest paths, log lines by
+level, errors and warnings by logger, most frequent messages, JVM heap, Hikari connections, and
+container CPU and memory. Both profiles (`observability`, `prod`) include it.
+
+The API writes one JSON object per log line in Logstash shape, with `correlationId`,
+`httpMethod`, `httpPath`, `userId`, `traceId` and `spanId` as top-level fields and one access
+line per request (`logger_name: iq.mizan.http`) carrying `httpStatus` and `durationMs`. In
+Docker, Logstash reads container stdout; on a developer machine it tails `api/logs/mizan.json`,
+which the API writes as well (`api/logs/`, ignored by git). Only output produced after Logstash
+starts is shipped; other containers' lines land in `containers-logs-*` so their fields never
+collide with the API's. Set `MIZAN_LOG_FORMAT=` (empty) for plain console lines locally.
+JVM, HTTP, Hikari and cache metrics go to `mizan-metrics-*` when `MIZAN_METRICS_ELASTIC_ENABLED=true`
+(the default inside the `api` container).
+
 ### Receipt reading
 
 Receipt OCR runs on the device with Tesseract. `npm run ocr:assets` (also run before `dev` and
@@ -65,6 +89,14 @@ models into `web/public/ocr/`, which is not committed. Without network the scrip
 "Read the receipt" button reports that the reader is unavailable.
 
 ### Price feeds
+
+Live without any key. Baghdad Bullion House (`prices.baghdadbullionhouse.com`) is the default
+local source: its ask per gram of pure metal feeds `XAU_LOCAL`/`XAG_LOCAL`, its bid feeds
+`XAU_LOCAL_BID`/`XAG_LOCAL_BID`, and its product list is kept for `GET /api/v1/market/catalogue`.
+gold-api.com supplies world spot in dollars and open.er-api.com the official dollar rate. Feeds
+are called only on request (`POST /api/v1/market/refresh`, cooldown 30 s), which the app does
+once on load and when the user presses Refresh; set `MIZAN_MARKET_AUTO_REFRESH=true` for a timed
+refresh as well. The parallel rate has no public feed and stays a configured value or a user override.
 
 Locally the API serves fixed stub prices (see `application-dev.yml`). To use real providers set
 any of `MIZAN_METALS_DEV_API_KEY`, `MIZAN_GOLD_API_KEY`, `MIZAN_OPEN_EXCHANGE_RATES_APP_ID`,
@@ -108,6 +140,8 @@ order every hour; the parallel-market dollar rate comes from `MIZAN_PARALLEL_RAT
 | POST/DELETE | `/api/v1/households/current/deletion-request` | bearer, `HOUSEHOLD_DELETE` | Request (with password) or cancel household deletion; purged after 7 days |
 | GET | `/api/v1/invitations/{token}` | public | Preview an invitation |
 | POST | `/api/v1/invitations/{token}/accept` | bearer | Join the household behind the link |
+| POST | `/api/v1/market/refresh` | bearer | Fetch fresh prices from the feeds now (cooldown 30 s) and return the quotes |
+| GET | `/api/v1/market/catalogue` | bearer | The dealer's bars and coins with bid and ask, as last fetched |
 | GET | `/api/v1/market/quotes` (instruments `XAU_LOCAL`, `XAG_LOCAL`) | bearer | The local market's quote per gram of pure metal, when a dealer feed is configured |
 | GET | `/api/v1/reports/annual?year` | bearer, `REPORTS_VIEW` | Income, spending, saving rate and closing net worth per month over shared records |
 | GET | `/api/v1/notifications/vapid-key` | bearer | The server's VAPID public key for subscribing a browser |

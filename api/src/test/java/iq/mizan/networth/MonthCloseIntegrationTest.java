@@ -70,7 +70,8 @@ class MonthCloseIntegrationTest extends PostgresIntegrationTest {
         assertThat(figures.get("totalLiabilities").asLong()).isEqualTo(liabilities);
         assertThat(figures.get("netWorth").asLong()).isEqualTo(cash + gold + receivables - liabilities);
         assertThat(figures.get("rateSet").get("usdIqdMicros").asLong()).isEqualTo(1_470_000_000L);
-        assertThat(figures.get("rateSet").get("xauSource").asString()).startsWith("stub@");
+        assertThat(figures.get("rateSet").get("xauSource").asString()).isEqualTo("local");
+        assertThat(figures.get("rateSet").get("xauLocalSource").asString()).startsWith("stub@");
     }
 
     @Test

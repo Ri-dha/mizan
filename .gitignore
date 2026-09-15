@@ -34,3 +34,6 @@ web/public/ocr/
 
 # jqwik keeps its last failing samples here
 api/.jqwik-database
+
+# API log file tailed by Filebeat in local development
+api/logs/

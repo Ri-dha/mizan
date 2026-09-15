@@ -5,7 +5,7 @@ import { writeFields } from "@/db/write"
 import { todayIso } from "@/domain/calendar/month"
 
 export interface Quote {
-  instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL"
+  instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL" | "XAU_LOCAL_BID" | "XAG_LOCAL_BID"
   priceMicros: number
   source: string
   quotedAt: string
@@ -19,6 +19,12 @@ const STALE_AFTER_MS = 24 * 60 * 60 * 1000
 /** Pulled with every sync; served from the local copy so valuation works offline (FR-MKT-05). */
 export async function refreshQuotes(): Promise<void> {
   const quotes = await unwrap(api.GET("/api/v1/market/quotes"))
+  await writeMeta(QUOTES_KEY, quotes)
+}
+
+/** The user asked for prices now: the server re-fetches from its feeds (within its cooldown) and answers with the result. */
+export async function fetchLiveQuotes(): Promise<void> {
+  const quotes = await unwrap(api.POST("/api/v1/market/refresh"))
   await writeMeta(QUOTES_KEY, quotes)
 }
 
@@ -39,7 +45,7 @@ export const DEFAULT_SETTING: Omit<MarketSetting, keyof import("@/db/schema").Sy
   valuationBasis: "MARKET",
   goldBuybackBasisPoints: 0,
   silverBuybackBasisPoints: 0,
-  priceSource: "WORLD",
+  priceSource: "LOCAL",
 }
 
 export async function liveSetting(): Promise<MarketSetting | undefined> {
@@ -80,7 +86,7 @@ export interface ResolvedPrices {
   usdIqdMicros: number
   rateKind: RateKind
   rateSource: PriceSource
-  spot: Record<Metal, { spotUsdPerOzMicros: number; perGram24kOverrideMicros: number | null; source: PriceSource }>
+  spot: Record<Metal, { spotUsdPerOzMicros: number; perGram24kOverrideMicros: number | null; source: PriceSource; bidFromFeed: boolean }>
 }
 
 /**
@@ -97,11 +103,16 @@ export function resolvePrices(quotes: Quote[], overrides: MarketOverride[], sett
     const quote = quotes.find((q) => q.instrument === (m === "GOLD" ? "XAU" : "XAG"))
     const override = activeOverride(overrides, m === "GOLD" ? "XAU" : "XAG")
     // Phase 4: the local market's quote per gram of pure metal stands in for spot × rate when chosen; a user's price still wins.
-    const local = setting?.priceSource === "LOCAL" ? quotes.find((q) => q.instrument === (m === "GOLD" ? "XAU_LOCAL" : "XAG_LOCAL")) : undefined
+    const useLocal = (setting?.priceSource ?? DEFAULT_SETTING.priceSource) === "LOCAL"
+    const local = useLocal ? quotes.find((q) => q.instrument === (m === "GOLD" ? "XAU_LOCAL" : "XAG_LOCAL")) : undefined
+    // A real buy-back price from the dealer beats a configured spread (FR-MTL-11).
+    const bid = useLocal && setting?.valuationBasis === "BUYBACK" ? quotes.find((q) => q.instrument === (m === "GOLD" ? "XAU_LOCAL_BID" : "XAG_LOCAL_BID")) : undefined
+    const chosen = override ? undefined : bid ?? local
     return {
       spotUsdPerOzMicros: quote?.priceMicros ?? 0,
-      perGram24kOverrideMicros: override?.priceMicros ?? local?.priceMicros ?? null,
-      source: override ? describe(override, quote) : local ? { kind: "local" as const, label: `local:${local.source}`, at: local.fetchedAt, stale: isStale(local) } : describe(undefined, quote),
+      perGram24kOverrideMicros: override?.priceMicros ?? chosen?.priceMicros ?? null,
+      bidFromFeed: !override && bid !== undefined,
+      source: override ? describe(override, quote) : chosen ? { kind: "local" as const, label: `${bid ? "bid " : ""}${chosen.source}`, at: chosen.fetchedAt, stale: isStale(chosen) } : describe(undefined, quote),
     }
   }
   return { usdIqdMicros, rateKind, rateSource: describe(rateOverride, rateQuote), spot: { GOLD: metal("GOLD"), SILVER: metal("SILVER") } }

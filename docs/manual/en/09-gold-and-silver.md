@@ -7,6 +7,10 @@ summary: "Recording purchases, how today's price is calculated, entering your ow
 
 Enter the metal, purity (24k, 22k, 21k, 18k for gold; 999 or 925 for silver), the weight in grams, mithqal (5 g), tola, troy ounces or kilograms, the form, the price paid for the metal, and separately the making charge and any fees. Making charges count in the cost but are shown separately, because a dealer rarely pays them back on sale.
 
+## Today's prices
+
+The metals screen lists today's price for every purity, per gram and per mithqal, in dinars and in dollars, with the time and source of the quote. Prices come from Baghdad Bullion House's published rates per gram, with the world market as a fallback, and are fetched when you open the app or press **Refresh**, never in the background. When you record a purchase, the cost is filled in from today's price for the purity and weight you entered until you type your own; **Use today's price** brings it back.
+
 ## How the price is calculated
 
 Mizan fetches the world spot price in dollars per troy ounce and a dollar rate, then works out the dinar price per gram of pure metal, applies the purity and any local premium you set, and multiplies by your weight. **How is this calculated?** shows every step with the numbers in use.
@@ -15,7 +19,15 @@ Every price carries its source and time. After 24 hours without a refresh it is 
 
 ## The local market's own price
 
-Where the service has a local dealer feed, the valuation settings offer **Local market quote** as the price source. The dealer's price per gram of pure metal then replaces world spot and the dollar rate for every value on the screen and in net worth, and the source is named. A price you enter yourself still wins over it.
+Baghdad Bullion House publishes what it charges (ask) and what it pays (bid) per gram of pure gold and silver, and a list of its bars and coins. Mizan uses the ask for values by default; switch the price source to **World spot × dollar rate** in the valuation settings if you prefer the world price. When you value holdings at what a dealer would pay, the published bid is used instead of a spread you enter. A price you enter yourself still wins over both.
+
+## Sell or hold?
+
+The **Sell or hold?** card answers the question directly: what the dealer would pay for your holding today, what it cost you including making charges, the gain or loss, and the buy-back price per gram at which you break even. The chart underneath shows, day by day, what the holding cost against what it was worth at the market price and at the dealer's buy-back price, so you can see when selling would have gained. It fills in as daily prices accumulate; before the dealer feed existed, world spot converted at your dollar rate stands in.
+
+## The dealer's bars and coins
+
+**Dealer's bars and coins** lists Baghdad Bullion House's products with what they pay for each and what they charge, in Arabic or English as you use the app.
 
 ## Entering today's price
 

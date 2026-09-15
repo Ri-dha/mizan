@@ -34,3 +34,5 @@ mizan:
         # Local market, IQD micros per gram of pure metal: about 125,243 IQD/g gold, 1,480 IQD/g silver.
         XAU_LOCAL: 125243000000
         XAG_LOCAL: 1480000000
+        XAU_LOCAL_BID: 124800000000
+        XAG_LOCAL_BID: 1450000000

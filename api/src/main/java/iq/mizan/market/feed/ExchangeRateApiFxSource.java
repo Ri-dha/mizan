@@ -19,9 +19,11 @@ import org.springframework.web.client.RestClient;
 public class ExchangeRateApiFxSource implements PriceFeed {
 
     private final RestClient client;
+    private final String url;
 
     public ExchangeRateApiFxSource(RestClient.Builder builder, MarketProperties properties) {
-        this.client = builder.baseUrl(properties.feeds().exchangeRateApi().url()).build();
+        this.url = properties.feeds().exchangeRateApi().url();
+        this.client = builder.baseUrl(this.url).build();
     }
 
     @Override
@@ -31,7 +33,7 @@ public class ExchangeRateApiFxSource implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return instrument == Instrument.USDIQD_OFFICIAL;
+        return instrument == Instrument.USDIQD_OFFICIAL && Configured.present(url);
     }
 
     @Override

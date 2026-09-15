@@ -65,7 +65,14 @@ services:
       MIZAN_METALS_DEV_API_KEY: ${MIZAN_METALS_DEV_API_KEY:-}
       MIZAN_GOLD_API_KEY: ${MIZAN_GOLD_API_KEY:-}
       MIZAN_OPEN_EXCHANGE_RATES_APP_ID: ${MIZAN_OPEN_EXCHANGE_RATES_APP_ID:-}
-      MIZAN_EXCHANGE_RATE_API_URL: ${MIZAN_EXCHANGE_RATE_API_URL:-}
+      MIZAN_EXCHANGE_RATE_API_URL: ${MIZAN_EXCHANGE_RATE_API_URL:-https://open.er-api.com}
+      MIZAN_GOLD_API_COM_ENABLED: ${MIZAN_GOLD_API_COM_ENABLED:-true}
+      MIZAN_BAGHDAD_BULLION_URL: ${MIZAN_BAGHDAD_BULLION_URL:-https://prices.baghdadbullionhouse.com/api/prices}
+      MIZAN_BAGHDAD_BULLION_ENABLED: ${MIZAN_BAGHDAD_BULLION_ENABLED:-true}
+      MIZAN_MARKET_AUTO_REFRESH: ${MIZAN_MARKET_AUTO_REFRESH:-false}
+      MIZAN_METRICS_ELASTIC_ENABLED: ${MIZAN_METRICS_ELASTIC_ENABLED:-true}
+      MIZAN_ELASTICSEARCH_URL: http://elasticsearch:9200
+      MIZAN_LOG_FILE: /dev/null
       MIZAN_LOCAL_DEALER_URL: ${MIZAN_LOCAL_DEALER_URL:-}
       MIZAN_LOCAL_DEALER_GOLD_PATH: ${MIZAN_LOCAL_DEALER_GOLD_PATH:-gold}
       MIZAN_LOCAL_DEALER_GOLD_UNIT: ${MIZAN_LOCAL_DEALER_GOLD_UNIT:-MITHQAL_21K}
@@ -114,8 +121,108 @@ services:
       BACKUP_BUCKET: ${BACKUP_BUCKET:-mizan-backups}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
 
+  # --- Observability: `docker compose --profile observability up -d` (also part of prod) ---
+  # Elasticsearch keeps the logs and metrics, Kibana shows them at http://localhost:5601. Single
+  # node, security off: reach it over the Docker network or an SSH tunnel, never expose 9200/5601.
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-9.3.3}
+    profiles: ["observability", "prod"]
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.ml.enabled: "false"
+      ES_JAVA_OPTS: ${ES_JAVA_OPTS:--Xms512m -Xmx512m}
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health | grep -qE 'green|yellow'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION:-9.3.3}
+    profiles: ["observability", "prod"]
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      TELEMETRY_ENABLED: "false"
+      XPACK_SECURITY_ENCRYPTIONKEY: ${KIBANA_ENCRYPTION_KEY:-change-me-to-32-or-more-characters!!}
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: ${KIBANA_ENCRYPTION_KEY:-change-me-to-32-or-more-characters!!}
+      XPACK_REPORTING_ENCRYPTIONKEY: ${KIBANA_ENCRYPTION_KEY:-change-me-to-32-or-more-characters!!}
+    ports:
+      - "127.0.0.1:5601:5601"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5601/api/status | grep -q '\"level\":\"available\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+
+  # Data views and the "Mizan overview" dashboard; runs once and exits.
+  kibana-setup:
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION:-9.3.3}
+    profiles: ["observability", "prod"]
+    depends_on:
+      kibana:
+        condition: service_healthy
+    environment:
+      KIBANA_URL: http://kibana:5601
+    volumes:
+      - ./infra/observability/kibana:/setup:ro
+    entrypoint: ["/bin/bash", "/setup/setup.sh"]
+
+  # Container stdout (JSON from the API) and the local API log file into mizan-logs-*.
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${ELASTIC_VERSION:-9.3.3}
+    profiles: ["observability", "prod"]
+    user: root
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      LS_JAVA_OPTS: ${LS_JAVA_OPTS:--Xms256m -Xmx512m}
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      XPACK_MONITORING_ENABLED: "false"
+      PIPELINE_ECS_COMPATIBILITY: disabled
+      # Root is needed to read other containers' log files.
+      ALLOW_SUPERUSER: "true"
+    volumes:
+      - ./infra/observability/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./infra/observability/mizan-logs-template.json:/usr/share/logstash/templates/mizan-logs-template.json:ro
+      - ./infra/observability/containers-logs-template.json:/usr/share/logstash/templates/containers-logs-template.json:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./api/logs:/logs/api:ro
+      - logstashdata:/usr/share/logstash/data
+
+  # CPU, memory, network and disk per container into metricbeat-*. Optional: `--profile containers`.
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:${ELASTIC_VERSION:-9.3.3}
+    profiles: ["containers"]
+    user: root
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    command: ["metricbeat", "-e", "--strict.perms=false", "-system.hostfs=/hostfs"]
+    volumes:
+      - ./infra/observability/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/hostfs/proc:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /:/hostfs:ro
+      - metricbeatdata:/usr/share/metricbeat/data
+
 volumes:
   pgdata:
+  esdata:
+  logstashdata:
+  metricbeatdata:
   miniodata:
   caddydata:
   caddyconfig:

@@ -1,0 +1,31 @@
+{
+  "index_patterns": ["mizan-logs-*"],
+  "template": {
+    "settings": { "number_of_shards": 1, "number_of_replicas": 0, "index.mapping.ignore_malformed": true },
+    "mappings": {
+      "dynamic_templates": [
+        { "strings_as_keywords": { "match_mapping_type": "string", "mapping": { "type": "keyword", "ignore_above": 1024 } } }
+      ],
+      "properties": {
+        "@timestamp": { "type": "date" },
+        "message": { "type": "text", "fields": { "keyword": { "type": "keyword", "ignore_above": 512 } } },
+        "level": { "type": "keyword" },
+        "logger_name": { "type": "keyword" },
+        "thread_name": { "type": "keyword" },
+        "application": { "type": "keyword" },
+        "correlationId": { "type": "keyword" },
+        "traceId": { "type": "keyword" },
+        "spanId": { "type": "keyword" },
+        "userId": { "type": "keyword" },
+        "httpMethod": { "type": "keyword" },
+        "httpPath": { "type": "keyword" },
+        "httpStatus": { "type": "integer" },
+        "durationMs": { "type": "long" },
+        "clientIp": { "type": "ip", "ignore_malformed": true },
+        "stack_trace": { "type": "text" },
+        "container_id": { "type": "keyword" }
+      }
+    }
+  },
+  "priority": 200
+}

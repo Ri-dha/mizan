@@ -58,8 +58,9 @@ public class LocalDealerPriceFeed implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return instrument == Instrument.XAU_LOCAL && config.goldPath() != null && !config.goldPath().isBlank()
-                || instrument == Instrument.XAG_LOCAL && config.silverPath() != null && !config.silverPath().isBlank();
+        return Configured.present(config.url())
+                && (instrument == Instrument.XAU_LOCAL && Configured.present(config.goldPath())
+                    || instrument == Instrument.XAG_LOCAL && Configured.present(config.silverPath()));
     }
 
     @Override

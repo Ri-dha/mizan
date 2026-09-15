@@ -1,5 +1,10 @@
-import { Plus, Settings2 } from "lucide-react"
+import { Plus, RefreshCw, Settings2 } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
+import { describeError } from "@/app/errors"
+import { fetchLiveQuotes } from "@/market/store"
+import { priceTable } from "@/db/metals"
+import { usePreferences } from "@/app/preferences"
 import { useTranslation } from "react-i18next"
 
 import { useSession } from "@/api/auth"
@@ -16,6 +21,8 @@ import { OverrideSheet } from "./OverrideSheet"
 import { PriceExplainer } from "./PriceExplainer"
 import { SellSheet } from "./SellSheet"
 import { ZakatDialog } from "./ZakatDialog"
+import { SellOrHoldCard } from "./SellOrHoldCard"
+import { DealerProductsCard } from "./DealerProductsCard"
 import { perGramFor } from "@/db/metals"
 import { useMetals } from "./useMetals"
 import { HelpButton } from "@/components/HelpButton"
@@ -36,6 +43,23 @@ export function MetalsPage() {
   const [settings, setSettings] = useState(false)
   const [explaining, setExplaining] = useState(false)
   const [zakat, setZakat] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const prefs = usePreferences()
+  const table = priceTable(view.prices, view.setting)
+  const usd = (micros: number) => formatMoney(Math.round(micros / 1e4), "USD", i18n.language)
+  const goldAt = view.prices.spot.GOLD.source.at
+
+  async function refreshPrices() {
+    setRefreshing(true)
+    try {
+      await fetchLiveQuotes()
+      toast(t("metals.refreshed"))
+    } catch (e) {
+      toast(describeError(e))
+    } finally {
+      setRefreshing(false)
+    }
+  }
   useScreenTour("metals")
 
   const money = (v: number) => formatMoney(v, base, i18n.language)
@@ -86,6 +110,48 @@ export function MetalsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="flex-row items-start justify-between gap-2">
+          <div>
+            <CardTitle>{t("metals.priceTable")}</CardTitle>
+            <CardDescription>
+              {goldAt ? t("metals.priceTableBody", { at: new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(goldAt)), source: view.prices.spot.GOLD.source.label }) : t("metals.priceTableNoPrice")}
+              {view.prices.spot.GOLD.source.stale && <> · <Badge>{t("metals.stale")}</Badge></>}
+            </CardDescription>
+          </div>
+          <Button size="sm" variant="neutral" disabled={refreshing || !navigator.onLine} onClick={() => void refreshPrices()}><RefreshCw className={refreshing ? "animate-spin" : ""} /> {t("metals.refresh")}</Button>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="opacity-70">
+                <th className="py-1 text-start">{t("metals.purity")}</th>
+                <th className="py-1 text-end">{base}/g</th>
+                <th className="py-1 text-end">USD/g</th>
+                <th className="py-1 text-end">{base}/{t("metals.units.MITHQAL")}</th>
+                <th className="py-1 text-end">USD/{t("metals.units.MITHQAL")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {table.map((row) => (
+                <tr key={`${row.metal}-${row.purityLabel}`} className="border-t border-border/40">
+                  <td className="py-1 font-heading">{t(`metals.metal.${row.metal}`)} {row.purityLabel}</td>
+                  <td className="py-1 text-end tabular-nums">{money(Math.round(row.perGramMicros / 1e6))}</td>
+                  <td className="py-1 text-end tabular-nums" dir="ltr">{usd(row.perGramUsdMicros)}</td>
+                  <td className="py-1 text-end tabular-nums">{money(Math.round(row.perMithqalMicros / 1e6))}</td>
+                  <td className="py-1 text-end tabular-nums" dir="ltr">{usd(row.perMithqalUsdMicros)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {prefs.showUsd === false && <p className="mt-2 text-xs opacity-70">{t("metals.usdNote", { rate: money(Math.round(view.prices.usdIqdMicros / 1e6)), kind: t(`metals.rateKinds.${view.prices.rateKind}`) })}</p>}
+        </CardContent>
+      </Card>
+
+      <SellOrHoldCard view={view} currency={base} />
+
+      <DealerProductsCard currency={base} />
 
       <Card data-tour="metals-prices">
         <CardHeader className="flex-row items-center justify-between">
@@ -170,12 +236,12 @@ function Fig({ label, value, strong }: { label: string; value: string; strong?: 
 
 function PriceLine({ label, value, source }: { label: string; value: string; source: PriceSource }) {
   const { t, i18n } = useTranslation()
-  const when = source.at ? new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "medium", timeStyle: source.kind === "feed" ? "short" : undefined }).format(new Date(source.at)) : ""
+  const when = source.at ? new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "medium", timeStyle: source.kind === "feed" || source.kind === "local" ? "short" : undefined }).format(new Date(source.at)) : ""
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       <span>{label}: <span className="font-heading tabular-nums">{value}</span></span>
       <span className="flex items-center gap-1">
-        <Badge variant="neutral">{source.kind === "override" ? t("metals.sources.override") : source.kind === "feed" ? source.label : t("metals.sources.none")}</Badge>
+        <Badge variant="neutral">{source.kind === "override" ? t("metals.sources.override") : source.kind === "feed" || source.kind === "local" ? source.label : t("metals.sources.none")}</Badge>
         {source.stale && <Badge>{t("metals.stale")}</Badge>}
         <span className="text-xs opacity-70">{when}</span>
       </span>

@@ -46,7 +46,7 @@ class LocalPriceIntegrationTest extends PostgresIntegrationTest {
                         "priceSource", "LOCAL")));
 
         JsonNode figures = api.body(api.get("/api/v1/networth/current", token));
-        assertThat(metals(figures)).isEqualTo(547_938);
+        assertThat(metals(figures)).isEqualTo(547_939);
         assertThat(figures.get("rateSet").get("priceSource").asString()).isEqualTo("LOCAL");
         assertThat(figures.get("rateSet").get("xauLocalSource").asString()).startsWith("stub@");
 
