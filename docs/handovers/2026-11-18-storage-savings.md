@@ -1,6 +1,6 @@
 # Handover — 2026-11-18 — Use the least storage: logs, receipts, SeaweedFS
 
-## Completed (uncommitted, worktree ../.wt-log-retention, branch feat/log-retention)
+## Completed (on develop)
 - T-log-retention (ADR obs-2): see its handover.
 - T-receipt-retention (ADR storage-2): grey 1200 px photos, `kind` on attachment URLs,
   `receipts/` prefix, `ReceiptPhotoExpiry`, device cleanup, notices in en and ar, manual.
@@ -10,8 +10,7 @@
 - Fix: `AttachmentObjectPurge` now runs in a transaction (learning 2026-11-18-scheduled-self-call).
 
 ## In flight
-- Nothing half-done. Awaiting the owner's word to commit (four commits: logs, SeaweedFS,
-  backups, receipts) and merge into develop.
+- Nothing. Committed as 561acf2, 6b0c2d4, d8a987e and fde03d9, merged into develop and pushed.
 
 ## Next steps
 - T-storage-public-endpoint, now that the store is settled.

@@ -1,7 +1,6 @@
 # Status — T-log-retention
 
-- Branch `feat/log-retention` (worktree `../.wt-log-retention`) from develop `588eddf`; uncommitted.
-  The same working tree also holds T-seaweedfs and T-receipt-retention, to be split into commits.
+- Merged into develop as `561acf2` (branch `feat/log-retention`).
 - Works: lifecycle policies for every index Mizan writes, compression and no replicas in the
   templates, a policy on indexes that already existed, Docker log rotation on all services.
 - Validated against Elasticsearch 9.3.3 under a throwaway compose project: the setup wrote the

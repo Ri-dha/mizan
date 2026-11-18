@@ -1,5 +1,5 @@
 # T-receipt-retention — Smaller receipt photos, deleted after thirty days
-- Status: in-review (2026-11-18), branch feat/log-retention (worktree ../.wt-log-retention), uncommitted
+- Status: done (2026-11-18), fde03d9 on develop
 - Context: ADR storage-2. Owner chose grey 1200 px photos and a one-month limit that the app
   states to people, out of the storage savings discussed on 2026-11-18.
 - Notes: `web/src/attachments/images.ts` (grey, 1200 px, q 0.6), `store.ts` (kind on URLs,

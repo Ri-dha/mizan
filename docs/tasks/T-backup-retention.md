@@ -1,5 +1,5 @@
 # T-backup-retention — Keep seven daily and four weekly database dumps
-- Status: in-review (2026-11-18), branch feat/log-retention (worktree ../.wt-log-retention), uncommitted
+- Status: done (2026-11-18), d8a987e on develop
 - Context: ADR storage-3; owner's request after the storage review. Builds on T-seaweedfs
   (rclone in the backup image).
 - Notes: `infra/backup/backup.sh` and `Dockerfile` (zstd), `BACKUP_KEEP_DAILY` /

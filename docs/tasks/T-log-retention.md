@@ -1,5 +1,5 @@
 # T-log-retention — Keep logs and metrics for a fixed number of days
-- Status: in-review (2026-11-18), branch feat/log-retention from develop 588eddf, uncommitted
+- Status: done (2026-11-18), 561acf2 on develop
 - Context: ADR obs-2 (supersedes the manual retention in ADR obs-1's runbook notes). Owner asked
   for the least storage possible and chose to keep Elasticsearch with limits over Loki + Grafana,
   VictoriaLogs or Docker logs only.

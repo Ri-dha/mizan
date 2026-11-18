@@ -1,6 +1,6 @@
 # Status — T-seaweedfs, T-backup-retention and T-receipt-retention
 
-- Worktree `../.wt-log-retention`, branch `feat/log-retention`, uncommitted, next to T-log-retention.
+- Merged into develop: `6b0c2d4` SeaweedFS, `d8a987e` backups, `fde03d9` receipts (branch `feat/log-retention`).
 - Works: SeaweedFS 4.51 in compose; the API creates its bucket, signs URLs and uploads land under
   `receipts/`; the backup image writes a custom-format dump compressed with zstd (37.8 KB), keeps 7 daily and
   4 weekly, and the dump restores into a scratch database that matches the live one. Receipt photos are grey
