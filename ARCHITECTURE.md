@@ -172,6 +172,9 @@ One host with Docker Compose profiles: default (`postgres`, `seaweedfs`), `full`
   before encryption and live under `receipts/<household>/<id>`; `ReceiptPhotoExpiry` deletes
   them 30 days after upload and devices drop their copies on the same rule (ADR storage-2). The
   app says so where a photo is added. Device backups keep `<household>/<id>`.
+  Links are signed for `MIZAN_STORAGE_PUBLIC_ENDPOINT` (ADR storage-4), normally the site itself,
+  which Caddy forwards to storage under `/mizan-attachments/*`; the API keeps the internal address
+  for its own calls, and storage listens on 127.0.0.1 only.
 - Scheduled jobs run through `common/jobs/JobLock` (ADR csp-and-job-lock-1): a row per job in
   `scheduled_job_lock`, taken by an upsert that succeeds only when the previous lease has passed,
   judged by the database clock. A job holds it at least a few minutes, so an instance whose

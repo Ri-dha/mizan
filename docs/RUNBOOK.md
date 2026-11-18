@@ -6,8 +6,8 @@ Operations for a hosted Mizan. Local development is in the README.
 
 1. Copy `.env.example` to `.env` on the host. Set `SPRING_PROFILES_ACTIVE=prod`, real values for
    `POSTGRES_PASSWORD`, `MIZAN_STORAGE_SECRET_KEY`, `MIZAN_JWT_SECRET` (32+ bytes), `MIZAN_HASH_PEPPER`,
-   `SITE_ADDRESS` (the public host; Caddy obtains the certificate) and `MIZAN_ALLOWED_ORIGINS`
-   (`https://<host>`). Add provider keys under `MIZAN_*_API_KEY` and the parallel rate.
+   `SITE_ADDRESS` (the public host; Caddy obtains the certificate), `MIZAN_ALLOWED_ORIGINS`
+   (`https://<host>`) and `MIZAN_STORAGE_PUBLIC_ENDPOINT` (`https://<host>`, for receipt links). Add provider keys under `MIZAN_*_API_KEY` and the parallel rate.
 2. `docker compose --profile prod up -d --build`. Flyway migrates on API start; the API creates
    the attachments bucket; Caddy serves the PWA on 80/443 and proxies `/api`.
 3. Check `https://<host>/actuator/health` and that `GET /api/v1/market/quotes` (with a token)
@@ -148,6 +148,15 @@ One `seaweedfs` container (ADR storage-1) runs the master, volume server, filer 
 on port 8333, storing everything in the `seaweeddata` volume. Its S3 identity is written from
 `MIZAN_STORAGE_ACCESS_KEY` and `MIZAN_STORAGE_SECRET_KEY` at start (the old `MINIO_ROOT_*` names
 are still read). Space from deleted files is reclaimed by vacuum once a volume is 10% garbage.
+
+Browsers and phones never use the internal address (ADR storage-4). Set
+`MIZAN_STORAGE_PUBLIC_ENDPOINT` to the site, e.g. `https://mizan.example.iq`: the API signs upload
+and download links for it, and Caddy forwards `/mizan-attachments/*` to `seaweedfs:8333` with the
+`Host` header unchanged, which keeps the signature valid. SeaweedFS also gets the address as
+`S3_EXTERNAL_URL`, so it still verifies if a proxy in front rewrites `Host`. Port 8333 is bound to
+127.0.0.1; with the variable blank (development) links point at `http://localhost:8333`. A receipt
+that fails to upload with 403 `SignatureDoesNotMatch` means the link's host and the host storage
+received differ.
 Check what is held:
 
 ```bash

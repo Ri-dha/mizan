@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record StorageProperties(
         String bucket,
         String endpoint,
+        String publicEndpoint,
         String region,
         String accessKey,
         String secretKey,
@@ -13,4 +14,9 @@ public record StorageProperties(
         boolean createBucketOnStartup,
         java.time.Duration urlTtl,
         java.time.Duration receiptRetention) {
+
+    /** ADR storage-4: links go to browsers and phones, which cannot reach the internal address. */
+    public String linkEndpoint() {
+        return publicEndpoint == null || publicEndpoint.isBlank() ? endpoint : publicEndpoint;
+    }
 }

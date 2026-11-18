@@ -214,6 +214,9 @@ mizan:
   storage:
     bucket: "${MIZAN_STORAGE_BUCKET:mizan-attachments}"
     endpoint: "${MIZAN_STORAGE_ENDPOINT:http://localhost:8333}"
+    # The address in upload and download links, e.g. https://mizan.example.iq when Caddy forwards
+    # /mizan-attachments/* to storage. Blank: links use the endpoint above (local development).
+    public-endpoint: "${MIZAN_STORAGE_PUBLIC_ENDPOINT:}"
     region: "${MIZAN_STORAGE_REGION:us-east-1}"
     access-key: "${MIZAN_STORAGE_ACCESS_KEY:mizan}"
     secret-key: "${MIZAN_STORAGE_SECRET_KEY:mizan-dev-secret}"

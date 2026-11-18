@@ -74,7 +74,7 @@ class ReceiptPhotoExpiryTest {
     }
 
     private static ReceiptPhotoExpiry expiryAt(Instant now) {
-        StorageProperties storage = new StorageProperties(BUCKET, null, null, null, null, true, false, Duration.ofMinutes(15), Duration.ofDays(30));
+        StorageProperties storage = new StorageProperties(BUCKET, null, null, null, null, null, true, false, Duration.ofMinutes(15), Duration.ofDays(30));
         return new ReceiptPhotoExpiry(s3, storage, Clock.fixed(now, ZoneOffset.UTC), (JobLock) null);
     }
 }

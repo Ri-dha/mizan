@@ -42,6 +42,8 @@ services:
     environment:
       STORAGE_ACCESS_KEY: ${MIZAN_STORAGE_ACCESS_KEY:-${MINIO_ROOT_USER:-mizan}}
       STORAGE_SECRET_KEY: ${MIZAN_STORAGE_SECRET_KEY:-${MINIO_ROOT_PASSWORD:-mizan-dev-secret}}
+      # Links are signed for the public address and arrive through Caddy (ADR storage-4).
+      S3_EXTERNAL_URL: ${MIZAN_STORAGE_PUBLIC_ENDPOINT:-}
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
@@ -50,8 +52,9 @@ services:
         exec weed server -dir=/data -ip.bind=0.0.0.0 -s3 -s3.config=/tmp/s3.json
         -s3.port.iceberg=0 -s3.port.lance=0
         -master.volumeSizeLimitMB=1024 -volume.max=0 -master.garbageThreshold=0.1
+    # Local only: browsers in development use it directly; deployments reach it through Caddy.
     ports:
-      - "8333:8333"
+      - "127.0.0.1:8333:8333"
     volumes:
       - seaweeddata:/data
     healthcheck:
@@ -77,6 +80,7 @@ services:
       DB_USERNAME: ${POSTGRES_USER:-mizan}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-mizan}
       MIZAN_STORAGE_ENDPOINT: http://seaweedfs:8333
+      MIZAN_STORAGE_PUBLIC_ENDPOINT: ${MIZAN_STORAGE_PUBLIC_ENDPOINT:-}
       MIZAN_STORAGE_ACCESS_KEY: ${MIZAN_STORAGE_ACCESS_KEY:-${MINIO_ROOT_USER:-mizan}}
       MIZAN_STORAGE_SECRET_KEY: ${MIZAN_STORAGE_SECRET_KEY:-${MINIO_ROOT_PASSWORD:-mizan-dev-secret}}
       MIZAN_JWT_SECRET: ${MIZAN_JWT_SECRET:-dev-only-secret-change-me-in-every-real-environment}
