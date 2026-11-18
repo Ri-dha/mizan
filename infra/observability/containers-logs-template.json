@@ -1,7 +1,7 @@
 {
   "index_patterns": ["containers-logs-*"],
   "template": {
-    "settings": { "number_of_shards": 1, "number_of_replicas": 0, "index.mapping.ignore_malformed": true, "index.mapping.total_fields.limit": 2000 },
+    "settings": { "number_of_shards": 1, "number_of_replicas": 0, "index.codec": "best_compression", "index.lifecycle.name": "containers-logs-retention", "index.mapping.ignore_malformed": true, "index.mapping.total_fields.limit": 2000 },
     "mappings": {
       "dynamic_templates": [
         { "strings_as_keywords": { "match_mapping_type": "string", "mapping": { "type": "keyword", "ignore_above": 1024 } } }

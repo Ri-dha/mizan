@@ -154,7 +154,9 @@ The API logs one Logstash-shaped JSON object per line (`logback-spring.xml`: rea
 JSON file in dev, JSON stdout in prod, plain in test) with `correlationId`, `traceId`, `spanId`,
 `userId`, `httpMethod`, `httpPath`, and one access line per request. Logstash ships API lines to
 `mizan-logs-*` and other containers to `containers-logs-*`; Micrometer pushes metrics to
-`mizan-metrics-*`; Kibana has a prebuilt "Mizan overview" dashboard.
+`mizan-metrics-*`; Kibana has a prebuilt "Mizan overview" dashboard. Every index is deleted
+after a set age through lifecycle policies (ADR obs-2: logs 14 days, container logs and metrics
+7), and Docker caps each container's output at 30 MB.
 
 ## Deployment
 

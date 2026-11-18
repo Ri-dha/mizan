@@ -109,13 +109,27 @@ ssh -L 5601:localhost:5601 user@host
 `kibana-setup` recreates the data views and the "Mizan overview" dashboard on every start
 (`infra/observability/kibana`). Log lines are JSON as the API writes them (see README); search
 by `correlationId` to follow one request through every line, or by `traceId` when several
-services are involved. Retention is manual: delete old indices with
+services are involved.
+
+Retention (ADR obs-2): `elasticsearch-setup` runs before Logstash and writes three lifecycle
+policies that delete daily indexes once they reach their age. Days are set in `.env`:
+
+| Indexes | Policy | Default | Variable |
+|---|---|---|---|
+| `mizan-logs-*` (the API) | `mizan-logs-retention` | 14 days | `MIZAN_LOG_RETENTION_DAYS` |
+| `containers-logs-*` | `containers-logs-retention` | 7 days | `MIZAN_CONTAINER_LOG_RETENTION_DAYS` |
+| `mizan-metrics-*`, `metricbeat-*` | `metrics-retention` | 7 days | `MIZAN_METRICS_RETENTION_DAYS` |
+
+Changing a value takes effect on the next `docker compose --profile prod up`; existing indexes
+follow the new age. Indexes use `best_compression` and no replicas. Check what is held with
 
 ```bash
-curl -X DELETE 'http://localhost:9200/mizan-logs-2026.08.*'
+curl -s 'localhost:9200/_cat/indices?v&s=index&h=index,docs.count,store.size'
+curl -s 'localhost:9200/mizan-logs-*/_ilm/explain?filter_path=**.phase,**.age'
 ```
 
-or set an ILM policy on `mizan-logs-*`, `containers-logs-*` and `metricbeat-*` once volumes matter.
+Every container's own output file is capped by Docker at three files of 10 MB
+(`x-logging` in `docker-compose.yml`), so the host disk has a ceiling even with the profile off.
 Index templates live in `infra/observability/*-template.json`; Logstash installs them on start,
 so delete an index created before a template change for the new mapping to apply. Give Elasticsearch
 more heap with `ES_JAVA_OPTS` in `.env` when the host has room; 512 MB is the floor.

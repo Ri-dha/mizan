@@ -7,8 +7,16 @@
 # Fixed so volumes and containers keep their names wherever the checkout lives.
 name: mizan
 
+# Docker keeps each container's output in a file that otherwise grows without limit (ADR obs-2).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
+    logging: *logging
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-mizan}
@@ -44,6 +52,7 @@ services:
       retries: 10
 
   api:
+    logging: *logging
     build: ./api
     profiles: ["full", "prod"]
     depends_on:
@@ -93,6 +102,7 @@ services:
   # --- Production profile: `docker compose --profile prod up -d --build` ---
   # Caddy serves the built PWA, terminates TLS for SITE_ADDRESS and proxies /api to the API.
   web:
+    logging: *logging
     build:
       context: .
       dockerfile: web/Dockerfile
@@ -112,6 +122,7 @@ services:
   # Nightly pg_dump into MinIO. Runs once per start and sleeps a day; restart: always keeps
   # the cadence. Restore instructions are in docs/RUNBOOK.md.
   backup:
+    logging: *logging
     build: ./infra/backup
     profiles: ["prod"]
     restart: always
@@ -132,6 +143,7 @@ services:
   # Elasticsearch keeps the logs and metrics, Kibana shows them at http://localhost:5601. Single
   # node, security off: reach it over the Docker network or an SSH tunnel, never expose 9200/5601.
   elasticsearch:
+    logging: *logging
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-9.3.3}
     profiles: ["observability", "prod"]
     environment:
@@ -153,6 +165,7 @@ services:
       retries: 30
 
   kibana:
+    logging: *logging
     image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION:-9.3.3}
     profiles: ["observability", "prod"]
     depends_on:
@@ -174,6 +187,7 @@ services:
 
   # Data views and the "Mizan overview" dashboard; runs once and exits.
   kibana-setup:
+    logging: *logging
     image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION:-9.3.3}
     profiles: ["observability", "prod"]
     depends_on:
@@ -185,14 +199,32 @@ services:
       - ./infra/observability/kibana:/setup:ro
     entrypoint: ["/bin/bash", "/setup/setup.sh"]
 
+  # Retention policies and the metrics template; runs once before Logstash and exits.
+  elasticsearch-setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-9.3.3}
+    logging: *logging
+    profiles: ["observability", "prod"]
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      LOG_RETENTION_DAYS: ${MIZAN_LOG_RETENTION_DAYS:-14}
+      CONTAINER_LOG_RETENTION_DAYS: ${MIZAN_CONTAINER_LOG_RETENTION_DAYS:-7}
+      METRICS_RETENTION_DAYS: ${MIZAN_METRICS_RETENTION_DAYS:-7}
+    volumes:
+      - ./infra/observability/elasticsearch:/setup:ro
+    entrypoint: ["/bin/sh", "/setup/setup.sh"]
+
   # Container stdout (JSON from the API) and the local API log file into mizan-logs-*.
   logstash:
+    logging: *logging
     image: docker.elastic.co/logstash/logstash:${ELASTIC_VERSION:-9.3.3}
     profiles: ["observability", "prod"]
     user: root
     depends_on:
-      elasticsearch:
-        condition: service_healthy
+      elasticsearch-setup:
+        condition: service_completed_successfully
     environment:
       LS_JAVA_OPTS: ${LS_JAVA_OPTS:--Xms256m -Xmx512m}
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
@@ -210,6 +242,7 @@ services:
 
   # CPU, memory, network and disk per container into metricbeat-*. Optional: `--profile containers`.
   metricbeat:
+    logging: *logging
     image: docker.elastic.co/beats/metricbeat:${ELASTIC_VERSION:-9.3.3}
     profiles: ["containers"]
     user: root
