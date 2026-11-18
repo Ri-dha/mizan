@@ -42,7 +42,7 @@ Requirements live in the BRD; the build order is in [PLAN.md](PLAN.md).
 | Concern | Choice |
 |---|---|
 | `shared/test-vectors/` | JSON cases every client's domain code must satisfy (money split, month figures, payoff, valuation, depreciation, net worth, strategies) |
-| Deployment | Docker Compose: PostgreSQL 16, MinIO, the API, Caddy (PWA, TLS, `/api` proxy), nightly `pg_dump` to MinIO |
+| Deployment | Docker Compose: PostgreSQL 16, SeaweedFS, the API, Caddy (PWA, TLS, `/api` proxy), nightly `pg_dump` to SeaweedFS |
 | Logs and metrics | Elasticsearch, Kibana and Logstash 9.3 with a prebuilt dashboard; Metricbeat optional |
 | CI | GitHub Actions: Maven tests on Java 25, `npm audit`, typecheck, tests and build on Node 24 |
 
@@ -54,7 +54,7 @@ Prerequisites: Java 25, Node 24, Docker.
 cd api && ./mvnw spring-boot:run
 ```
 
-That starts Postgres and MinIO from `docker-compose.yml` automatically, migrates the schema, and
+That starts Postgres and SeaweedFS from `docker-compose.yml` automatically, migrates the schema, and
 serves the API. Verification and password-reset codes are printed to the API log in the dev
 profile (look for `[DEV ONLY]`).
 
@@ -72,7 +72,7 @@ docker compose --profile full up --build
 ```
 
 To deploy, use the `prod` profile: Caddy serves the built PWA with automatic TLS, proxies `/api`,
-and a backup container dumps Postgres nightly into MinIO. Steps, restore, secret rotation and the
+and a backup container dumps Postgres nightly into SeaweedFS. Steps, restore, secret rotation and the
 scheduled jobs are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ### On your phone, over the local network
@@ -115,7 +115,7 @@ mkcert 192.168.0.127 && VITE_SSL_CERT=192.168.0.127.pem VITE_SSL_KEY=192.168.0.1
 | MinIO console | http://localhost:9001 | user `mizan`, password `mizan-dev-secret` (dev only) |
 
 Every credential above is a dev default from `.env.example` and `application.yml`. Deployed
-environments override them with `MIZAN_*`, `DB_*` and `MINIO_*` environment variables.
+environments override them with `MIZAN_*` and `DB_*` environment variables.
 
 ### Logs, statistics and performance (Kibana)
 

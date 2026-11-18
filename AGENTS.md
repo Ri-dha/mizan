@@ -63,5 +63,5 @@ Docker; it starts its own Postgres and does not use port 5432.
 ## Local environment facts
 
 - Project root is `myWallet/Mizan` (moved there on 2026-11-18). Compose project name is pinned to
-  `mizan`, so volumes are `mizan_pgdata`, `mizan_miniodata`, `mizan_esdata`.
+  `mizan`, so volumes are `mizan_pgdata`, `mizan_seaweeddata`, `mizan_esdata`.
 - Dev test accounts live only in the local database; their credentials are not recorded here.

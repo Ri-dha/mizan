@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
-/** One S3 client for MinIO locally and any S3-compatible store in deployment. */
+/** One S3 client for SeaweedFS locally and any S3-compatible store in deployment. */
 @Configuration
 public class S3Config {
 

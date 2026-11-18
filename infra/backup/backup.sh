@@ -1,11 +1,15 @@
 #!/bin/sh
-# Nightly logical backup of Postgres into the MinIO bucket, keeping the last N days.
-# Restore: mc cp local/mizan-backups/<file> - | gunzip | psql "$DATABASE_URL"
+# Nightly logical backup of Postgres into object storage, keeping the last N days.
+# Restore: rclone cat store:mizan-backups/<file> | gunzip | psql "$DATABASE_URL"
 set -eu
+export RCLONE_CONFIG_STORE_TYPE=s3
+export RCLONE_CONFIG_STORE_PROVIDER=SeaweedFS
+export RCLONE_CONFIG_STORE_ENDPOINT="$STORAGE_ENDPOINT"
+export RCLONE_CONFIG_STORE_ACCESS_KEY_ID="$STORAGE_ACCESS_KEY"
+export RCLONE_CONFIG_STORE_SECRET_ACCESS_KEY="$STORAGE_SECRET_KEY"
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 FILE="mizan-${STAMP}.sql.gz"
-mc alias set local "$MINIO_ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null
-mc mb --ignore-existing "local/${BACKUP_BUCKET}" >/dev/null
-pg_dump "$DATABASE_URL" | gzip | mc pipe "local/${BACKUP_BUCKET}/${FILE}"
-mc rm --recursive --force --older-than "${BACKUP_RETENTION_DAYS}d" "local/${BACKUP_BUCKET}" >/dev/null || true
+rclone mkdir "store:${BACKUP_BUCKET}"
+pg_dump "$DATABASE_URL" | gzip | rclone rcat "store:${BACKUP_BUCKET}/${FILE}"
+rclone delete --min-age "${BACKUP_RETENTION_DAYS}d" "store:${BACKUP_BUCKET}" || true
 echo "backup ${FILE} written"

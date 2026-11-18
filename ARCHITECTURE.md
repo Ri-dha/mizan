@@ -11,10 +11,10 @@ them means a new ADR and an edit here in the same task.
 web/  React 19 PWA (offline-first)  ──HTTPS──▶  Caddy  ──▶  api/  Spring Boot 4.1, Java 25
       Dexie (IndexedDB) + outbox                         │
                                                           ├──▶ PostgreSQL 16 (RLS)
-                                                          ├──▶ MinIO (S3) receipts, backups
+                                                          ├──▶ SeaweedFS (S3) receipts, backups
                                                           └──▶ price feeds, Web Push services
 shared/test-vectors/  JSON cases every client's domain maths must pass
-infra/  caddy, backup (pg_dump → MinIO), observability (Elastic, Logstash, Kibana)
+infra/  caddy, backup (pg_dump → SeaweedFS), observability (Elastic, Logstash, Kibana)
 docs/manual/  one Markdown source → in-app /help and static /docs
 ```
 
@@ -160,8 +160,8 @@ after a set age through lifecycle policies (ADR obs-2: logs 14 days, container l
 
 ## Deployment
 
-One host with Docker Compose profiles: default (`postgres`, `minio`), `full` (plus the API),
-`prod` (plus Caddy with automatic TLS, nightly `pg_dump` to MinIO, observability),
+One host with Docker Compose profiles: default (`postgres`, `seaweedfs`), `full` (plus the API),
+`prod` (plus Caddy with automatic TLS, nightly `pg_dump` to SeaweedFS, observability),
 `observability`, `containers` (Metricbeat). Flyway migrates on API start. Operations are in
 `docs/RUNBOOK.md`.
 

@@ -1,4 +1,4 @@
-# Local stack. `./mvnw spring-boot:run` in api/ starts postgres and minio through
+# Local stack. `./mvnw spring-boot:run` in api/ starts postgres and seaweedfs through
 # spring-boot-docker-compose; `docker compose --profile full up` also builds and runs the API.
 #
 # Ports are pinned so they match api/src/main/resources/application-dev.yml. Credentials are
@@ -34,22 +34,31 @@ services:
 
   # S3-compatible object storage for receipt and asset photos. The API creates its bucket on
   # startup. Console on 9001.
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+  # S3-compatible object storage for receipts and device backups (ADR storage-1). One process
+  # runs the master, volume, filer and S3 gateway; the S3 identity is written from the env.
+  seaweedfs:
+    logging: *logging
+    image: chrislusf/seaweedfs:${SEAWEEDFS_VERSION:-4.51}
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mizan}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mizan-dev-secret}
+      STORAGE_ACCESS_KEY: ${MIZAN_STORAGE_ACCESS_KEY:-${MINIO_ROOT_USER:-mizan}}
+      STORAGE_SECRET_KEY: ${MIZAN_STORAGE_SECRET_KEY:-${MINIO_ROOT_PASSWORD:-mizan-dev-secret}}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        printf '{"identities":[{"name":"mizan","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","Write","List","Tagging"]}]}'
+        "$$STORAGE_ACCESS_KEY" "$$STORAGE_SECRET_KEY" > /tmp/s3.json &&
+        exec weed server -dir=/data -ip.bind=0.0.0.0 -s3 -s3.config=/tmp/s3.json
+        -s3.port.iceberg=0 -s3.port.lance=0
+        -master.volumeSizeLimitMB=1024 -volume.max=0 -master.garbageThreshold=0.1
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "8333:8333"
     volumes:
-      - miniodata:/data
+      - seaweeddata:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/healthz"]
       interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 20
 
   api:
     logging: *logging
@@ -58,7 +67,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      minio:
+      seaweedfs:
         condition: service_healthy
     environment:
       # dev inside Docker keeps the stub prices; set prod in .env for a real deployment.
@@ -67,9 +76,9 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-mizan}
       DB_USERNAME: ${POSTGRES_USER:-mizan}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-mizan}
-      MIZAN_STORAGE_ENDPOINT: http://minio:9000
-      MIZAN_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-mizan}
-      MIZAN_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-mizan-dev-secret}
+      MIZAN_STORAGE_ENDPOINT: http://seaweedfs:8333
+      MIZAN_STORAGE_ACCESS_KEY: ${MIZAN_STORAGE_ACCESS_KEY:-${MINIO_ROOT_USER:-mizan}}
+      MIZAN_STORAGE_SECRET_KEY: ${MIZAN_STORAGE_SECRET_KEY:-${MINIO_ROOT_PASSWORD:-mizan-dev-secret}}
       MIZAN_JWT_SECRET: ${MIZAN_JWT_SECRET:-dev-only-secret-change-me-in-every-real-environment}
       MIZAN_HASH_PEPPER: ${MIZAN_HASH_PEPPER:-dev-only-pepper-change-me}
       MIZAN_ALLOWED_ORIGINS: ${MIZAN_ALLOWED_ORIGINS:-}
@@ -111,7 +120,7 @@ services:
       - api
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
-      MIZAN_STORAGE_ORIGIN: ${MIZAN_STORAGE_ORIGIN:-http://localhost:9000}
+      MIZAN_STORAGE_ORIGIN: ${MIZAN_STORAGE_ORIGIN:-http://localhost:8333}
     ports:
       - "80:80"
       - "443:443"
@@ -119,7 +128,7 @@ services:
       - caddydata:/data
       - caddyconfig:/config
 
-  # Nightly pg_dump into MinIO. Runs once per start and sleeps a day; restart: always keeps
+  # Nightly pg_dump into object storage. Runs once per start and sleeps a day; restart: always keeps
   # the cadence. Restore instructions are in docs/RUNBOOK.md.
   backup:
     logging: *logging
@@ -129,13 +138,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      minio:
+      seaweedfs:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-mizan}:${POSTGRES_PASSWORD:-mizan}@postgres:5432/${POSTGRES_DB:-mizan}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mizan}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mizan-dev-secret}
+      STORAGE_ENDPOINT: http://seaweedfs:8333
+      STORAGE_ACCESS_KEY: ${MIZAN_STORAGE_ACCESS_KEY:-${MINIO_ROOT_USER:-mizan}}
+      STORAGE_SECRET_KEY: ${MIZAN_STORAGE_SECRET_KEY:-${MINIO_ROOT_PASSWORD:-mizan-dev-secret}}
       BACKUP_BUCKET: ${BACKUP_BUCKET:-mizan-backups}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
 
@@ -263,6 +272,6 @@ volumes:
   esdata:
   logstashdata:
   metricbeatdata:
-  miniodata:
+  seaweeddata:
   caddydata:
   caddyconfig:

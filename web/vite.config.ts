@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { VitePWA } from "vite-plugin-pwa"
 import { defineConfig, type Plugin } from "vitest/config"
 
-const STORAGE_ORIGIN = process.env.MIZAN_STORAGE_ORIGIN ?? "http://localhost:9000"
+const STORAGE_ORIGIN = process.env.MIZAN_STORAGE_ORIGIN ?? "http://localhost:8333"
 
 /** The production headers from Caddy (ADR csp-and-job-lock-2), so `vite preview` catches what the policy blocks. */
 export function productionHeaders(file = path.resolve(import.meta.dirname, "../infra/caddy/security-headers.caddy")): Record<string, string> {

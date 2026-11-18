@@ -5,7 +5,7 @@ Operations for a hosted Mizan. Local development is in the README.
 ## Deploy
 
 1. Copy `.env.example` to `.env` on the host. Set `SPRING_PROFILES_ACTIVE=prod`, real values for
-   `POSTGRES_PASSWORD`, `MINIO_ROOT_PASSWORD`, `MIZAN_JWT_SECRET` (32+ bytes), `MIZAN_HASH_PEPPER`,
+   `POSTGRES_PASSWORD`, `MIZAN_STORAGE_SECRET_KEY`, `MIZAN_JWT_SECRET` (32+ bytes), `MIZAN_HASH_PEPPER`,
    `SITE_ADDRESS` (the public host; Caddy obtains the certificate) and `MIZAN_ALLOWED_ORIGINS`
    (`https://<host>`). Add provider keys under `MIZAN_*_API_KEY` and the parallel rate.
 2. `docker compose --profile prod up -d --build`. Flyway migrates on API start; the API creates
@@ -39,7 +39,8 @@ missed on the next sync; the per-field clocks decide, not the restore time.
   tokens, which are stored by hash. Users refresh silently.
 - **Hash pepper**: rotating it invalidates every refresh token and pending verification code.
   Everyone signs in again. Rotate only with that expectation.
-- **Postgres and MinIO passwords**: change in `.env`, then `docker compose down` and `up`. The
+- **Postgres and storage passwords**: change in `.env`, then `docker compose down` and `up`. SeaweedFS
+  reads its key from the env on every start, so the storage key changes with no other step. The
   Postgres volume keeps the old password until you `ALTER ROLE` inside the container.
 - **Settings key** (`MIZAN_SETTINGS_KEY`, 32 random bytes, base64: `openssl rand -base64 32`):
   encrypts the secrets operators save in the dashboard. Keep it out of the database and its

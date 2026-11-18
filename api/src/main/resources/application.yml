@@ -213,7 +213,7 @@ mizan:
 
   storage:
     bucket: "${MIZAN_STORAGE_BUCKET:mizan-attachments}"
-    endpoint: "${MIZAN_STORAGE_ENDPOINT:http://localhost:9000}"
+    endpoint: "${MIZAN_STORAGE_ENDPOINT:http://localhost:8333}"
     region: "${MIZAN_STORAGE_REGION:us-east-1}"
     access-key: "${MIZAN_STORAGE_ACCESS_KEY:mizan}"
     secret-key: "${MIZAN_STORAGE_SECRET_KEY:mizan-dev-secret}"

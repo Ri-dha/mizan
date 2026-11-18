@@ -12,7 +12,7 @@ const policy = Object.fromEntries((headers["Content-Security-Policy"] ?? "").spl
 describe("production security headers", () => {
   it("preview serves the policy Caddy serves, with the storage origin filled in", () => {
     expect(policy["default-src"]).toEqual(["'self'"])
-    expect(policy["connect-src"]).toEqual(["'self'", "http://localhost:9000"])
+    expect(policy["connect-src"]).toEqual(["'self'", "http://localhost:8333"])
     expect(headers["Content-Security-Policy"]).not.toContain("{$")
     expect(headers["X-Frame-Options"]).toBe("DENY")
   })

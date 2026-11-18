@@ -15,6 +15,6 @@ Long-lived facts only. Change in its own small commit when one of them changes.
 - **Integrations**: IQWealth (iraqsm.com) for the Baghdad and Central Bank dollar, free key,
   personal use only; Baghdad Bullion House prices (keyless, unofficial endpoint), gold-api.com,
   open.er-api.com, optional metals.dev, GoldAPI and Open Exchange Rates with keys; Web Push
-  (VAPID); MinIO. No payment provider.
+  (VAPID); SeaweedFS (S3). No payment provider.
 - **Conventions**: AGENTS.md and the gitignored CLAUDE.md. Commit only when asked; branch from
   `develop`, merge into `develop` to test, fast-forward `main` only when asked.
