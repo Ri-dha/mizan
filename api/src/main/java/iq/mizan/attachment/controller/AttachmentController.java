@@ -2,6 +2,7 @@ package iq.mizan.attachment.controller;
 
 import java.util.UUID;
 
+import iq.mizan.attachment.dto.AttachmentKind;
 import iq.mizan.attachment.dto.PresignedUrlResponse;
 import iq.mizan.attachment.service.AttachmentService;
 import iq.mizan.common.security.CurrentUser;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -30,14 +32,16 @@ public class AttachmentController {
     @Operation(summary = "A URL to PUT the encrypted bytes of a synced attachment")
     @PostMapping("/{id}/upload-url")
     @PreAuthorize("hasAuthority('RECORD_WRITE')")
-    public ResponseEntity<PresignedUrlResponse> uploadUrl(@AuthenticationPrincipal CurrentUser user, @PathVariable UUID id) {
-        return ResponseEntity.ok(attachmentService.uploadUrl(user, id));
+    public ResponseEntity<PresignedUrlResponse> uploadUrl(@AuthenticationPrincipal CurrentUser user, @PathVariable UUID id,
+                                                          @RequestParam(defaultValue = "BACKUP") AttachmentKind kind) {
+        return ResponseEntity.ok(attachmentService.uploadUrl(user, id, kind));
     }
 
     @Operation(summary = "A URL to GET the encrypted bytes of a synced attachment")
     @GetMapping("/{id}/download-url")
     @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
-    public ResponseEntity<PresignedUrlResponse> downloadUrl(@AuthenticationPrincipal CurrentUser user, @PathVariable UUID id) {
-        return ResponseEntity.ok(attachmentService.downloadUrl(user, id));
+    public ResponseEntity<PresignedUrlResponse> downloadUrl(@AuthenticationPrincipal CurrentUser user, @PathVariable UUID id,
+                                                            @RequestParam(defaultValue = "BACKUP") AttachmentKind kind) {
+        return ResponseEntity.ok(attachmentService.downloadUrl(user, id, kind));
     }
 }

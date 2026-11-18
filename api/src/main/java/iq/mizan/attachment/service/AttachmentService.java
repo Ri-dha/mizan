@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import iq.mizan.attachment.dto.AttachmentKind;
 import iq.mizan.attachment.dto.PresignedUrlResponse;
 import iq.mizan.attachment.sync.AttachmentSyncTable;
 import iq.mizan.common.exception.ApiException;
@@ -42,23 +43,23 @@ public class AttachmentService {
     private final StorageProperties storage;
 
     @Transactional(readOnly = true)
-    public PresignedUrlResponse uploadUrl(CurrentUser user, UUID attachmentId) {
+    public PresignedUrlResponse uploadUrl(CurrentUser user, UUID attachmentId, AttachmentKind kind) {
         requireVisible(attachmentId);
         var presigned = presigner.presignPutObject(PutObjectPresignRequest.builder()
                 .signatureDuration(storage.urlTtl())
                 .putObjectRequest(PutObjectRequest.builder()
-                        .bucket(storage.bucket()).key(objectKey(user, attachmentId)).contentType(CIPHERTEXT_CONTENT_TYPE).build())
+                        .bucket(storage.bucket()).key(kind.objectKey(user.householdId(), attachmentId)).contentType(CIPHERTEXT_CONTENT_TYPE).build())
                 .build());
         return new PresignedUrlResponse(presigned.url().toString(), "PUT", Instant.now().plus(storage.urlTtl()));
     }
 
     @Transactional(readOnly = true)
-    public PresignedUrlResponse downloadUrl(CurrentUser user, UUID attachmentId) {
+    public PresignedUrlResponse downloadUrl(CurrentUser user, UUID attachmentId, AttachmentKind kind) {
         requireVisible(attachmentId);
         var presigned = presigner.presignGetObject(GetObjectPresignRequest.builder()
                 .signatureDuration(storage.urlTtl())
                 .getObjectRequest(GetObjectRequest.builder()
-                        .bucket(storage.bucket()).key(objectKey(user, attachmentId)).build())
+                        .bucket(storage.bucket()).key(kind.objectKey(user.householdId(), attachmentId)).build())
                 .build());
         return new PresignedUrlResponse(presigned.url().toString(), "GET", Instant.now().plus(storage.urlTtl()));
     }
@@ -73,9 +74,5 @@ public class AttachmentService {
         if (!encrypted && !legacy) {
             throw ApiException.of(ErrorCode.RESOURCE_NOT_FOUND, "No such attachment");
         }
-    }
-
-    private static String objectKey(CurrentUser user, UUID attachmentId) {
-        return user.householdId() + "/" + attachmentId;
     }
 }

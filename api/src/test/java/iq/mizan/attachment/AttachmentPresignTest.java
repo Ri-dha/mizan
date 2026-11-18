@@ -46,7 +46,9 @@ class AttachmentPresignTest extends PostgresIntegrationTest {
         JsonNode upload = api.body(api.post("/api/v1/attachments/" + attachmentId + "/upload-url", owner, null));
         assertThat(upload.get("method").asString()).isEqualTo("PUT");
         assertThat(upload.get("url").asString()).contains("/mizan-attachments/").contains(attachmentId.toString());
-
+        assertThat(upload.get("url").asString()).doesNotContain("/receipts/");
+        JsonNode receipt = api.body(api.post("/api/v1/attachments/" + attachmentId + "/upload-url?kind=RECEIPT", owner, null));
+        assertThat(receipt.get("url").asString()).contains("/mizan-attachments/receipts/");
         JsonNode download = api.body(api.get("/api/v1/attachments/" + attachmentId + "/download-url", owner));
         assertThat(download.get("method").asString()).isEqualTo("GET");
 

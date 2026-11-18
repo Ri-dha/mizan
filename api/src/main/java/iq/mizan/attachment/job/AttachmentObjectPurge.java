@@ -1,11 +1,15 @@
 package iq.mizan.attachment.job;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
+import iq.mizan.attachment.dto.AttachmentKind;
+import iq.mizan.common.jobs.JobLock;
 import iq.mizan.common.storage.StorageProperties;
 import iq.mizan.sync.SyncProperties;
 
@@ -16,12 +20,11 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
-import iq.mizan.common.jobs.JobLock;
-import java.time.Duration;
 
 /**
  * BR-15 for bytes: the objects behind attachment rows (receipts and backups) that the recycle-bin
@@ -40,13 +43,14 @@ public class AttachmentObjectPurge {
     private final SyncProperties sync;
     private final Clock clock;
     private final JobLock jobLock;
+    private final TransactionTemplate transactions;
 
     private static final Duration RUNS_AT_MOST = Duration.ofHours(1);
     private static final Duration HELD_AT_LEAST = Duration.ofMinutes(5);
 
     @Scheduled(cron = "${mizan.storage.object-purge-cron}")
     public void scheduled() {
-        jobLock.runExclusively("attachment-object-purge", RUNS_AT_MOST, HELD_AT_LEAST, this::purge);
+        jobLock.runExclusively("attachment-object-purge", RUNS_AT_MOST, HELD_AT_LEAST, () -> transactions.executeWithoutResult(status -> purge()));
     }
 
     @Transactional
@@ -60,14 +64,15 @@ public class AttachmentObjectPurge {
             return 0;
         }
         List<ObjectIdentifier> keys = rows.stream()
-                .map(row -> ObjectIdentifier.builder().key(row.get("household_id") + "/" + row.get("id")).build())
+                .flatMap(row -> Stream.of(AttachmentKind.values()).map(kind -> kind.objectKey(row.get("household_id"), row.get("id"))))
+                .map(key -> ObjectIdentifier.builder().key(key).build())
                 .toList();
         try {
             s3.deleteObjects(DeleteObjectsRequest.builder().bucket(storage.bucket()).delete(Delete.builder().objects(keys).build()).build());
-            log.info("Removed {} attachment objects deleted before {}", keys.size(), cutoff);
+            log.info("Removed the objects of {} attachments deleted before {}", rows.size(), cutoff);
         } catch (RuntimeException e) {
-            log.warn("Could not remove {} attachment objects: {}", keys.size(), e.getMessage());
+            log.warn("Could not remove the objects of {} attachments: {}", rows.size(), e.getMessage());
         }
-        return keys.size();
+        return rows.size();
     }
 }

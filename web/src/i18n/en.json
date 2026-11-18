@@ -562,6 +562,8 @@
     "category": "Category",
     "receipt": "Receipt",
     "addReceipt": "Add photo",
+    "receiptKeptFor": "Photos are kept for {{days}} days, then deleted. What you type here stays.",
+    "receiptRemoved": "The photo was deleted after {{days}} days. The amounts on this transaction are kept.",
     "search": "Search payee, note, category",
     "allBuckets": "All buckets",
     "allTypes": "All types",

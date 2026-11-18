@@ -45,6 +45,8 @@ Deleted entries go to a recycle bin for 30 days and can be restored from the bot
 
 Attach a photo from the quick-add sheet. It is downscaled, encrypted on your device and uploaded when there is a connection. Nobody, including the server, can read a receipt without your device's key.
 
+**Photos are kept for 30 days.** A month after a photo is uploaded it is deleted from the service and from your devices, to keep storage small. The transaction keeps everything you typed: amount, payee, category, date and note. Read the receipt or copy what you need from it within the month; photos are saved in grey at a size that keeps every number readable.
+
 ## Closed months
 
 An entry dated in a closed month is refused. Reopen the month on the Net worth screen first.

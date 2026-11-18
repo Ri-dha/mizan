@@ -11,5 +11,6 @@ public record StorageProperties(
         String secretKey,
         boolean pathStyle,
         boolean createBucketOnStartup,
-        java.time.Duration urlTtl) {
+        java.time.Duration urlTtl,
+        java.time.Duration receiptRetention) {
 }

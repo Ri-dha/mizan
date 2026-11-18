@@ -142,6 +142,28 @@ Index templates live in `infra/observability/*-template.json`; Logstash installs
 so delete an index created before a template change for the new mapping to apply. Give Elasticsearch
 more heap with `ES_JAVA_OPTS` in `.env` when the host has room; 512 MB is the floor.
 
+## Object storage (SeaweedFS)
+
+One `seaweedfs` container (ADR storage-1) runs the master, volume server, filer and S3 gateway
+on port 8333, storing everything in the `seaweeddata` volume. Its S3 identity is written from
+`MIZAN_STORAGE_ACCESS_KEY` and `MIZAN_STORAGE_SECRET_KEY` at start (the old `MINIO_ROOT_*` names
+are still read). Space from deleted files is reclaimed by vacuum once a volume is 10% garbage.
+Check what is held:
+
+```bash
+docker compose exec seaweedfs sh -c 'echo "volume.list" | weed shell -master=localhost:9333' | head
+```
+
+Receipt photos (`receipts/` prefix) are deleted 30 days after upload by the receipt expiry job
+(`MIZAN_RECEIPT_RETENTION`, default `30d`). Change it only together with
+`RECEIPT_RETENTION_DAYS` in `web/src/attachments/store.ts` and the manual, since the app tells
+people the number.
+
+Moving from MinIO: start `seaweedfs`, then copy the buckets once with
+`rclone copy minio:mizan-attachments store:mizan-attachments` (and `mizan-backups`). Receipts
+uploaded before this change sit outside `receipts/`, so they never expire; there were none in
+any deployment when the switch was made.
+
 ## Scheduled jobs
 
 | Job | Default | What it does |
@@ -150,6 +172,7 @@ more heap with `ES_JAVA_OPTS` in `.env` when the host has room; 512 MB is the fl
 | Metal price alerts | 09:00 Asia/Baghdad | Public gold and silver moves beyond each member's threshold |
 | Market poll | every 30 min, 07:00–22:00 Asia/Baghdad | Refreshes every feed; records a price change only when it moves |
 | IQWealth dollar | every 20 min 08:00–22:00, and 23:00, 02:00, 05:00 | One request each, never past the reserve |
+| Receipt photo expiry | 03:00 | Deletes receipt photos 30 days after upload (ADR storage-2) |
 | Attachment object purge | 03:15 | Removes storage objects (receipts, backups) whose rows left the recycle bin |
 | Household deletion purge | 04:15 | Deletes households seven days after the owner confirmed |
 

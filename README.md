@@ -13,7 +13,7 @@ Requirements live in the BRD; the build order is in [PLAN.md](PLAN.md).
 | Language and runtime | Java 25, virtual threads |
 | Framework | Spring Boot 4.1 (Spring MVC, Spring Security, Spring Data JPA, Actuator), Jackson 3 |
 | Database | PostgreSQL 16 with row-level security per household and per private record; Flyway owns the schema; `JdbcClient` for the ledger maths |
-| Object storage | MinIO through the AWS S3 SDK, presigned upload and download URLs; receipts are encrypted on the device before upload |
+| Object storage | SeaweedFS through the AWS S3 SDK, presigned upload and download URLs; receipts are shrunk to grey 1200 px, encrypted on the device before upload, and deleted after 30 days |
 | Auth | JWT access tokens (jjwt), rotating refresh tokens in an httpOnly cookie, Argon2id hashes of a device-derived auth key, never the password (BouncyCastle); records end-to-end encrypted on the device (WebCrypto), Bucket4j rate limits |
 | Sync | Client-generated UUIDs, hybrid logical clocks, per-field last-write-wins, an outbox on the device and a change log on the server |
 | Notifications | Web Push with VAPID on the JDK crypto stack |
@@ -111,8 +111,7 @@ mkcert 192.168.0.127 && VITE_SSL_CERT=192.168.0.127.pem VITE_SSL_KEY=192.168.0.1
 | OpenAPI document | http://localhost:8080/v3/api-docs | What `npm run api:types` reads |
 | Health | http://localhost:8080/actuator/health | Liveness and readiness groups |
 | Postgres | `jdbc:postgresql://localhost:5432/mizan` | user `mizan`, password `mizan` (dev only) |
-| MinIO S3 endpoint | http://localhost:9000 | Bucket `mizan-attachments`, created by the API on startup |
-| MinIO console | http://localhost:9001 | user `mizan`, password `mizan-dev-secret` (dev only) |
+| SeaweedFS S3 endpoint | http://localhost:8333 | Bucket `mizan-attachments`, created by the API on startup; receipts under `receipts/` |
 
 Every credential above is a dev default from `.env.example` and `application.yml`. Deployed
 environments override them with `MIZAN_*` and `DB_*` environment variables.

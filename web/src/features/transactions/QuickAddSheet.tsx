@@ -6,7 +6,7 @@ import { usePrivacyDefaults } from "@/db/privacy"
 import { toast } from "sonner"
 
 import { useSession } from "@/api/auth"
-import { attachImage, attachmentObjectUrl, removeAttachment } from "@/attachments/store"
+import { attachImage, attachmentObjectUrl, photoExpired, RECEIPT_RETENTION_DAYS, removeAttachment } from "@/attachments/store"
 import { Field } from "@/components/Field"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -96,6 +96,9 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
     setParts([])
     setAssetId(transaction?.assetId ?? "")
   }, [open, transaction, base, privacy])
+
+  const attachment = useLiveQuery(() => (attachmentId ? db.attachments.get(attachmentId) : undefined), [attachmentId])
+  const photoRemoved = attachment !== undefined && photoExpired(attachment)
 
   useEffect(() => {
     let revoked: string | null = null
@@ -313,6 +316,8 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
 
           <div className="flex flex-col gap-2">
             <Label>{t("transactions.receipt")}</Label>
+            <p className="text-xs text-muted-foreground">{t("transactions.receiptKeptFor", { days: RECEIPT_RETENTION_DAYS })}</p>
+            {photoRemoved && <p className="text-sm">{t("transactions.receiptRemoved", { days: RECEIPT_RETENTION_DAYS })}</p>}
             <input ref={fileInput} type="file" accept="image/*" capture="environment" hidden onChange={(e) => void pickPhoto(e.target.files?.[0])} />
             {preview ? (
               <div className="relative w-fit">

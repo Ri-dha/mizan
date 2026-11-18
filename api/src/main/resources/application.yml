@@ -223,6 +223,9 @@ mizan:
     url-ttl: 15m
     # Objects of attachments past the recycle-bin window go shortly before the row purge.
     object-purge-cron: "0 15 3 * * *"
+    # ADR storage-2: receipt photos are deleted this long after upload; the app tells people so.
+    receipt-retention: "${MIZAN_RECEIPT_RETENTION:30d}"
+    receipt-expiry-cron: "0 0 3 * * *"
 
   web:
     allowed-origins: "${MIZAN_ALLOWED_ORIGINS:}"

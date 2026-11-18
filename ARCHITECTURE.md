@@ -165,6 +165,11 @@ One host with Docker Compose profiles: default (`postgres`, `seaweedfs`), `full`
 `observability`, `containers` (Metricbeat). Flyway migrates on API start. Operations are in
 `docs/RUNBOOK.md`.
 
+- Object storage is SeaweedFS (ADR storage-1), one `weed server -s3` container, reached only
+  through the S3 API, so any S3 store can replace it. Receipt photos are shrunk to grey 1200 px
+  before encryption and live under `receipts/<household>/<id>`; `ReceiptPhotoExpiry` deletes
+  them 30 days after upload and devices drop their copies on the same rule (ADR storage-2). The
+  app says so where a photo is added. Device backups keep `<household>/<id>`.
 - Scheduled jobs run through `common/jobs/JobLock` (ADR csp-and-job-lock-1): a row per job in
   `scheduled_job_lock`, taken by an upsert that succeeds only when the previous lease has passed,
   judged by the database clock. A job holds it at least a few minutes, so an instance whose

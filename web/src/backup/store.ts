@@ -8,7 +8,8 @@ import { META_KEYS, readMeta, writeMeta, deleteMeta } from "@/db/meta"
 import { db, type Attachment } from "@/db/schema"
 import { softDelete, writeFields } from "@/db/write"
 
-export const BACKUP_OWNER_TYPE = "BACKUP"
+import { BACKUP_OWNER_TYPE } from "@/attachments/store"
+export { BACKUP_OWNER_TYPE }
 const MAGIC = strToU8("MZB1")
 const SALT_BYTES = 16
 const IV_BYTES = 12
@@ -143,7 +144,7 @@ export async function runBackupIfDue(session: LocalSession | null) {
 export async function openBackup(attachment: Attachment, passphrase: string): Promise<ImportPreview> {
   let blob = await db.blobs.get(attachment.id)
   if (!blob) {
-    const { url } = await unwrap(api.GET("/api/v1/attachments/{id}/download-url", { params: { path: { id: attachment.id } } }))
+    const { url } = await unwrap(api.GET("/api/v1/attachments/{id}/download-url", { params: { path: { id: attachment.id }, query: { kind: "BACKUP" } } }))
     const response = await fetch(url)
     if (!response.ok) throw new Error("BACKUP_DOWNLOAD_FAILED")
     blob = { id: attachment.id, bytes: await response.arrayBuffer(), uploaded: true }

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react"
 
 import { api, ApiError, unwrap } from "@/api/client"
-import { uploadPendingBlobs } from "@/attachments/store"
+import { dropExpiredPhotos, uploadPendingBlobs } from "@/attachments/store"
 import { runBackupIfDue } from "@/backup/store"
 import { clearLocalData, loadSession, refreshProfile, rememberFromServer, type LocalSession } from "@/api/auth"
 import { purgeExpiredDeletions } from "@/db/transactions"
@@ -232,6 +232,7 @@ export async function syncNow(): Promise<void> {
       await pull(device)
       await runDeviceDuties(session)
       await uploadPendingBlobs()
+      await dropExpiredPhotos()
       await push(device)
       await completeMigrationIfDrained(session)
       await purgeExpiredDeletions()

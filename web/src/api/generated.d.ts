@@ -1554,15 +1554,15 @@ export interface components {
         };
         JsonNode: {
             floatingPointNumber?: boolean;
-            container?: boolean;
             number?: boolean;
-            string?: boolean;
-            missingNode?: boolean;
-            valueNode?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            pojo?: boolean;
+            string?: boolean;
             integralNumber?: boolean;
+            missingNode?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
+            pojo?: boolean;
             int?: boolean;
             long?: boolean;
             double?: boolean;
@@ -2387,7 +2387,9 @@ export interface operations {
     };
     uploadUrl: {
         parameters: {
-            query?: never;
+            query?: {
+                kind?: "RECEIPT" | "BACKUP";
+            };
             header?: never;
             path: {
                 id: string;
@@ -3065,7 +3067,9 @@ export interface operations {
     };
     downloadUrl: {
         parameters: {
-            query?: never;
+            query?: {
+                kind?: "RECEIPT" | "BACKUP";
+            };
             header?: never;
             path: {
                 id: string;
