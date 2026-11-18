@@ -146,7 +146,8 @@ services:
       STORAGE_ACCESS_KEY: ${MIZAN_STORAGE_ACCESS_KEY:-${MINIO_ROOT_USER:-mizan}}
       STORAGE_SECRET_KEY: ${MIZAN_STORAGE_SECRET_KEY:-${MINIO_ROOT_PASSWORD:-mizan-dev-secret}}
       BACKUP_BUCKET: ${BACKUP_BUCKET:-mizan-backups}
-      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-7}
+      BACKUP_KEEP_WEEKLY: ${BACKUP_KEEP_WEEKLY:-4}
 
   # --- Observability: `docker compose --profile observability up -d` (also part of prod) ---
   # Elasticsearch keeps the logs and metrics, Kibana shows them at http://localhost:5601. Single

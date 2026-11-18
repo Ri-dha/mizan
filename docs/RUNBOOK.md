@@ -17,18 +17,25 @@ Upgrades are the same command. Migrations are forward-only; never edit an applie
 
 ## Backups and restore
 
-The `backup` service runs `pg_dump` nightly into the `mizan-backups` bucket in MinIO and prunes
-files older than `BACKUP_RETENTION_DAYS`. Attachments live in the `mizan-attachments` bucket;
-back that bucket up with `mc mirror` to another store, since a database dump does not include it.
+The `backup` service runs `pg_dump` nightly into the `mizan-backups` bucket in SeaweedFS with
+`rclone` (ADR storage-3). Dumps are pg_dump's custom format, compressed whole with zstd
+(`mizan-<UTC stamp>.dump.zst`, about 40 KB for a near-empty database). After each run it keeps
+the newest `BACKUP_KEEP_DAILY` (7) dumps and, before those, the newest dump of each of
+`BACKUP_KEEP_WEEKLY` (4) ISO weeks, so about five weeks are covered by eleven files. Attachments live in the
+`mizan-attachments` bucket; copy it to another store with `rclone sync`, since a database dump
+does not include it. Receipt photos there last 30 days anyway (ADR storage-2).
 
 Restore into an empty database:
 
 ```bash
 docker compose --profile prod stop api
-docker compose exec minio mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
-docker compose exec minio mc cat local/mizan-backups/<file>.sql.gz | gunzip | docker compose exec -T postgres psql -U mizan mizan
+docker compose --profile prod run --rm backup sh -c 'export RCLONE_CONFIG_STORE_TYPE=s3 RCLONE_CONFIG_STORE_PROVIDER=SeaweedFS RCLONE_CONFIG_STORE_ENDPOINT="$STORAGE_ENDPOINT" RCLONE_CONFIG_STORE_ACCESS_KEY_ID="$STORAGE_ACCESS_KEY" RCLONE_CONFIG_STORE_SECRET_ACCESS_KEY="$STORAGE_SECRET_KEY"; rclone cat store:mizan-backups/<file>.dump.zst | zstd -d | pg_restore --no-owner -d "$DATABASE_URL"'
 docker compose --profile prod start api
 ```
+
+List the dumps with `rclone lsf store:mizan-backups` inside that same `run`. One table can be
+restored alone with `pg_restore -t <table>`. Dumps from before ADR storage-3 are `.sql.gz`:
+`rclone cat … | gunzip | psql`.
 
 Devices keep their own copy of the household, so after a restore they push anything the dump
 missed on the next sync; the per-field clocks decide, not the restore time.
