@@ -2,6 +2,11 @@ import { preferences } from "@/app/preferences"
 
 const ZERO_DECIMAL_CURRENCIES: ReadonlySet<string> = new Set(["IQD"])
 
+/** How many minor units make one unit: 1 for the dinar, 100 for currencies with cents. */
+export function minorUnitsPerMajor(currency: string): number {
+  return ZERO_DECIMAL_CURRENCIES.has(currency) ? 1 : 100
+}
+
 /** IQD shows whole dinars with grouping (FR-SET-03); other currencies use their own minor unit. */
 export function formatMoney(minorUnits: number, currency: string, locale: string): string {
   const zeroDecimal = ZERO_DECIMAL_CURRENCIES.has(currency)

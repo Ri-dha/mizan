@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
-import { RATE_SCALE } from "@/db/income"
+import { microsToRate, RATE_SCALE, rateToMicros } from "@/db/income"
 import { createLot, removeLot, updateLot } from "@/db/metals"
 import type { Metal, MetalForm, MetalLot, WeightUnit } from "@/db/schema"
 import { todayIso } from "@/domain/calendar/month"
@@ -61,7 +61,7 @@ export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot 
     setMaking(lot ? fromMinorUnits(lot.makingCharge, lot.currency) : "0")
     setFees(lot ? fromMinorUnits(lot.fees, lot.currency) : "0")
     setCurrency(lot?.currency ?? base)
-    setRate(lot ? String(lot.fxRateMicros / RATE_SCALE) : "1")
+    setRate(lot ? microsToRate(lot.fxRateMicros, lot.currency) : "1")
     setForm(lot?.form ?? "JEWELLERY")
     setDealer(lot?.dealer ?? "")
     setLocation(lot?.location ?? "")
@@ -98,7 +98,7 @@ export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot 
       makingCharge: toMinorUnits(making, currency),
       fees: toMinorUnits(fees, currency),
       currency,
-      fxRateMicros: needsRate ? Math.round(Number(rate) * RATE_SCALE) : RATE_SCALE,
+      fxRateMicros: needsRate ? rateToMicros(rate, currency) : RATE_SCALE,
       form,
       dealer: dealer.trim() || null,
       location: location.trim() || null,

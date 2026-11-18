@@ -4,6 +4,9 @@
 # Ports are pinned so they match api/src/main/resources/application-dev.yml. Credentials are
 # dev-only and applied when a volume is first created — after changing one, `docker compose
 # down -v` forces a rebuild.
+# Fixed so volumes and containers keep their names wherever the checkout lives.
+name: mizan
+
 services:
   postgres:
     image: postgres:16-alpine

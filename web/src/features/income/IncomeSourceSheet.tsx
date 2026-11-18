@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
-import { createIncomeSource, historyOf, RATE_SCALE, recordAmountChange, removeAmountChange, updateIncomeSource } from "@/db/income"
+import { createIncomeSource, historyOf, microsToRate, RATE_SCALE, rateToMicros, recordAmountChange, removeAmountChange, updateIncomeSource } from "@/db/income"
 import type { Frequency, IncomeSource, IncomeSourceAmount } from "@/db/schema"
 import { todayIso } from "@/domain/calendar/month"
 import { formatMoney, fromMinorUnits, toMinorUnits } from "@/domain/money/format"
@@ -51,7 +51,7 @@ export function IncomeSourceSheet({ open, source, history, onClose }: Props) {
     setName(source?.name ?? "")
     setAmount(source ? fromMinorUnits(source.amount, source.currency) : "0")
     setCurrency(source?.currency ?? base)
-    setRate(source ? String(source.fxRateMicros / RATE_SCALE) : "1")
+    setRate(source ? microsToRate(source.fxRateMicros, source.currency) : "1")
     setFrequency(source?.frequency ?? "MONTHLY")
     setPayDay(source?.payDay ?? 25)
     setAnchorDate(source?.anchorDate ?? todayIso())
@@ -84,7 +84,7 @@ export function IncomeSourceSheet({ open, source, history, onClose }: Props) {
       name: name.trim(),
       amount: source ? source.amount : toMinorUnits(amount, currency),
       currency,
-      fxRateMicros: needsRate ? Math.round(Number(rate) * RATE_SCALE) : RATE_SCALE,
+      fxRateMicros: needsRate ? rateToMicros(rate, currency) : RATE_SCALE,
       frequency,
       payDay: usesPayDay ? payDay : null,
       anchorDate: usesPayDay ? null : anchorDate,

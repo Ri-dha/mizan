@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
 import { createDebt, updateDebt } from "@/db/debts"
-import { RATE_SCALE } from "@/db/income"
+import { microsToRate, RATE_SCALE, rateToMicros } from "@/db/income"
 import { liveBucketsOf, livePlans, planFor } from "@/db/plan"
 import type { Debt, DebtDirection } from "@/db/schema"
 import { softDelete } from "@/db/write"
@@ -51,7 +51,7 @@ export function DebtSheet({ open, debt, onClose }: { open: boolean; debt: Debt |
     setDirection(debt?.direction ?? "OWING")
     setPrincipal(debt ? fromMinorUnits(debt.principal, debt.currency) : "0")
     setCurrency(debt?.currency ?? base)
-    setRate(debt ? String(debt.fxRateMicros / RATE_SCALE) : "1")
+    setRate(debt ? microsToRate(debt.fxRateMicros, debt.currency) : "1")
     setAnnualPercent(debt ? String(debt.annualRateBasisPoints / 100) : "0")
     setTermMonths(debt?.termMonths ? String(debt.termMonths) : "")
     setMonthlyPayment(debt ? fromMinorUnits(debt.monthlyPayment, debt.currency) : "0")
@@ -70,7 +70,7 @@ export function DebtSheet({ open, debt, onClose }: { open: boolean; debt: Debt |
       direction,
       principal: toMinorUnits(principal, currency),
       currency,
-      fxRateMicros: needsRate ? Math.round(Number(rate) * RATE_SCALE) : RATE_SCALE,
+      fxRateMicros: needsRate ? rateToMicros(rate, currency) : RATE_SCALE,
       annualRateBasisPoints: Math.round(Number(annualPercent) * 100),
       termMonths: termMonths ? Number(termMonths) : null,
       monthlyPayment: toMinorUnits(monthlyPayment, currency),

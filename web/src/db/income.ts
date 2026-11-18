@@ -1,3 +1,4 @@
+import { minorUnitsPerMajor } from "@/domain/money/format"
 import { db, type IncomeReceipt, type IncomeSource, type IncomeSourceAmount, type Visibility } from "./schema"
 import { softDelete, writeFields } from "./write"
 import { monthWindow } from "@/domain/calendar/month"
@@ -30,8 +31,22 @@ export interface ReceiptInput {
   visibility: Visibility
 }
 
+/** Base minor units for an amount in another currency's minor units; the rate is per minor unit (see rateToMicros). */
 export function toBaseAmount(amount: number, fxRateMicros: number): number {
   return Math.round((amount * fxRateMicros) / RATE_SCALE)
+}
+
+/**
+ * People type the rate for one dollar (1470), but amounts are stored in cents, so the stored
+ * rate is per cent: 1470 → 14,700,000 micros. This is the only place that conversion lives.
+ */
+export function rateToMicros(rate: string | number, currency: string): number {
+  return Math.round((Number(rate) * RATE_SCALE) / minorUnitsPerMajor(currency))
+}
+
+export function microsToRate(fxRateMicros: number, currency: string): string {
+  const rate = (fxRateMicros * minorUnitsPerMajor(currency)) / RATE_SCALE
+  return String(Number(rate.toFixed(4)))
 }
 
 export async function createIncomeSource(input: IncomeSourceInput): Promise<string> {

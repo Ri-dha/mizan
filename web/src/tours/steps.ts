@@ -61,6 +61,7 @@ export const TOURS: Record<string, TourDefinition> = {
     steps: [
       step("bills-due", "bills.due"),
       step("bills-add", "bills.add", "top"),
+      step("bills-subscriptions", "bills.subscriptions", "top"),
     ],
   },
   ledger: {

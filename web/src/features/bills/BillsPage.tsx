@@ -17,6 +17,7 @@ import { todayIso } from "@/domain/calendar/month"
 import { formatMoney, fromMinorUnits, toMinorUnits } from "@/domain/money/format"
 import { useMonthView } from "@/features/plan/useMonthFigures"
 import { RecurringExpenseSheet } from "./RecurringExpenseSheet"
+import { SubscriptionsCard } from "./SubscriptionsCard"
 import { HelpButton } from "@/components/HelpButton"
 import { useScreenTour } from "@/tours/useTour"
 
@@ -115,6 +116,8 @@ export function BillsPage() {
           <RecurringExpenseListOutsideMonth monthBills={view.bills} onEdit={setEditing} />
         </CardContent>
       </Card>
+
+      <SubscriptionsCard currency={base} onEdit={setEditing} />
 
       <RecurringExpenseSheet open={editing !== null} expense={editing === "new" ? null : editing} buckets={view.buckets} onClose={() => setEditing(null)} />
 

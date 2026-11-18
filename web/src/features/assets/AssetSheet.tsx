@@ -15,6 +15,7 @@ import { ATTRIBUTE_KEYS, DEFAULT_LIQUIDITY, createAsset, updateAsset } from "@/d
 import type { Asset, AssetType } from "@/db/schema"
 import type { DepreciationMethod } from "@/domain/asset/depreciation"
 import { fromMinorUnits, toMinorUnits } from "@/domain/money/format"
+import { rateToMicros } from "@/db/income"
 import { useMetals } from "@/features/metals/useMetals"
 
 const TYPES: AssetType[] = ["VEHICLE", "PROPERTY", "ELECTRONICS", "EQUIPMENT", "FURNITURE", "LIVESTOCK", "OTHER"]
@@ -78,7 +79,7 @@ export function AssetSheet({ open, asset, onClose, onDelete }: Props) {
       purchaseDate: purchaseDate || null,
       purchasePrice: toMinorUnits(price, currency),
       currency,
-      fxRateMicros: asset?.currency === currency ? asset.fxRateMicros : currency === base ? 1_000_000 : currency === "USD" ? Math.round(metals.prices.usdIqdMicros / 100) : 1_000_000,
+      fxRateMicros: asset?.currency === currency ? asset.fxRateMicros : currency === base ? 1_000_000 : currency === "USD" ? rateToMicros(metals.prices.usdIqdMicros / 1_000_000, "USD") : 1_000_000,
       liquidity: illiquid ? ("ILLIQUID" as const) : ("LIQUID" as const),
       depreciationMethod: method,
       annualRateBasisPoints: method === "NONE" ? 0 : Math.round(Number(rate) * 100),

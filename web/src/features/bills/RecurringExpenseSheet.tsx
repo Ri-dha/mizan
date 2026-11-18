@@ -12,10 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
 import { createRecurringExpense, updateRecurringExpense } from "@/db/expenses"
-import { RATE_SCALE } from "@/db/income"
+import { microsToRate, RATE_SCALE, rateToMicros } from "@/db/income"
 import type { Bucket, ExpenseFrequency, RecurringExpense } from "@/db/schema"
 import { todayIso } from "@/domain/calendar/month"
 import { fromMinorUnits, toMinorUnits } from "@/domain/money/format"
+import { SUBSCRIPTION_CATEGORY, isSubscription } from "@/domain/expense/subscriptions"
 
 const FREQUENCIES: ExpenseFrequency[] = ["MONTHLY", "QUARTERLY", "ANNUAL", "CUSTOM"]
 const CURRENCIES = ["IQD", "USD"]
@@ -57,7 +58,7 @@ export function RecurringExpenseSheet({ open, expense, buckets, onClose }: Props
     setIsEstimate(expense?.isEstimate ?? false)
     setReminderDays(expense?.reminderDays == null ? "" : String(expense.reminderDays))
     setCurrency(expense?.currency ?? base)
-    setRate(expense ? String(expense.fxRateMicros / RATE_SCALE) : "1")
+    setRate(expense ? microsToRate(expense.fxRateMicros, expense.currency) : "1")
     setFrequency(expense?.frequency ?? "MONTHLY")
     setDueDay(expense?.dueDay ?? 1)
     setAnchorDate(expense?.anchorDate ?? todayIso())
@@ -79,7 +80,7 @@ export function RecurringExpenseSheet({ open, expense, buckets, onClose }: Props
       isEstimate,
       reminderDays: reminderDays.trim() === "" ? null : Math.max(0, Math.min(30, Number(reminderDays))),
       currency,
-      fxRateMicros: needsRate ? Math.round(Number(rate) * RATE_SCALE) : RATE_SCALE,
+      fxRateMicros: needsRate ? rateToMicros(rate, currency) : RATE_SCALE,
       frequency,
       dueDay: frequency === "MONTHLY" ? dueDay : null,
       anchorDate: frequency === "MONTHLY" ? null : anchorDate,
@@ -171,7 +172,11 @@ export function RecurringExpenseSheet({ open, expense, buckets, onClose }: Props
               <Input id="activeTo" type="date" dir="ltr" value={activeTo} onChange={(e) => setActiveTo(e.target.value)} />
             </Field>
           </div>
-          <Field id="category" label={t("transactions.category")}>
+          <div className="flex items-center gap-2">
+            <Switch id="subscription" checked={isSubscription({ category } as RecurringExpense)} onCheckedChange={(on) => setCategory(on ? SUBSCRIPTION_CATEGORY : "")} />
+            <Label htmlFor="subscription">{t("subscriptions.switch")}</Label>
+          </div>
+          <Field id="category" label={t("transactions.category")} hint={t("subscriptions.categoryHint")}>
             <Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} maxLength={40} />
           </Field>
           <div className="flex items-center gap-2">

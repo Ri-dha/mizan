@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch"
 import { liveCashAccounts } from "@/db/cashAccounts"
 import { liveDebts } from "@/db/debts"
 import { liveGoals } from "@/db/goals"
-import { RATE_SCALE } from "@/db/income"
+import { microsToRate, RATE_SCALE, rateToMicros } from "@/db/income"
 import { liveBucketsOf, livePlans, planFor } from "@/db/plan"
 import type { Bucket, CounterpartyType, LedgerTransaction, TransactionType } from "@/db/schema"
 import { createSplit, createTransaction, deleteTransaction, knownCategories, liveTransactionsFor, updateTransaction } from "@/db/transactions"
@@ -83,7 +83,7 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
     setType(transaction?.type ?? "EXPENSE")
     setAmount(transaction ? fromMinorUnits(transaction.amount, transaction.currency) : "")
     setCurrency(transaction?.currency ?? base)
-    setRate(transaction ? String(transaction.fxRateMicros / RATE_SCALE) : "1")
+    setRate(transaction ? microsToRate(transaction.fxRateMicros, transaction.currency) : "1")
     setOccurredOn(transaction?.occurredOn ?? todayIso())
     setBucketId(transaction?.bucketId ?? null)
     setCounterparty(transaction?.counterpartyType && transaction.counterpartyId ? `${transaction.counterpartyType}:${transaction.counterpartyId}` : "")
@@ -120,7 +120,7 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
       monthKey: monthKeyFor(occurredOn, startDay),
       amount: toMinorUnits(amount, currency),
       currency,
-      fxRateMicros: needsRate ? Math.round(Number(rate) * RATE_SCALE) : RATE_SCALE,
+      fxRateMicros: needsRate ? rateToMicros(rate, currency) : RATE_SCALE,
       bucketId: type === "INCOME" ? null : bucketId,
       category: category.trim() || null,
       payee: payee.trim() || null,

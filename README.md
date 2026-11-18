@@ -228,7 +228,7 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/plan` | Buckets for the selected month with allocated, carried over, committed, spent and free; edit shares, fixed amounts and carry-over with the over/under warning and rebalance; move money between buckets with a reason |
 | `/income` | Income sources with an amount history (record a raise from a date), this month's expected pay dates, mark received, irregular receipts |
 | `/transactions` | The ledger for the selected month: search and filters, edit, recycle bin, split purchases, running costs of an asset; the + button anywhere opens quick add |
-| `/bills` | Recurring bills, this month's due dates, mark paid with the actual amount, undo |
+| `/bills` | Recurring bills, this month's due dates, mark paid with the actual amount, undo; subscriptions grouped with monthly and yearly cost in IQD and USD |
 | `/debts` | Debts owed and owing, balance from the payment ledger, payoff and what-if extra payments, snowball vs avalanche comparison |
 | `/goals` | Savings goals with deposits, withdrawals, progress and projection |
 | `/metals` | Gold and silver: holdings by purity, purchases with cost per gram vs now, sales with realised gain, prices in use, "how is this calculated", enter today's price, valuation settings |

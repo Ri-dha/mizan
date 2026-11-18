@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { RATE_SCALE, recordReceipt, toBaseAmount } from "@/db/income"
+import { microsToRate, RATE_SCALE, rateToMicros, recordReceipt, toBaseAmount } from "@/db/income"
 import type { IncomeReceipt } from "@/db/schema"
 import { softDelete, writeFields } from "@/db/write"
 import { formatMoney, fromMinorUnits, toMinorUnits } from "@/domain/money/format"
@@ -38,13 +38,13 @@ export function ReceiptSheet({ draft, onClose }: { draft: ReceiptDraft | null; o
     if (!draft) return
     setAmount(fromMinorUnits(draft.amount, draft.currency))
     setCurrency(draft.currency)
-    setRate(String(draft.fxRateMicros / RATE_SCALE))
+    setRate(microsToRate(draft.fxRateMicros, draft.currency))
     setReceivedOn(draft.receivedOn)
     setNote(draft.existing?.note ?? "")
   }, [draft])
 
   const needsRate = currency !== base
-  const fxRateMicros = needsRate ? Math.round(Number(rate) * RATE_SCALE) : RATE_SCALE
+  const fxRateMicros = needsRate ? rateToMicros(rate, currency) : RATE_SCALE
   const minor = toMinorUnits(amount, currency)
 
   async function submit(event: FormEvent) {

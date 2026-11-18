@@ -734,6 +734,10 @@
       "add": {
         "title": "Add a bill",
         "body": "Set the bucket, amount and frequency. Switch on amount varies for electricity and the generator."
+      },
+      "subscriptions": {
+        "title": "Subscriptions",
+        "body": "YouTube, Spotify and the like, with what they cost per month and per year in dinars and dollars, so an annual plan and a monthly one compare fairly."
       }
     },
     "ledger": {
@@ -1120,5 +1124,16 @@
     "firefox2": "Choose “Install” or “Add to Home screen”.",
     "other1": "Open the browser menu (the three dots).",
     "other2": "Choose “Install app” or “Add to Home screen”."
+  },
+  "subscriptions": {
+    "title": "Subscriptions",
+    "empty": "Mark a bill as a subscription (YouTube, Spotify, iCloud…) and it appears here with its monthly and yearly cost.",
+    "totals": "{{monthly}} a month · {{yearly}} a year",
+    "totalsUsd": "{{monthly}} · {{yearly}}",
+    "perMonth": "{{amount}}/month",
+    "perYear": "{{amount}}/year",
+    "perMonthBase": "{{amount}} a month",
+    "switch": "This is a subscription",
+    "categoryHint": "Subscriptions are grouped on the Bills screen with their monthly and yearly cost."
   }
 }
