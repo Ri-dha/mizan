@@ -10,6 +10,8 @@ import java.util.Optional;
 import iq.mizan.market.MarketProperties;
 import iq.mizan.market.MarketSettings;
 import iq.mizan.market.entity.Instrument;
+import iq.mizan.market.entity.PriceQuote;
+import iq.mizan.market.repository.PriceQuoteRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,7 @@ public class IqWealthFxFeed implements PriceFeed {
     private final MarketSettings settings;
     private final ZoneId zone;
     private final Clock clock;
+    private final PriceQuoteRepository quotes;
     private volatile Rates rates;
     private LocalDate budgetDay;
     private int remaining = Integer.MAX_VALUE;
@@ -56,12 +59,14 @@ public class IqWealthFxFeed implements PriceFeed {
     private volatile Instant lastPollAt;
     private volatile Outcome lastOutcome;
 
-    public IqWealthFxFeed(RestClient.Builder builder, MarketProperties properties, MarketSettings settings, Clock clock) {
+    public IqWealthFxFeed(RestClient.Builder builder, MarketProperties properties, MarketSettings settings, Clock clock,
+                         PriceQuoteRepository quotes) {
         this.config = properties.feeds().iqWealth();
         this.settings = settings;
         this.client = builder.build();
         this.zone = ZoneId.of(config.zone());
         this.clock = clock;
+        this.quotes = quotes;
     }
 
     @Override
@@ -71,18 +76,31 @@ public class IqWealthFxFeed implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return (instrument == Instrument.USDIQD_PARALLEL || instrument == Instrument.USDIQD_OFFICIAL) && rates != null;
+        return instrument == Instrument.USDIQD_PARALLEL || instrument == Instrument.USDIQD_OFFICIAL;
     }
 
     @Override
     public Optional<FetchedPrice> fetch(Instrument instrument) {
         Rates known = rates;
         if (known == null) {
-            return Optional.empty();
+            return lastStored(instrument);
         }
         return instrument == Instrument.USDIQD_PARALLEL
                 ? price(known.parallelMicros(), known.parallelAt())
                 : price(known.officialMicros(), known.officialAt());
+    }
+
+    /**
+     * Only the instance holding the poll lock fills {@link #rates} (ADR csp-and-job-lock-1); the
+     * others answer with what that instance stored, rather than letting a later feed overwrite it.
+     */
+    private Optional<FetchedPrice> lastStored(Instrument instrument) {
+        if (!Configured.present(settings.iqWealthApiKey())) {
+            return Optional.empty();
+        }
+        return quotes.findById(instrument)
+                .filter(quote -> NAME.equals(quote.getSource()))
+                .map(quote -> new FetchedPrice(quote.getPriceMicros(), quote.getQuotedAt()));
     }
 
     public boolean hasRates() {

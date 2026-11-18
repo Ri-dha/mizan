@@ -162,3 +162,11 @@ One host with Docker Compose profiles: default (`postgres`, `minio`), `full` (pl
 `prod` (plus Caddy with automatic TLS, nightly `pg_dump` to MinIO, observability),
 `observability`, `containers` (Metricbeat). Flyway migrates on API start. Operations are in
 `docs/RUNBOOK.md`.
+
+- Scheduled jobs run through `common/jobs/JobLock` (ADR csp-and-job-lock-1): a row per job in
+  `scheduled_job_lock`, taken by an upsert that succeeds only when the previous lease has passed,
+  judged by the database clock. A job holds it at least a few minutes, so an instance whose
+  schedule fires a moment later skips. Several API instances are safe.
+- Caddy's security headers, the Content-Security-Policy among them, live in
+  `infra/caddy/security-headers.caddy` (ADR csp-and-job-lock-2); `vite preview` serves the same
+  file.

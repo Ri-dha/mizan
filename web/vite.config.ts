@@ -6,6 +6,19 @@ import { existsSync, readFileSync } from "node:fs"
 import { VitePWA } from "vite-plugin-pwa"
 import { defineConfig, type Plugin } from "vitest/config"
 
+const STORAGE_ORIGIN = process.env.MIZAN_STORAGE_ORIGIN ?? "http://localhost:9000"
+
+/** The production headers from Caddy (ADR csp-and-job-lock-2), so `vite preview` catches what the policy blocks. */
+export function productionHeaders(file = path.resolve(import.meta.dirname, "../infra/caddy/security-headers.caddy")): Record<string, string> {
+  if (!existsSync(file)) return {}
+  const headers: Record<string, string> = {}
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    const match = /^\s+([A-Z][A-Za-z-]+)\s+(?:"(.*)"|(\S+))\s*$/.exec(line)
+    if (match) headers[match[1]] = (match[2] ?? match[3]).replaceAll("{$MIZAN_STORAGE_ORIGIN}", STORAGE_ORIGIN)
+  }
+  return headers
+}
+
 /** In development the static manual is rendered on request, so /docs works without a build. */
 function docsDevServer(): Plugin {
   return {
@@ -96,6 +109,8 @@ export default defineConfig({
       },
     },
   },
+  // Dev keeps no policy: the dev server injects inline scripts for hot reload.
+  preview: { headers: productionHeaders() },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],

@@ -9,6 +9,8 @@ mkdirSync(out, { recursive: true })
 
 const copies = [
   ["node_modules/tesseract.js/dist/worker.min.js", "worker.min.js"],
+  // tesseract.js picks the fastest core the browser runs; current Chrome takes relaxed SIMD.
+  ["node_modules/tesseract.js-core/tesseract-core-relaxedsimd-lstm.wasm.js", "tesseract-core-relaxedsimd-lstm.wasm.js"],
   ["node_modules/tesseract.js-core/tesseract-core-simd-lstm.wasm.js", "tesseract-core-simd-lstm.wasm.js"],
   ["node_modules/tesseract.js-core/tesseract-core-lstm.wasm.js", "tesseract-core-lstm.wasm.js"],
 ]

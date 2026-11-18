@@ -16,6 +16,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import iq.mizan.common.jobs.JobLock;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * BR-15: soft-deleted rows stay restorable for the retention window, then go for good. Runs as
@@ -31,8 +33,17 @@ public class RecycleBinPurge {
     private final List<SyncTable> tables;
     private final SyncProperties properties;
     private final Clock clock;
+    private final JobLock jobLock;
+    private final TransactionTemplate transactions;
+
+    private static final Duration RUNS_AT_MOST = Duration.ofHours(1);
+    private static final Duration HELD_AT_LEAST = Duration.ofMinutes(5);
 
     @Scheduled(cron = "${mizan.sync.purge-cron}")
+    public void scheduled() {
+        jobLock.runExclusively("recycle-bin-purge", RUNS_AT_MOST, HELD_AT_LEAST, () -> transactions.executeWithoutResult(status -> purge()));
+    }
+
     @Transactional
     public void purge() {
         jdbcClient.sql("select set_config('app.system', 'on', true)").query().singleRow();

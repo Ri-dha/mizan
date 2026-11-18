@@ -17,7 +17,9 @@ cleanupOutdatedCaches()
 
 registerRoute(({ url }) => url.pathname.startsWith("/api/"), new NetworkOnly())
 // Phase 4: the OCR worker and models are large and change rarely; keep them once fetched.
-registerRoute(({ url }) => url.pathname.startsWith("/ocr/"), new CacheFirst({ cacheName: "ocr-assets" }))
+// A missing file is answered with the app page and a 200, which must not be kept in place of the asset.
+const assetsOnly = { cacheWillUpdate: async ({ response }: { response: Response }) => (response.ok && !response.headers.get("content-type")?.includes("text/html") ? response : null) }
+registerRoute(({ url }) => url.pathname.startsWith("/ocr/"), new CacheFirst({ cacheName: "ocr-assets", plugins: [assetsOnly] }))
 registerRoute(new NavigationRoute(createHandlerBoundToURL("index.html"), { denylist: [/^\/api\//, /^\/docs\//] }))
 
 self.addEventListener("message", (event) => {

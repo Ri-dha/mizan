@@ -1,6 +1,8 @@
 package iq.mizan.market.feed;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
@@ -9,10 +11,13 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
 
 import iq.mizan.market.MarketProperties;
 import iq.mizan.market.MarketSettings;
 import iq.mizan.market.entity.Instrument;
+import iq.mizan.market.entity.PriceQuote;
+import iq.mizan.market.repository.PriceQuoteRepository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -40,6 +45,8 @@ class IqWealthFxFeedTest {
     private final RestClient.Builder builder = RestClient.builder();
     private final MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
 
+    private final PriceQuoteRepository quotes = mock(PriceQuoteRepository.class);
+
     private IqWealthFxFeed feed(String key, String side) {
         MarketProperties.IqWealth config = new MarketProperties.IqWealth(URL, key, side, RESERVE, "Asia/Baghdad", "-", "-");
         MarketProperties.Feeds feeds = new MarketProperties.Feeds(null, null, null, null, 0, null, null, null, config);
@@ -59,7 +66,7 @@ class IqWealthFxFeedTest {
                 return RESERVE;
             }
         };
-        return new IqWealthFxFeed(builder, new MarketProperties(false, null, null, 0, 0, null, feeds, null), settings, NOON_BAGHDAD);
+        return new IqWealthFxFeed(builder, new MarketProperties(false, null, null, 0, 0, null, feeds, null), settings, NOON_BAGHDAD, quotes);
     }
 
     private void answer(int remaining) {
@@ -70,7 +77,7 @@ class IqWealthFxFeedTest {
     @Test
     void answersFromTheLastPollWithoutTouchingTheNetwork() {
         IqWealthFxFeed feed = feed(KEY, "MID");
-        assertThat(feed.supports(Instrument.USDIQD_PARALLEL)).isFalse();
+        assertThat(feed.fetch(Instrument.USDIQD_PARALLEL)).isEmpty();
 
         answer(99);
         assertThat(feed.poll()).isEqualTo(IqWealthFxFeed.Outcome.UPDATED);
@@ -83,6 +90,19 @@ class IqWealthFxFeedTest {
                 });
         assertThat(feed.fetch(Instrument.USDIQD_OFFICIAL)).get().extracting(FetchedPrice::priceMicros).isEqualTo(1_510_000_000L);
         assertThat(feed.supports(Instrument.XAU)).isFalse();
+    }
+
+    @Test
+    void anInstanceThatDidNotPollAnswersWithTheStoredQuote() {
+        Instant quotedAt = Instant.parse("2026-11-18T08:00:00Z");
+        when(quotes.findById(Instrument.USDIQD_PARALLEL))
+                .thenReturn(Optional.of(PriceQuote.of(Instrument.USDIQD_PARALLEL, 1_700_000_000L, IqWealthFxFeed.NAME, quotedAt, quotedAt)));
+        when(quotes.findById(Instrument.USDIQD_OFFICIAL))
+                .thenReturn(Optional.of(PriceQuote.of(Instrument.USDIQD_OFFICIAL, 1_310_000_000L, "cbi.iq", quotedAt, quotedAt)));
+
+        assertThat(feed(KEY, "MID").fetch(Instrument.USDIQD_PARALLEL)).get().extracting(FetchedPrice::quotedAt).isEqualTo(quotedAt);
+        assertThat(feed(KEY, "MID").fetch(Instrument.USDIQD_OFFICIAL)).isEmpty();
+        assertThat(feed("", "MID").fetch(Instrument.USDIQD_PARALLEL)).isEmpty();
     }
 
     @Test

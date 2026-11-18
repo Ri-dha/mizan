@@ -20,6 +20,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
+import iq.mizan.common.jobs.JobLock;
+import java.time.Duration;
 
 /**
  * BR-15 for bytes: the objects behind attachment rows (receipts and backups) that the recycle-bin
@@ -37,10 +39,14 @@ public class AttachmentObjectPurge {
     private final StorageProperties storage;
     private final SyncProperties sync;
     private final Clock clock;
+    private final JobLock jobLock;
+
+    private static final Duration RUNS_AT_MOST = Duration.ofHours(1);
+    private static final Duration HELD_AT_LEAST = Duration.ofMinutes(5);
 
     @Scheduled(cron = "${mizan.storage.object-purge-cron}")
     public void scheduled() {
-        purge();
+        jobLock.runExclusively("attachment-object-purge", RUNS_AT_MOST, HELD_AT_LEAST, this::purge);
     }
 
     @Transactional

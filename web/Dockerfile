@@ -11,4 +11,4 @@ RUN npm run build
 # Caddy serves the PWA and terminates TLS; /api is proxied to the API container.
 FROM caddy:2-alpine
 COPY --from=build /build/dist /srv
-COPY infra/caddy/Caddyfile /etc/caddy/Caddyfile
+COPY infra/caddy/ /etc/caddy/

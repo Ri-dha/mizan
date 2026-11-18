@@ -101,6 +101,7 @@ services:
       - api
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+      MIZAN_STORAGE_ORIGIN: ${MIZAN_STORAGE_ORIGIN:-http://localhost:9000}
     ports:
       - "80:80"
       - "443:443"

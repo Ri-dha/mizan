@@ -78,7 +78,9 @@ metal and refreshed with the other feeds. Households opt in under valuation sett
 
 The web build fetches Tesseract models from GitHub; set `MIZAN_TESSDATA_URL` to a mirror when
 the build host cannot reach it. The files live in `web/public/ocr/` and are served as static
-assets; nothing about a receipt reaches the server.
+assets; nothing about a receipt reaches the server. All three Tesseract cores are copied
+(plain, SIMD, relaxed SIMD); the browser picks one, and a missing one breaks reading only on
+browsers that pick it. The service worker never caches an HTML answer under `/ocr/`.
 
 ## Push notifications
 
@@ -135,8 +137,18 @@ more heap with `ES_JAVA_OPTS` in `.env` when the host has room; 512 MB is the fl
 | Recycle-bin purge | 03:30 daily | Hard-deletes rows soft-deleted more than 30 days ago |
 | Account purge | 03:45 daily | Deletes accounts and households whose deletion request is older than 30 days |
 
-All run in the single API instance. If you scale to more than one instance, guard them with a
-lock (ShedLock or a Postgres advisory lock) before doing so.
+Every instance schedules every job, and the `scheduled_job_lock` table lets one of them run it
+(ADR csp-and-job-lock-1). A row names the job, the instance that took it (`pid@host/uuid`) and
+`locked_until`. A crashed run frees itself when `locked_until` passes (one hour for the purges,
+minutes for the polls). To free a job by hand:
+
+```sql
+update scheduled_job_lock set locked_until = now() where name = 'iqwealth-poll';
+```
+
+The IQWealth rates live in the polling instance's memory; the others answer from the stored
+quote it wrote, so every instance shows the same dollar. The operator's "Fetch now" polls from
+whichever instance served it, outside the lock.
 
 ## Row-level security
 
@@ -153,8 +165,13 @@ bind a household or the system flag or it will see an empty database.
 - Unauthenticated auth endpoints are rate-limited per client address, in process.
 - Presigned attachment URLs are issued only for rows the caller can see and expire in 15 minutes;
   the bytes are encrypted on the device before upload, the API never holds a key.
-- Caddy adds `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy` and a
-  `Permissions-Policy`. There is no CSP yet; adding one means hashing the inline theme script.
+- Caddy sends a Content-Security-Policy (ADR csp-and-job-lock-2) with `X-Content-Type-Options`,
+  `X-Frame-Options: DENY`, `Referrer-Policy` and a `Permissions-Policy`, all from
+  `infra/caddy/security-headers.caddy`. Scripts come only from the site itself (plus
+  `'wasm-unsafe-eval'` for OCR); `MIZAN_STORAGE_ORIGIN` is the one other origin, for receipts.
+  Set it to the origin browsers use for object storage, or uploads are blocked. `vite preview`
+  serves the same file, so `npm run build && npx vite preview` shows a violation before
+  production does. Never add an inline `<script>` to `index.html`; boot code goes in `public/`.
 - `npm audit --audit-level=high` runs in CI. Maven dependencies are pinned through the Boot BOM;
   review them on each Boot upgrade.
 - Known gap: the parallel dollar rate and stub prices are configuration, not signed data. Anyone
