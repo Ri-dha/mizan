@@ -1,5 +1,5 @@
 # T-lean-backend — Make the API need less memory, CPU and database work
-- Status: in-review (2026-11-19), branch perf/lean-backend (worktree ../.wt-lean), uncommitted
+- Status: done (2026-11-19), 898ee24 on develop and main
 - Context: owner asked for an analysis of the backend's resource use (2026-11-19) and chose the
   quick batch: JVM settings, fewer database round trips, log and metric trims, a smaller jar.
   ADR obs-3. Not in this task, still open: Filebeat instead of Logstash and Kibana on demand,

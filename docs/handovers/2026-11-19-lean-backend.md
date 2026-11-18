@@ -1,12 +1,12 @@
 # Handover — 2026-11-19 — Leaner API (quick batch)
 
-## Completed (uncommitted, MizanApi worktree ../.wt-lean, branch perf/lean-backend)
+## Completed (898ee24 on develop and main)
 - See T-lean-backend: JVM settings and memory limit, one-statement tenancy, two-query members,
   smaller prod pool, prod OpenAPI off, Netty excluded, access-line levels and metric bands
   (ADR obs-3), RUNBOOK and ARCHITECTURE. API 106 tests; measured 617 → 478 MB.
 
 ## In flight
-- Nothing half-done. Awaiting the owner's word to commit.
+- Nothing.
 
 ## Next steps
 - Owner to decide on per-op audit rows (stop them, or keep with a retention period).
