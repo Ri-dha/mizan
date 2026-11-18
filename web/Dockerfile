@@ -5,6 +5,7 @@ COPY web/package.json web/package-lock.json ./
 RUN npm ci
 COPY web/ .
 COPY shared/ ../shared/
+COPY docs/manual/ ../docs/manual/
 RUN npm run build
 
 # Caddy serves the PWA and terminates TLS; /api is proxied to the API container.
