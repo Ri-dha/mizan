@@ -1,6 +1,6 @@
 # Handover — 2026-11-18 — Job lock and Content-Security-Policy
 
-## Completed (uncommitted, branch feat/csp-and-job-lock from develop c4aa411)
+## Completed (e15b0eb on develop)
 - ADRs csp-and-job-lock-1 (lock table) and -2 (CSP).
 - `api/.../db/migration/V024__scheduled_job_lock.sql`, `common/jobs/JobLock.java`, wrapped in
   AccountDeletionPurge, AttachmentObjectPurge, HouseholdDeletionPurge, RecycleBinPurge (now a
@@ -14,7 +14,7 @@
 - Docs: ARCHITECTURE Deployment, RUNBOOK (scheduled jobs, CSP, OCR), task, status, learning.
 
 ## In flight
-- Nothing half-done. Awaiting the owner's word to commit and merge into develop.
+- Nothing. Committed as e15b0eb, merged into develop and pushed; main not promoted.
 
 ## Next steps
 - Build and start the prod `web` image once to confirm Caddy parses the import.

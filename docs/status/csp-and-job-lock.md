@@ -1,6 +1,6 @@
 # Status — T-csp-and-job-lock
 
-- Branch `feat/csp-and-job-lock` from develop `c4aa411`; nothing committed yet.
+- Merged into develop as `e15b0eb` (branch `feat/csp-and-job-lock`); main not yet promoted.
 - Works: every scheduled job takes a row in `scheduled_job_lock` (V024) through `JobLock` before
   running; the IQWealth feed answers from the stored quote on instances that did not poll; Caddy
   and `vite preview` send the same CSP from `infra/caddy/security-headers.caddy`.

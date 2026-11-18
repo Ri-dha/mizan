@@ -1,5 +1,5 @@
 # T-csp-and-job-lock — Add a Content-Security-Policy and lock scheduled jobs
-- Status: in-review (2026-11-18), branch feat/csp-and-job-lock from develop, uncommitted
+- Status: done (2026-11-18), e15b0eb on develop
 - Context: T-m8; docs/RUNBOOK.md security notes; ADR csp-and-job-lock-1 (job lock), csp-and-job-lock-2 (CSP).
 - Notes: Done: V024 `scheduled_job_lock`, `JobLock` around all eight scheduled jobs, IQWealth
   stored-quote fallback for instances that did not poll, `infra/caddy/security-headers.caddy`
