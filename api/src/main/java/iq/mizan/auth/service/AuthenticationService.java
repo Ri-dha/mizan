@@ -41,13 +41,13 @@ public class AuthenticationService {
     private final DummyPasswordHash dummyPasswordHash;
 
     @Transactional
-    public TokenPair login(String rawIdentifier, String rawPassword, String userAgent, String ipAddress) {
+    public TokenPair login(String rawIdentifier, String authKey, String legacyPassword, String userAgent, String ipAddress) {
         Identifier identifier = Identifier.parse(rawIdentifier, authProperties.defaultCountryCode());
         AppUser user = userLookup.byIdentifier(identifier).orElse(null);
 
         if (user == null) {
             // Costs the same as a wrong password, so timing cannot enumerate accounts.
-            passwordEncoder.matches(rawPassword, dummyPasswordHash.value());
+            passwordEncoder.matches(authKey, dummyPasswordHash.value());
             throw invalidCredentials();
         }
         if (!user.isActive()) {
@@ -56,11 +56,18 @@ public class AuthenticationService {
         if (user.isLocked()) {
             throw ApiException.of(ErrorCode.ACCOUNT_LOCKED, "Too many failed attempts. Try again later.");
         }
-        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+        if (!credentialsMatch(user, authKey, legacyPassword)) {
             loginAttemptRecorder.recordFailure(user.getId(), ipAddress);
             throw invalidCredentials();
         }
+        if (user.isSuspended()) {
+            throw ApiException.of(ErrorCode.ACCOUNT_SUSPENDED, "This account has been suspended. Contact support.");
+        }
 
+        if (user.usesLegacyPassword()) {
+            user.changePassword(passwordEncoder.encode(authKey));
+            audit(AuditAction.AUTH_UPGRADED, user, ipAddress);
+        }
         user.recordSuccessfulLogin();
         audit(AuditAction.LOGIN_SUCCEEDED, user, ipAddress);
         return tokenIssuer.issue(user, householdService.summaryFor(user.getId()), userAgent, ipAddress);
@@ -89,6 +96,9 @@ public class AuthenticationService {
         if (!user.isActive()) {
             throw ApiException.of(ErrorCode.ACCOUNT_NOT_ACTIVE, "This account is not active");
         }
+        if (user.isSuspended()) {
+            throw ApiException.of(ErrorCode.ACCOUNT_SUSPENDED, "This account has been suspended. Contact support.");
+        }
 
         TokenPair pair = tokenIssuer.issue(user, householdService.summaryFor(user.getId()), userAgent, ipAddress);
         refreshTokenRepository.findByTokenHash(hashingService.hash(pair.refreshToken()))
@@ -108,6 +118,14 @@ public class AuthenticationService {
                             .entityId(token.getUserId())
                             .build());
                 });
+    }
+
+    /** A LEGACY account proves itself with the old password once; afterwards only the auth key counts. */
+    private boolean credentialsMatch(AppUser user, String authKey, String legacyPassword) {
+        if (user.usesLegacyPassword()) {
+            return legacyPassword != null && passwordEncoder.matches(legacyPassword, user.getPasswordHash());
+        }
+        return passwordEncoder.matches(authKey, user.getPasswordHash());
     }
 
     private void audit(AuditAction action, AppUser user, String ipAddress) {

@@ -19,6 +19,9 @@ springdoc:
     enabled: true
 
 mizan:
+  # Dev only: a fixed settings key so secrets saved in the dashboard survive restarts locally.
+  platform:
+    settings-key: "${MIZAN_SETTINGS_KEY:ZGV2LW9ubHktc2V0dGluZ3Mta2V5LTMyLWJ5dGVzISE=}"
   web:
     allowed-origins: ${MIZAN_ALLOWED_ORIGINS:http://localhost:5173}
 

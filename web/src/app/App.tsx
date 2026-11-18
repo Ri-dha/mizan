@@ -8,6 +8,7 @@ import { loadSession } from "@/api/auth"
 import { Toaster } from "@/components/ui/sonner"
 import { directionFor } from "@/i18n"
 import { initialiseLock, startLockWatcher } from "@/lock/store"
+import { initialiseVault } from "@/vault/account"
 import { AppShell } from "./AppShell"
 import { RequireSession, RedirectIfSession } from "./guards"
 import { LoginPage } from "@/features/auth/LoginPage"
@@ -31,6 +32,8 @@ const JoinPage = lazy(() => import("@/features/household/JoinPage").then((m) => 
 const HelpPage = lazy(() => import("@/features/help/HelpPage").then((m) => ({ default: m.HelpPage })))
 const ReportPage = lazy(() => import("@/features/report/ReportPage").then((m) => ({ default: m.ReportPage })))
 const YearReportPage = lazy(() => import("@/features/report/YearReportPage").then((m) => ({ default: m.YearReportPage })))
+const PricesPage = lazy(() => import("@/features/prices/PricesPage").then((m) => ({ default: m.PricesPage })))
+const AdminPage = lazy(() => import("@/features/admin/AdminPage").then((m) => ({ default: m.AdminPage })))
 const AdvisorPage = lazy(() => import("@/features/advisor/AdvisorPage").then((m) => ({ default: m.AdvisorPage })))
 const SyncPage = lazy(() => import("@/features/sync/SyncPage").then((m) => ({ default: m.SyncPage })))
 const RouteError = lazy(() => import("@/app/RouteError").then((m) => ({ default: m.RouteError })))
@@ -79,6 +82,8 @@ const router = createBrowserRouter([
       { path: "settings", element: <SettingsPage /> },
       { path: "household", element: <HouseholdPage /> },
       { path: "advisor", element: <AdvisorPage /> },
+      { path: "prices", element: <PricesPage /> },
+      { path: "admin", element: <AdminPage /> },
     ],
   },
 ])
@@ -88,7 +93,7 @@ export default function App() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    void Promise.all([loadSession(), initialiseLock()]).then(() => setReady(true))
+    void Promise.all([loadSession(), initialiseLock(), initialiseVault()]).then(() => setReady(true))
     startLockWatcher()
   }, [])
 

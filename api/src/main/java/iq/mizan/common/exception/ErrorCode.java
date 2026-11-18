@@ -38,9 +38,22 @@ public enum ErrorCode {
     SYNC_DEVICE_NOT_FOUND(HttpStatus.NOT_FOUND, "Sync Device Not Found"),
     SYNC_TABLE_UNKNOWN(HttpStatus.BAD_REQUEST, "Unknown Sync Table"),
     SYNC_FIELD_UNKNOWN(HttpStatus.BAD_REQUEST, "Unknown Sync Field"),
-    SYNC_TABLE_READ_ONLY(HttpStatus.FORBIDDEN, "Sync Table Is Read Only"),
-    MONTH_ALREADY_CLOSED(HttpStatus.CONFLICT, "Month Already Closed"),
-    MONTH_NOT_CLOSED(HttpStatus.CONFLICT, "Month Not Closed"),
+    SYNC_RECORD_IMMUTABLE(HttpStatus.CONFLICT, "Sync Record Is Immutable"),
+    SYNC_TABLE_MISMATCH(HttpStatus.CONFLICT, "Record Belongs To Another Table"),
+    /** ADR e2e-1: anything but ciphertext for a field other than visibility or deletedAt. */
+    SYNC_PLAIN_VALUE_REFUSED(HttpStatus.BAD_REQUEST, "Plain Value Refused"),
+    SYNC_SHARED_WRITE_REFUSED(HttpStatus.FORBIDDEN, "Shared Write Refused"),
+
+    // Keys
+    ACCOUNT_KEYS_EXIST(HttpStatus.CONFLICT, "Account Keys Already Exist"),
+    ACCOUNT_KEYS_MISSING(HttpStatus.NOT_FOUND, "Account Keys Missing"),
+    KEY_GRANT_REFUSED(HttpStatus.FORBIDDEN, "Key Grant Refused"),
+    OPERATOR_REQUIRED(HttpStatus.FORBIDDEN, "Operator Required"),
+    REAUTHENTICATION_REQUIRED(HttpStatus.FORBIDDEN, "Re-authentication Required"),
+    ACCOUNT_SUSPENDED(HttpStatus.FORBIDDEN, "Account Suspended"),
+    SETTING_INVALID(HttpStatus.BAD_REQUEST, "Setting Invalid"),
+    SETTINGS_KEY_MISSING(HttpStatus.CONFLICT, "Settings Key Missing"),
+    LAST_OPERATOR(HttpStatus.CONFLICT, "Last Operator"),
     SYNC_BATCH_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Sync Batch Too Large");
 
     private final HttpStatus status;

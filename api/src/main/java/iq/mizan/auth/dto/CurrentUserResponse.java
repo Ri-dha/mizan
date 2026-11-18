@@ -12,5 +12,7 @@ public record CurrentUserResponse(
         String locale,
         boolean verified,
         java.time.Instant deletionRequestedAt,
+        /** Runs the service (ADR admin-1): the app shows the operator dashboard. */
+        boolean operator,
         HouseholdResponse household) {
 }

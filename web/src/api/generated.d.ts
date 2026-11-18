@@ -4,6 +4,76 @@
  */
 
 export interface paths {
+    "/api/v1/notifications/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace the caller's upcoming reminders; the device works them out from its encrypted records (ADR e2e-1) */
+        put: operations["schedule"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/keys/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's wrapped user key and the household keys granted to them */
+        get: operations["mine"];
+        /** Store the caller's keys, once, for an account created before end-to-end encryption */
+        put: operations["store"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Replace the password or recovery wrap of the same user key */
+        patch: operations["rewrap"];
+        trace?: never;
+    };
+    "/api/v1/admin/settings/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putSetting"];
+        post?: never;
+        /** Drop the operator's value so the environment default applies again */
+        delete: operations["resetSetting"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vault/migration/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete the plain copies of records this device has re-uploaded encrypted */
+        post: operations["complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sync/push": {
         parameters: {
             query?: never;
@@ -66,46 +136,12 @@ export interface paths {
             cookie?: never;
         };
         /** This account's subscribed devices in the current household */
-        get: operations["mine"];
+        get: operations["mine_1"];
         put?: never;
         /** Register this browser's push subscription (FR-NTF-01) */
         post: operations["subscribe"];
         /** Remove a subscription */
         delete: operations["unsubscribe"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/months/{monthKey}/reopen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reopen a closed month; recorded in the audit trail */
-        post: operations["reopen"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/months/{monthKey}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Close a month: takes an immutable net worth snapshot (BR-14) */
-        post: operations["close"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -140,6 +176,23 @@ export interface paths {
         put?: never;
         /** Fetch fresh prices from the feeds now (at most once per cooldown) and return the quotes */
         post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/keys/household/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hand household or report keys, wrapped to each recipient's public key, to members */
+        post: operations["grant"];
         delete?: never;
         options?: never;
         head?: never;
@@ -415,6 +468,157 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether the caller is an operator and until when changes are allowed without the password */
+        get: operations["session"];
+        put?: never;
+        /** Re-enter the password (as the device-derived auth key) to allow changes for a few minutes */
+        post: operations["elevate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/prices/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a corrected price; it becomes the current quote and a new change in the history */
+        post: operations["correct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/operators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["operatorList"];
+        put?: never;
+        post: operations["grant_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/feeds/poll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fetch prices now: DOLLAR spends one IQWealth request; ALL refreshes the other feeds */
+        post: operations["poll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["announcements"];
+        put?: never;
+        /** Show a notice to everyone, in English and Arabic */
+        post: operations["publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/accounts/{userId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend an account: its sessions end and it cannot sign in until restored */
+        post: operations["suspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/accounts/{userId}/revoke-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign the account out everywhere */
+        post: operations["revokeSessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/accounts/{userId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/accounts/{userId}/cancel-deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelDeletion_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/households/current": {
         parameters: {
             query?: never;
@@ -451,6 +655,23 @@ export interface paths {
         patch: operations["changeRole"];
         trace?: never;
     };
+    "/api/v1/vault/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether the household still has plain records on the server */
+        get: operations["status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sync/pull": {
         parameters: {
             query?: never;
@@ -485,23 +706,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/reports/annual": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Income, spending, saving rate and closing net worth per month of a year (FR-RPT-03) */
-        get: operations["annual"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/notifications/vapid-key": {
         parameters: {
             query?: never;
@@ -511,40 +715,6 @@ export interface paths {
         };
         /** The server's VAPID public key, needed to subscribe a browser */
         get: operations["vapidKey"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/networth/current": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Net worth right now, computed on the server from the synced ledgers */
-        get: operations["current_1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/months": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Which months are closed */
-        get: operations["months"];
         put?: never;
         post?: never;
         delete?: never;
@@ -594,8 +764,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Daily price history for charts and snapshots */
+        /** Price history by day, week (from Saturday) or month: open, high, low and close of each period */
         get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/market/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every change of a price, newest first, with the price it replaced; page with nextBefore */
+        get: operations["changes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -613,6 +800,23 @@ export interface paths {
         };
         /** The local dealer's product list with bid and ask, as last fetched */
         get: operations["catalogue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/keys/household/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Members with their public keys and the keys they already hold, for granting */
+        get: operations["members"];
         put?: never;
         post?: never;
         delete?: never;
@@ -663,7 +867,7 @@ export interface paths {
             cookie?: never;
         };
         /** Active members of the current household */
-        get: operations["members"];
+        get: operations["members_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -689,6 +893,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Announcements showing now, newest first */
+        get: operations["live"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Settings operators may change, with their defaults; secrets are masked */
+        get: operations["settings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Counts, sizes and feed health across the service */
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search the audit log, newest first; page with before */
+        get: operations["audit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Find accounts by the start of an email or phone, or part of a name */
+        get: operations["accounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/households/current/invitations/{invitationId}": {
         parameters: {
             query?: never;
@@ -706,10 +995,121 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/prices/changes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a wrong price change from the history */
+        delete: operations["deleteChange"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/operators/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revoke_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/announcements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["retract"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Item: {
+            /** @enum {string} */
+            kind: "BILL_DUE" | "PAY_DAY" | "OVERSPEND" | "MONTH_CLOSE";
+            /** Format: date-time */
+            fireAt: string;
+            dedupeKey: string;
+        };
+        ScheduleRequest: {
+            items: components["schemas"]["Item"][];
+            metalPriceAlerts?: boolean;
+            /** Format: int32 */
+            metalMoveBasisPoints?: number;
+        };
+        AccountKeysRequest: {
+            wrappedByPassword: string;
+            wrappedByRecovery: string;
+            publicKey: string;
+            encryptedPrivateKey: string;
+        };
+        AccountKeysResponse: {
+            wrappedByPassword?: string;
+            wrappedByRecovery?: string;
+            publicKey?: string;
+            encryptedPrivateKey?: string;
+        };
+        GrantResponse: {
+            /** @enum {string} */
+            keyKind?: "HOUSEHOLD" | "REPORT";
+            /** Format: int32 */
+            keyVersion?: number;
+            wrappedKey?: string;
+            /** Format: uuid */
+            grantedBy?: string;
+        };
+        MyKeysResponse: {
+            account?: components["schemas"]["AccountKeysResponse"];
+            grants?: components["schemas"]["GrantResponse"][];
+        };
+        SettingUpdateRequest: {
+            value: string;
+        };
+        SettingResponse: {
+            key?: string;
+            kind?: string;
+            value?: string;
+            defaultValue?: string;
+            overridden?: boolean;
+            choices?: string[];
+            /** Format: int64 */
+            min?: number;
+            /** Format: int64 */
+            max?: number;
+            /** Format: uuid */
+            updatedBy?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        VaultStatusResponse: {
+            migrated?: boolean;
+            /** Format: int64 */
+            legacyRows?: number;
+        };
         SyncOp: {
             /** Format: uuid */
             opId: string;
@@ -771,16 +1171,6 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
-        MonthCloseResponse: {
-            monthKey?: string;
-            /** Format: uuid */
-            snapshotId?: string;
-            /** Format: date-time */
-            closedAt?: string;
-            /** Format: date-time */
-            reopenedAt?: string;
-            closed?: boolean;
-        };
         CurrentUserResponse: {
             /** Format: uuid */
             id?: string;
@@ -791,6 +1181,7 @@ export interface components {
             verified?: boolean;
             /** Format: date-time */
             deletionRequestedAt?: string;
+            operator?: boolean;
             household?: components["schemas"]["HouseholdResponse"];
         };
         HouseholdResponse: {
@@ -817,6 +1208,30 @@ export interface components {
             fetchedAt?: string;
             stale?: boolean;
         };
+        GrantRequest: {
+            /** Format: uuid */
+            userId: string;
+            /** @enum {string} */
+            keyKind: "HOUSEHOLD" | "REPORT";
+            /** Format: int32 */
+            keyVersion?: number;
+            wrappedKey: string;
+        };
+        HeldKey: {
+            keyKind?: string;
+            /** Format: int32 */
+            keyVersion?: number;
+        };
+        KeyMemberResponse: {
+            /** Format: uuid */
+            userId?: string;
+            displayName?: string;
+            role?: string;
+            mayHoldHouseholdKey?: boolean;
+            mayHoldReportKey?: boolean;
+            publicKey?: string;
+            holds?: components["schemas"]["HeldKey"][];
+        };
         TransferOwnershipRequest: {
             /** Format: uuid */
             userId: string;
@@ -839,16 +1254,17 @@ export interface components {
             token?: string;
         };
         ConfirmPasswordRequest: {
-            password: string;
+            authKey: string;
         };
         VerifyRequest: {
             code: string;
         };
         RegisterRequest: {
             identifier: string;
-            password: string;
+            authKey: string;
             displayName: string;
             locale?: string;
+            keys: components["schemas"]["AccountKeysRequest"];
         };
         TokenResponse: {
             accessToken?: string;
@@ -865,17 +1281,138 @@ export interface components {
         PasswordResetConfirmRequest: {
             identifier: string;
             code: string;
-            newPassword: string;
+            newAuthKey: string;
         };
         LoginRequest: {
             identifier: string;
-            password: string;
+            authKey: string;
+            legacyPassword?: string;
         };
         PresignedUrlResponse: {
             url?: string;
             method?: string;
             /** Format: date-time */
             expiresAt?: string;
+        };
+        ElevateRequest: {
+            authKey: string;
+        };
+        SessionResponse: {
+            operator?: boolean;
+            /** Format: date-time */
+            elevatedUntil?: string;
+        };
+        PriceCorrectionRequest: {
+            /** @enum {string} */
+            instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL" | "XAU_LOCAL_BID" | "XAG_LOCAL_BID";
+            /** Format: int64 */
+            priceMicros?: number;
+            reason: string;
+        };
+        GrantOperatorRequest: {
+            identifier: string;
+        };
+        OperatorSummary: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string;
+            email?: string;
+            phone?: string;
+            /** Format: date-time */
+            elevatedUntil?: string;
+        };
+        PollRequest: {
+            /** @enum {string} */
+            target: "DOLLAR" | "ALL";
+        };
+        FeedStatus: {
+            name?: string;
+            /** Format: date-time */
+            lastSuccessAt?: string;
+            /** Format: date-time */
+            lastFailureAt?: string;
+            lastError?: string;
+        };
+        Overview: {
+            accounts?: {
+                [key: string]: unknown;
+            };
+            households?: {
+                [key: string]: unknown;
+            };
+            notifications?: {
+                [key: string]: unknown;
+            };
+            storage?: {
+                [key: string]: unknown;
+            };
+            feeds?: components["schemas"]["FeedStatus"][];
+            iqWealth?: components["schemas"]["Quota"];
+        };
+        Quota: {
+            configured?: boolean;
+            /** Format: int32 */
+            remainingToday?: number;
+            /** Format: int32 */
+            reserve?: number;
+            pausedUntilMidnight?: boolean;
+            keyRefused?: boolean;
+            /** Format: date-time */
+            lastPollAt?: string;
+            /** @enum {string} */
+            lastOutcome?: "UPDATED" | "UNCHANGED" | "NO_KEY" | "BUDGET_KEPT" | "PAUSED_UNTIL_MIDNIGHT" | "KEY_REFUSED";
+        };
+        AnnouncementRequest: {
+            messageEn: string;
+            messageAr: string;
+            /** @enum {string} */
+            level: "INFO" | "WARNING";
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string;
+        };
+        AnnouncementResponse: {
+            /** Format: uuid */
+            id?: string;
+            messageEn?: string;
+            messageAr?: string;
+            level?: string;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            retractedAt?: string;
+            live?: boolean;
+        };
+        ReasonRequest: {
+            reason: string;
+        };
+        AccountSummary: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string;
+            email?: string;
+            phone?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            verified?: boolean;
+            status?: string;
+            authScheme?: string;
+            operator?: boolean;
+            /** Format: date-time */
+            suspendedAt?: string;
+            /** Format: date-time */
+            lockedUntil?: string;
+            /** Format: date-time */
+            deletionRequestedAt?: string;
+        };
+        RewrapRequest: {
+            wrappedByPassword?: string;
+            wrappedByRecovery?: string;
         };
         UpdateHouseholdRequest: {
             name?: string;
@@ -919,71 +1456,39 @@ export interface components {
             };
             /** Format: int64 */
             seq?: number;
-        };
-        AnnualReportResponse: {
-            /** Format: int32 */
-            year?: number;
-            baseCurrency?: string;
-            months?: components["schemas"]["Month"][];
-            /** Format: int64 */
-            received?: number;
-            /** Format: int64 */
-            spent?: number;
-            /** Format: double */
-            savingRate?: number;
-            snapshots?: components["schemas"]["Snapshot"][];
-        };
-        Month: {
-            monthKey?: string;
-            /** Format: int64 */
-            received?: number;
-            /** Format: int64 */
-            spent?: number;
-            /** Format: int64 */
-            saved?: number;
-            /** Format: double */
-            savingRate?: number;
-        };
-        Snapshot: {
-            monthKey?: string;
-            /** Format: int64 */
-            netWorth?: number;
+            encrypted?: boolean;
         };
         VapidKeyResponse: {
             publicKey?: string;
-        };
-        NetWorthResponse: {
-            /** Format: int64 */
-            totalAssets?: number;
-            /** Format: int64 */
-            totalLiabilities?: number;
-            /** Format: int64 */
-            netWorth?: number;
-            /** Format: int64 */
-            liquidAssets?: number;
-            /** Format: int64 */
-            illiquidAssets?: number;
-            composition?: components["schemas"]["Share"][];
-            rateSet?: {
-                [key: string]: unknown;
-            };
-            /** Format: date-time */
-            computedAt?: string;
-        };
-        Share: {
-            /** @enum {string} */
-            assetClass?: "CASH" | "METALS" | "RECEIVABLES" | "VEHICLES" | "PROPERTY" | "OTHER_ASSETS";
-            /** Format: int64 */
-            amount?: number;
-            /** Format: double */
-            percent?: number;
         };
         HistoryPointResponse: {
             /** Format: date */
             day?: string;
             /** Format: int64 */
+            openMicros?: number;
+            /** Format: int64 */
+            highMicros?: number;
+            /** Format: int64 */
+            lowMicros?: number;
+            /** Format: int64 */
             priceMicros?: number;
             source?: string;
+        };
+        PriceChangeResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            observedAt?: string;
+            /** Format: int64 */
+            priceMicros?: number;
+            /** Format: int64 */
+            previousMicros?: number;
+            source?: string;
+        };
+        PriceChangesResponse: {
+            changes?: components["schemas"]["PriceChangeResponse"][];
+            /** Format: date-time */
+            nextBefore?: string;
         };
         CatalogueResponse: {
             source?: string;
@@ -994,15 +1499,15 @@ export interface components {
             catalogue?: components["schemas"]["JsonNode"];
         };
         JsonNode: {
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            string?: boolean;
-            integralNumber?: boolean;
             floatingPointNumber?: boolean;
+            container?: boolean;
+            number?: boolean;
             missingNode?: boolean;
             valueNode?: boolean;
-            container?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             pojo?: boolean;
+            integralNumber?: boolean;
             int?: boolean;
             long?: boolean;
             double?: boolean;
@@ -1012,7 +1517,7 @@ export interface components {
             textual?: boolean;
             boolean?: boolean;
             binary?: boolean;
-            number?: boolean;
+            string?: boolean;
             empty?: boolean;
             array?: boolean;
             null?: boolean;
@@ -1037,6 +1542,23 @@ export interface components {
             role?: "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR";
             current?: boolean;
         };
+        Entry: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            occurredAt?: string;
+            action?: string;
+            entityType?: string;
+            /** Format: uuid */
+            entityId?: string;
+            /** Format: uuid */
+            actorId?: string;
+            /** Format: uuid */
+            householdId?: string;
+            before?: string;
+            after?: string;
+            ipAddress?: string;
+        };
         UnsubscribeRequest: {
             endpoint: string;
         };
@@ -1049,6 +1571,168 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    schedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+    };
+    mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MyKeysResponse"];
+                };
+            };
+        };
+    };
+    store: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountKeysRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MyKeysResponse"];
+                };
+            };
+        };
+    };
+    rewrap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RewrapRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MyKeysResponse"];
+                };
+            };
+        };
+    };
+    putSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: "MARKET_IQWEALTH_API_KEY" | "MARKET_IQWEALTH_PARALLEL_SIDE" | "MARKET_IQWEALTH_RESERVE" | "MARKET_METALS_DEV_API_KEY" | "MARKET_GOLD_API_KEY" | "MARKET_OPEN_EXCHANGE_RATES_APP_ID" | "MARKET_MANUAL_DOLLAR_IQD" | "MARKET_BAGHDAD_BULLION_ENABLED" | "MARKET_GOLD_API_COM_ENABLED" | "MARKET_STALE_AFTER" | "MARKET_REFRESH_COOLDOWN";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SettingResponse"][];
+                };
+            };
+        };
+    };
+    resetSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: "MARKET_IQWEALTH_API_KEY" | "MARKET_IQWEALTH_PARALLEL_SIDE" | "MARKET_IQWEALTH_RESERVE" | "MARKET_METALS_DEV_API_KEY" | "MARKET_GOLD_API_KEY" | "MARKET_OPEN_EXCHANGE_RATES_APP_ID" | "MARKET_MANUAL_DOLLAR_IQD" | "MARKET_BAGHDAD_BULLION_ENABLED" | "MARKET_GOLD_API_COM_ENABLED" | "MARKET_STALE_AFTER" | "MARKET_REFRESH_COOLDOWN";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SettingResponse"][];
+                };
+            };
+        };
+    };
+    complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VaultStatusResponse"];
+                };
+            };
+        };
+    };
     push: {
         parameters: {
             query?: never;
@@ -1119,7 +1803,7 @@ export interface operations {
             };
         };
     };
-    mine: {
+    mine_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1187,50 +1871,6 @@ export interface operations {
             };
         };
     };
-    reopen: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                monthKey: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["MonthCloseResponse"];
-                };
-            };
-        };
-    };
-    close: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                monthKey: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["MonthCloseResponse"];
-                };
-            };
-        };
-    };
     requestDeletion: {
         parameters: {
             query?: never;
@@ -1287,6 +1927,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["QuoteResponse"][];
+                };
+            };
+        };
+    };
+    grant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GrantRequest"][];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["KeyMemberResponse"][];
                 };
             };
         };
@@ -1665,6 +2329,274 @@ export interface operations {
             };
         };
     };
+    session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SessionResponse"];
+                };
+            };
+        };
+    };
+    elevate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElevateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SessionResponse"];
+                };
+            };
+        };
+    };
+    correct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PriceCorrectionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operatorList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OperatorSummary"][];
+                };
+            };
+        };
+    };
+    grant_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GrantOperatorRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OperatorSummary"][];
+                };
+            };
+        };
+    };
+    poll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Overview"];
+                };
+            };
+        };
+    };
+    announcements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnnouncementResponse"][];
+                };
+            };
+        };
+    };
+    publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnnouncementResponse"];
+                };
+            };
+        };
+    };
+    suspend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountSummary"];
+                };
+            };
+        };
+    };
+    revokeSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountSummary"];
+                };
+            };
+        };
+    };
+    cancelDeletion_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountSummary"];
+                };
+            };
+        };
+    };
     current: {
         parameters: {
             query?: never;
@@ -1755,6 +2687,26 @@ export interface operations {
             };
         };
     };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VaultStatusResponse"];
+                };
+            };
+        };
+    };
     pull: {
         parameters: {
             query: {
@@ -1801,28 +2753,6 @@ export interface operations {
             };
         };
     };
-    annual: {
-        parameters: {
-            query: {
-                year: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["AnnualReportResponse"];
-                };
-            };
-        };
-    };
     vapidKey: {
         parameters: {
             query?: never;
@@ -1839,46 +2769,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["VapidKeyResponse"];
-                };
-            };
-        };
-    };
-    current_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["NetWorthResponse"];
-                };
-            };
-        };
-    };
-    months: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["MonthCloseResponse"][];
                 };
             };
         };
@@ -1929,6 +2819,7 @@ export interface operations {
                 instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL" | "XAU_LOCAL_BID" | "XAG_LOCAL_BID";
                 from?: string;
                 to?: string;
+                interval?: "DAY" | "WEEK" | "MONTH";
             };
             header?: never;
             path?: never;
@@ -1943,6 +2834,31 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["HistoryPointResponse"][];
+                };
+            };
+        };
+    };
+    changes: {
+        parameters: {
+            query: {
+                instrument: "XAU" | "XAG" | "USDIQD_OFFICIAL" | "USDIQD_PARALLEL" | "XAU_LOCAL" | "XAG_LOCAL" | "XAU_LOCAL_BID" | "XAG_LOCAL_BID";
+                from?: string;
+                before?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PriceChangesResponse"];
                 };
             };
         };
@@ -1963,6 +2879,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CatalogueResponse"];
+                };
+            };
+        };
+    };
+    members: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["KeyMemberResponse"][];
                 };
             };
         };
@@ -2009,7 +2945,7 @@ export interface operations {
             };
         };
     };
-    members: {
+    members_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2051,12 +2987,186 @@ export interface operations {
             };
         };
     };
+    live: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnnouncementResponse"][];
+                };
+            };
+        };
+    };
+    settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SettingResponse"][];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Overview"];
+                };
+            };
+        };
+    };
+    audit: {
+        parameters: {
+            query?: {
+                action?: string;
+                actorId?: string;
+                entityId?: string;
+                before?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Entry"][];
+                };
+            };
+        };
+    };
+    accounts: {
+        parameters: {
+            query: {
+                query: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountSummary"][];
+                };
+            };
+        };
+    };
     revoke: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revoke_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OperatorSummary"][];
+                };
+            };
+        };
+    };
+    retract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
             };
             cookie?: never;
         };

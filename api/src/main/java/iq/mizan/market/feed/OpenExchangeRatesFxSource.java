@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import iq.mizan.market.MarketProperties;
+import iq.mizan.market.MarketSettings;
 import iq.mizan.market.entity.Instrument;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -15,14 +15,15 @@ import org.springframework.web.client.RestClient;
 /** openexchangerates.org: {"rates": {"IQD": 1310.0}, "timestamp": ...}. Official rate only. */
 @Component
 @Order(40)
-@ConditionalOnProperty(prefix = "mizan.market.feeds.open-exchange-rates", name = "app-id")
 public class OpenExchangeRatesFxSource implements PriceFeed {
 
     private final RestClient client;
     private final MarketProperties.OpenExchangeRates config;
+    private final MarketSettings settings;
 
-    public OpenExchangeRatesFxSource(RestClient.Builder builder, MarketProperties properties) {
+    public OpenExchangeRatesFxSource(RestClient.Builder builder, MarketProperties properties, MarketSettings settings) {
         this.config = properties.feeds().openExchangeRates();
+        this.settings = settings;
         this.client = builder.baseUrl(config.url()).build();
     }
 
@@ -33,13 +34,13 @@ public class OpenExchangeRatesFxSource implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return instrument == Instrument.USDIQD_OFFICIAL && Configured.present(config.appId());
+        return instrument == Instrument.USDIQD_OFFICIAL && Configured.present(settings.openExchangeRatesAppId());
     }
 
     @Override
     public Optional<FetchedPrice> fetch(Instrument instrument) {
         Map<?, ?> body = client.get()
-                .uri(uri -> uri.path("/api/latest.json").queryParam("app_id", config.appId()).queryParam("symbols", "IQD").build())
+                .uri(uri -> uri.path("/api/latest.json").queryParam("app_id", settings.openExchangeRatesAppId()).queryParam("symbols", "IQD").build())
                 .retrieve()
                 .body(Map.class);
         Map<?, ?> rates = body == null ? null : (Map<?, ?>) body.get("rates");

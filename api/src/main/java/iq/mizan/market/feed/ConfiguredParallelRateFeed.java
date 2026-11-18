@@ -3,7 +3,7 @@ package iq.mizan.market.feed;
 import java.time.Clock;
 import java.util.Optional;
 
-import iq.mizan.market.MarketProperties;
+import iq.mizan.market.MarketSettings;
 import iq.mizan.market.entity.Instrument;
 
 import org.springframework.core.annotation.Order;
@@ -17,11 +17,11 @@ import org.springframework.stereotype.Component;
 @Order(100)
 public class ConfiguredParallelRateFeed implements PriceFeed {
 
-    private final MarketProperties properties;
+    private final MarketSettings settings;
     private final Clock clock;
 
-    public ConfiguredParallelRateFeed(MarketProperties properties, Clock clock) {
-        this.properties = properties;
+    public ConfiguredParallelRateFeed(MarketSettings settings, Clock clock) {
+        this.settings = settings;
         this.clock = clock;
     }
 
@@ -32,11 +32,11 @@ public class ConfiguredParallelRateFeed implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return instrument == Instrument.USDIQD_PARALLEL && properties.feeds().parallelRateIqdMicros() > 0;
+        return instrument == Instrument.USDIQD_PARALLEL && settings.manualDollarMicros() > 0;
     }
 
     @Override
     public Optional<FetchedPrice> fetch(Instrument instrument) {
-        return Optional.of(new FetchedPrice(properties.feeds().parallelRateIqdMicros(), clock.instant()));
+        return Optional.of(new FetchedPrice(settings.manualDollarMicros(), clock.instant()));
     }
 }

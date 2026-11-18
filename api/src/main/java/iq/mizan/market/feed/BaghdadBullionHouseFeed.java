@@ -7,11 +7,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import iq.mizan.market.MarketProperties;
+import iq.mizan.market.MarketSettings;
 import iq.mizan.market.entity.Instrument;
 import iq.mizan.market.entity.MarketCatalogue;
 import iq.mizan.market.repository.MarketCatalogueRepository;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -25,7 +25,6 @@ import tools.jackson.databind.json.JsonMapper;
  */
 @Component
 @Order(3)
-@ConditionalOnProperty(prefix = "mizan.market.feeds.baghdad-bullion", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class BaghdadBullionHouseFeed implements PriceFeed {
 
     public static final String NAME = "baghdadbullionhouse.com";
@@ -33,15 +32,17 @@ public class BaghdadBullionHouseFeed implements PriceFeed {
 
     private final RestClient client;
     private final MarketProperties.BaghdadBullion config;
+    private final MarketSettings settings;
     private final MarketCatalogueRepository catalogues;
     private final JsonMapper json;
     private final Clock clock;
     private Map<?, ?> cachedBody;
     private Instant cachedAt = Instant.EPOCH;
 
-    public BaghdadBullionHouseFeed(RestClient.Builder builder, MarketProperties properties, MarketCatalogueRepository catalogues,
+    public BaghdadBullionHouseFeed(RestClient.Builder builder, MarketProperties properties, MarketSettings settings, MarketCatalogueRepository catalogues,
                                    JsonMapper json, Clock clock) {
         this.config = properties.feeds().baghdadBullion();
+        this.settings = settings;
         this.client = builder.build();
         this.catalogues = catalogues;
         this.json = json;
@@ -55,7 +56,7 @@ public class BaghdadBullionHouseFeed implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return Configured.present(config.url()) && switch (instrument) {
+        return settings.baghdadBullionEnabled() && Configured.present(config.url()) && switch (instrument) {
             case XAU_LOCAL, XAU_LOCAL_BID, XAG_LOCAL, XAG_LOCAL_BID -> true;
             default -> false;
         };

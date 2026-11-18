@@ -4,25 +4,28 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import iq.mizan.common.exception.ApiException;
-import iq.mizan.common.exception.ErrorCode;
-import iq.mizan.market.MarketProperties;
+import iq.mizan.market.MarketSettings;
 import iq.mizan.market.dto.CatalogueResponse;
-import iq.mizan.market.dto.HistoryPointResponse;
 import iq.mizan.market.repository.MarketCatalogueRepository;
 import tools.jackson.databind.json.JsonMapper;
 import iq.mizan.market.dto.QuoteResponse;
 import iq.mizan.market.entity.Instrument;
 import iq.mizan.market.entity.PriceHistory;
 import iq.mizan.market.entity.PriceQuote;
+import iq.mizan.market.entity.PriceTick;
 import iq.mizan.market.feed.FetchedPrice;
 import iq.mizan.market.feed.PriceFeed;
 import iq.mizan.market.mapper.MarketMapper;
 import iq.mizan.market.repository.PriceHistoryRepository;
 import iq.mizan.market.repository.PriceQuoteRepository;
+import iq.mizan.market.repository.PriceTickRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -44,24 +47,58 @@ public class MarketService {
     private final List<PriceFeed> feeds;
     private final PriceQuoteRepository quotes;
     private final PriceHistoryRepository history;
+    private final PriceTickRepository ticks;
     private final MarketCatalogueRepository catalogues;
     private final JsonMapper json;
     private final MarketMapper mapper;
-    private final MarketProperties properties;
+    private final MarketSettings settings;
     private final Clock clock;
     private volatile Instant lastManualRefresh = Instant.EPOCH;
+    private final Map<String, FeedHealth> health = new ConcurrentHashMap<>();
+
+    /** Since this instance started; a feed that never answered or failed is not listed. */
+    public record FeedHealth(Instant lastSuccessAt, Instant lastFailureAt, String lastError) {
+        static FeedHealth succeeded(FeedHealth previous, Instant at) {
+            return previous == null ? new FeedHealth(at, null, null) : new FeedHealth(at, previous.lastFailureAt(), previous.lastError());
+        }
+
+        static FeedHealth failed(FeedHealth previous, Instant at, String error) {
+            return new FeedHealth(previous == null ? null : previous.lastSuccessAt(), at, error);
+        }
+    }
+
+    public Map<String, FeedHealth> feedHealth() {
+        return Map.copyOf(health);
+    }
+
+    public List<String> feedNames() {
+        return feeds.stream().map(PriceFeed::name).toList();
+    }
+
+    /** An operator's correction: recorded like any price, from source "correction". */
+    @Transactional
+    public void correct(Instrument instrument, long priceMicros) {
+        store(instrument, CORRECTION_SOURCE, new FetchedPrice(priceMicros, clock.instant()));
+    }
+
+    public static final String CORRECTION_SOURCE = "correction";
 
     @Transactional
     public void refresh() {
-        for (Instrument instrument : Instrument.values()) {
-            fetchFromFirstAnsweringFeed(instrument).ifPresent(fetched -> store(instrument, fetched.feed(), fetched.price()));
+        refresh(EnumSet.allOf(Instrument.class));
+    }
+
+    @Transactional
+    public void refresh(Set<Instrument> instruments) {
+        for (Instrument instrument : instruments) {
+            fetchFromFirstAnsweringFeed(instrument).ifPresent(fetched -> store(instrument, fetched.feed().name(), fetched.price()));
         }
     }
 
     /** A user asking for fresh prices gets them, but not more often than the cooldown, whoever asks. */
     public List<QuoteResponse> refreshOnRequest() {
         Instant now = clock.instant();
-        if (lastManualRefresh.plus(properties.manualRefreshCooldown()).isBefore(now)) {
+        if (lastManualRefresh.plus(settings.refreshCooldown()).isBefore(now)) {
             lastManualRefresh = now;
             refresh();
         }
@@ -72,7 +109,7 @@ public class MarketService {
     public List<QuoteResponse> quotes() {
         Instant now = clock.instant();
         return quotes.findAll().stream()
-                .map(quote -> mapper.toResponse(quote, quote.isStaleAt(now, properties.staleAfter())))
+                .map(quote -> mapper.toResponse(quote, quote.isStaleAt(now, settings.staleAfter())))
                 .toList();
     }
 
@@ -81,20 +118,6 @@ public class MarketService {
     public Optional<CatalogueResponse> catalogue() {
         return catalogues.findAll().stream().findFirst()
                 .map(c -> new CatalogueResponse(c.getSource(), c.getFetchedAt(), c.getAsOf(), json.readTree(c.getPayload())));
-    }
-
-    @Transactional(readOnly = true)
-    public List<HistoryPointResponse> history(Instrument instrument, LocalDate from, LocalDate to) {
-        LocalDate today = LocalDate.now(clock);
-        LocalDate end = to == null ? today : to;
-        LocalDate start = from == null ? end.minusDays(properties.historyDefaultDays()) : from;
-        if (start.plusDays(properties.historyMaxDays()).isBefore(end)) {
-            throw ApiException.of(ErrorCode.VALIDATION_FAILED,
-                    "History is limited to %d days per request".formatted(properties.historyMaxDays()));
-        }
-        return history.findByKeyInstrumentAndKeyDayBetweenOrderByKeyDay(instrument, start, end).stream()
-                .map(mapper::toResponse)
-                .toList();
     }
 
     private record Answer(PriceFeed feed, FetchedPrice price) {
@@ -108,24 +131,40 @@ public class MarketService {
             try {
                 Optional<FetchedPrice> price = feed.fetch(instrument);
                 if (price.isPresent()) {
+                    health.compute(feed.name(), (name, h) -> FeedHealth.succeeded(h, clock.instant()));
                     return Optional.of(new Answer(feed, price.get()));
                 }
             } catch (RuntimeException e) {
+                health.compute(feed.name(), (name, h) -> FeedHealth.failed(h, clock.instant(), instrument + ": " + e.getMessage()));
                 log.warn("Price feed {} failed for {}: {}", feed.name(), instrument, e.getMessage());
             }
         }
         return Optional.empty();
     }
 
-    private void store(Instrument instrument, PriceFeed feed, FetchedPrice price) {
+    @Transactional
+    void store(Instrument instrument, String source, FetchedPrice price) {
         Instant now = clock.instant();
         quotes.findById(instrument).ifPresentOrElse(
-                quote -> quote.update(price.priceMicros(), feed.name(), price.quotedAt(), now),
-                () -> quotes.save(PriceQuote.of(instrument, price.priceMicros(), feed.name(), price.quotedAt(), now)));
+                quote -> quote.update(price.priceMicros(), source, price.quotedAt(), now),
+                () -> quotes.save(PriceQuote.of(instrument, price.priceMicros(), source, price.quotedAt(), now)));
+
+        recordTickIfChanged(instrument, source, price);
 
         LocalDate day = price.quotedAt().atZone(ZoneOffset.UTC).toLocalDate();
         history.findById(new PriceHistory.Key(instrument, day)).ifPresentOrElse(
-                point -> point.record(price.priceMicros(), feed.name()),
-                () -> history.save(PriceHistory.of(instrument, day, price.priceMicros(), feed.name())));
+                point -> point.record(price.priceMicros(), source),
+                () -> history.save(PriceHistory.of(instrument, day, price.priceMicros(), source)));
+    }
+
+    /** A tick per change, not per fetch: a feed answering the same price again adds nothing. */
+    private void recordTickIfChanged(Instrument instrument, String source, FetchedPrice price) {
+        boolean unchanged = ticks.findFirstByInstrumentOrderByObservedAtDesc(instrument)
+                .map(last -> last.getPriceMicros() == price.priceMicros())
+                .orElse(false);
+        if (unchanged || ticks.existsByInstrumentAndObservedAt(instrument, price.quotedAt())) {
+            return;
+        }
+        ticks.save(PriceTick.of(instrument, price.quotedAt(), price.priceMicros(), source));
     }
 }

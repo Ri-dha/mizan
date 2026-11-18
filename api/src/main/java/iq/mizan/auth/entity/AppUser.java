@@ -37,6 +37,10 @@ public class AppUser {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_scheme", nullable = false)
+    private AuthScheme authScheme;
+
     @Column(nullable = false)
     private String locale;
 
@@ -56,6 +60,16 @@ public class AppUser {
     @Column(name = "deletion_requested_at")
     private Instant deletionRequestedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "platform_role", nullable = false)
+    private PlatformRole platformRole = PlatformRole.NONE;
+
+    @Column(name = "operator_elevated_until")
+    private Instant operatorElevatedUntil;
+
+    @Column(name = "suspended_at")
+    private Instant suspendedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -70,6 +84,7 @@ public class AppUser {
         user.phone = identifier.phoneOrNull();
         user.displayName = displayName;
         user.passwordHash = passwordHash;
+        user.authScheme = AuthScheme.KEY;
         user.locale = locale;
         user.accountStatus = AccountStatus.ACTIVE;
         user.createdAt = Instant.now();
@@ -110,9 +125,15 @@ public class AppUser {
         }
     }
 
-    public void changePassword(String newPasswordHash) {
-        this.passwordHash = newPasswordHash;
+    /** The new hash always protects an auth key, so this also completes a LEGACY account's upgrade. */
+    public void changePassword(String newAuthKeyHash) {
+        this.passwordHash = newAuthKeyHash;
+        this.authScheme = AuthScheme.KEY;
         recordSuccessfulLogin();
+    }
+
+    public boolean usesLegacyPassword() {
+        return authScheme == AuthScheme.LEGACY;
     }
 
     public void recordFailedLogin(int maxAttempts, Duration lockoutDuration) {
@@ -126,6 +147,40 @@ public class AppUser {
     public void recordSuccessfulLogin() {
         failedLoginAttempts = 0;
         lockedUntil = null;
+    }
+
+    public boolean isOperator() {
+        return platformRole == PlatformRole.OPERATOR;
+    }
+
+    public void grantOperator() {
+        platformRole = PlatformRole.OPERATOR;
+    }
+
+    public void revokeOperator() {
+        platformRole = PlatformRole.NONE;
+        operatorElevatedUntil = null;
+    }
+
+    public void elevateUntil(Instant until) {
+        operatorElevatedUntil = until;
+    }
+
+    public boolean isElevatedAt(Instant now) {
+        return isOperator() && operatorElevatedUntil != null && operatorElevatedUntil.isAfter(now);
+    }
+
+    public boolean isSuspended() {
+        return suspendedAt != null;
+    }
+
+    public void suspend(Instant at) {
+        suspendedAt = at;
+        revokeOperator();
+    }
+
+    public void restore() {
+        suspendedAt = null;
     }
 
     @PreUpdate

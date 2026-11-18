@@ -6,5 +6,8 @@ public enum AuditEntityType {
     MEMBERSHIP,
     INVITATION,
     SYNC_RECORD,
-    MONTH
+    MONTH,
+    PLATFORM_SETTING,
+    PRICE,
+    ANNOUNCEMENT
 }

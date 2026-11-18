@@ -118,17 +118,17 @@ mizan:
   notifications:
     enabled: ${MIZAN_NOTIFICATIONS_ENABLED:true}
     transport: ${MIZAN_NOTIFICATIONS_TRANSPORT:webpush}
-    daily-cron: "0 0 8 * * *"
+    # Devices schedule reminders (ADR e2e-1); this is how often due ones are sent.
+    dispatch-interval: 5m
+    # A reminder this late is dropped rather than sent.
+    stale-after: 6h
+    metal-cron: "0 0 9 * * *"
     time-zone: ${MIZAN_TIME_ZONE:Asia/Baghdad}
     ttl: 24h
     vapid:
       subject: ${MIZAN_VAPID_SUBJECT:mailto:admin@mizan.iq}
       public-key: ${MIZAN_VAPID_PUBLIC_KEY:}
       private-key: ${MIZAN_VAPID_PRIVATE_KEY:}
-    defaults:
-      bill-lead-days: 3
-      overspend-threshold-basis-points: 9000
-      metal-move-basis-points: 200
 
   household:
     default-currency: IQD
@@ -142,15 +142,6 @@ mizan:
       purge-cron: "0 15 4 * * *"
     advisor:
       default-access-days: 30
-
-  # FR-PLN-02: the split a new household starts with. Shares are basis points (5500 = 55.0%).
-  plan:
-    default-buckets:
-      - { name: Essentials, colour: "#88aaee", share-basis-points: 5500 }
-      - { name: Guilt-free, colour: "#ffdc58", share-basis-points: 500 }
-      - { name: Debt & invest, colour: "#ff6b6b", share-basis-points: 1000 }
-      - { name: Short-term savings, colour: "#a3e635", share-basis-points: 1500 }
-      - { name: Investing, colour: "#c4a1ff", share-basis-points: 1500 }
 
   sync:
     pull-page-size: 500
@@ -167,6 +158,10 @@ mizan:
     # Feeds are called only on request (Refresh button, app load) unless auto-refresh is on.
     auto-refresh: "${MIZAN_MARKET_AUTO_REFRESH:false}"
     refresh-interval: 15m
+    # T-price-history: every feed is polled on this schedule so price changes are recorded
+    # (keyless sources by default; check a keyed provider's quota). "-" turns it off.
+    poll-cron: "${MIZAN_MARKET_POLL_CRON:0 0/30 7-22 * * *}"
+    poll-zone: Asia/Baghdad
     manual-refresh-cooldown: 30s
     stale-after: 24h
     history-default-days: 365
@@ -192,6 +187,18 @@ mizan:
         url: "${MIZAN_GOLD_API_COM_URL:https://api.gold-api.com}"
         enabled: "${MIZAN_GOLD_API_COM_ENABLED:true}"
       parallel-rate-iqd-micros: "${MIZAN_PARALLEL_RATE_IQD_MICROS:0}"
+      # IQWealth (iraqsm.com): the Baghdad market and Central Bank dollar, ahead of the sources above.
+      # Free keys allow 100 requests a day for personal, non-commercial use and require the
+      # "Data: IQWealth" credit; anything public needs their Business plan. Blank key: off.
+      # The crons spend about 45 a day; the reserve is never spent by polling.
+      iq-wealth:
+        url: "${MIZAN_IQWEALTH_URL:https://iraqsm.com/api/v1}"
+        api-key: "${MIZAN_IQWEALTH_API_KEY:}"
+        parallel-side: "${MIZAN_IQWEALTH_PARALLEL_SIDE:MID}"
+        reserve: 40
+        zone: Asia/Baghdad
+        day-cron: "0 0/20 8-21 * * *"
+        night-cron: "0 0 23,2,5 * * *"
       # Phase 4: the local market's own quote. Any JSON endpoint; e.g. {"gold21": 547000} with
       # gold-path=gold21 and gold-unit=MITHQAL_21K. Registered only when the URL is set.
       local-dealer:
@@ -203,12 +210,6 @@ mizan:
     stub:
       enabled: false
       prices-micros: {}
-
-  # --- Net worth (FR-NET-03) ---
-  # The month that ended is snapshotted shortly after midnight; a month someone already closed
-  # by hand is left alone.
-  networth:
-    auto-close-cron: "0 15 0 * * *"
 
   storage:
     bucket: "${MIZAN_STORAGE_BUCKET:mizan-attachments}"
@@ -225,3 +226,16 @@ mizan:
 
   web:
     allowed-origins: "${MIZAN_ALLOWED_ORIGINS:}"
+
+  # --- Operators (ADR admin-1) ---
+  # The first operator: an existing account's email or phone, granted at start-up. Later
+  # operators are granted from the dashboard. Changes need the password again within elevation.
+  admin:
+    bootstrap-operator: "${MIZAN_BOOTSTRAP_OPERATOR:}"
+    elevation: 10m
+
+  # Secret settings changed from the dashboard are encrypted under this key (32 random bytes,
+  # base64). Without it, secrets can only come from the environment.
+  platform:
+    settings-key: "${MIZAN_SETTINGS_KEY:}"
+

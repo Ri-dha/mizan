@@ -1,6 +1,9 @@
-import { BarChart3, House, ListOrdered, MoreHorizontal, PieChart, PiggyBank, Plus, Receipt, Settings } from "lucide-react"
+import { BarChart3, ChartLine, House, ListOrdered, MoreHorizontal, PieChart, PiggyBank, Plus, Receipt, Settings, ShieldCheck } from "lucide-react"
 import { Suspense, useState } from "react"
 import { useTranslation } from "react-i18next"
+
+import { RecoveryCodeDialog } from "@/features/vault/VaultScreens"
+import { AnnouncementBanner } from "@/components/AnnouncementBanner"
 import { Link, NavLink, Outlet, useNavigate } from "react-router"
 import { useEffect } from "react"
 
@@ -39,6 +42,7 @@ export function AppShell() {
       { to: "/", label: t("nav.home"), icon: House, end: true },
       { to: "/transactions", label: t("nav.transactions"), icon: ListOrdered },
       { to: "/goals", label: t("nav.goals"), icon: PiggyBank },
+      { to: "/prices", label: t("nav.prices"), icon: ChartLine },
       { to: "/settings", label: t("nav.settings"), icon: Settings },
     ]
     : role === "ADVISOR"
@@ -46,6 +50,7 @@ export function AppShell() {
         { to: "/advisor", label: t("advisor.nav"), icon: BarChart3, end: true },
         { to: "/household", label: t("household.title"), icon: House },
         { to: "/help", label: t("help.title"), icon: ListOrdered },
+        { to: "/prices", label: t("nav.prices"), icon: ChartLine },
         { to: "/settings", label: t("nav.settings"), icon: Settings },
       ]
       : [
@@ -57,30 +62,38 @@ export function AppShell() {
   const restricted = role === "DEPENDENT" || role === "ADVISOR"
   const sidebar = restricted ? primary : [...primary, ...MORE_LINKS.filter((l) => l.to !== "/bills").map((l) => ({ to: l.to, label: t(l.key), icon: l.icon, end: false }))]
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    cn("flex items-center gap-3 rounded-base border-2 border-border px-3 py-2 font-heading", isActive ? "bg-main text-main-foreground shadow-shadow" : "hover:bg-background")
+    cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+      isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
-      <aside className="print:hidden hidden w-60 shrink-0 flex-col gap-2 border-e-4 border-border bg-secondary-background p-4 md:flex">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-2xl font-heading">{t("app.name")}</span>
+      <aside className="print:hidden sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-1 overflow-y-auto border-e bg-sidebar p-3 text-sidebar-foreground md:flex">
+        <div className="mb-3 flex items-center justify-between px-1 pt-1">
+          <span className="text-xl font-semibold">{t("app.name")}</span>
           <SyncBadge />
         </div>
         {canWrite && <Button onClick={() => setAdding(true)} className="mb-2" data-tour="quick-add-desktop"><Plus /> {t("transactions.add")}</Button>}
         {sidebar.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
-            <item.icon className="size-5" />
+            <item.icon className="size-4" />
             {item.label}
           </NavLink>
         ))}
-        <p className="mt-auto truncate text-sm opacity-70">{session?.householdName}</p>
+        {session?.operator && (
+          <NavLink to="/admin" className={linkClass}>
+            <ShieldCheck className="size-4" />
+            {t("admin.nav")}
+          </NavLink>
+        )}
+        <p className="mt-auto truncate px-1 pt-3 text-sm text-muted-foreground">{session?.householdName}</p>
       </aside>
 
       <main className="flex-1 p-4 pb-28 md:p-8 md:pb-8">
         <div className="mb-4 flex items-center justify-between md:hidden">
-          <span className="text-2xl font-heading">{t("app.name")}</span>
+          <span className="text-xl font-semibold">{t("app.name")}</span>
           <SyncBadge />
         </div>
+        <AnnouncementBanner />
         <Suspense fallback={<p className="opacity-70">{t("common.loading")}</p>}>
           <Outlet />
         </Suspense>
@@ -96,16 +109,16 @@ export function AppShell() {
         <Plus className="size-7" />
       </Button>}
 
-      <nav className={cn("print:hidden fixed inset-x-0 bottom-0 z-10 grid border-t-4 border-border bg-secondary-background md:hidden", restricted ? "grid-cols-4" : "grid-cols-5")}>
+      <nav className={cn("print:hidden fixed inset-x-0 bottom-0 z-10 grid border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden", "grid-cols-5")}>
         {primary.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end}
-            className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-heading", isActive && "bg-main text-main-foreground")}>
+            className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-medium", isActive ? "text-primary" : "text-muted-foreground")}>
             <item.icon className="size-5" />
             {item.label}
           </NavLink>
         ))}
         {!restricted && (
-          <NavLink to="/more" data-tour="nav-more" className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-heading", isActive && "bg-main text-main-foreground")}>
+          <NavLink to="/more" data-tour="nav-more" className={({ isActive }) => cn("flex flex-col items-center gap-1 py-2 text-xs font-medium", isActive ? "text-primary" : "text-muted-foreground")}>
             <MoreHorizontal className="size-5" />
             {t("nav.more")}
           </NavLink>
@@ -114,6 +127,7 @@ export function AppShell() {
 
       <QuickAddSheet open={adding} transaction={null} onClose={() => setAdding(false)} />
       <TourProvider />
+      <RecoveryCodeDialog />
     </div>
   )
 }
@@ -124,7 +138,7 @@ function SyncBadge() {
   const label = status.pending > 0 ? t("sync.status.pending", { count: status.pending }) : t(`sync.status.${status.phase}`)
   return (
     <Link to="/sync">
-      <Badge variant={status.phase === "error" ? "default" : "neutral"} className="max-w-40 truncate">{label}</Badge>
+      <Badge variant={status.phase === "error" ? "destructive" : "secondary"} className="max-w-40 truncate">{label}</Badge>
     </Link>
   )
 }

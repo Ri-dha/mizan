@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import iq.mizan.market.MarketProperties;
+import iq.mizan.market.MarketSettings;
 import iq.mizan.market.entity.Instrument;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -19,13 +19,14 @@ import org.springframework.web.client.RestClient;
  */
 @Component
 @Order(20)
-@ConditionalOnProperty(prefix = "mizan.market.feeds.gold-api-com", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class GoldApiComPriceFeed implements PriceFeed {
 
     private final RestClient client;
+    private final MarketSettings settings;
 
-    public GoldApiComPriceFeed(RestClient.Builder builder, MarketProperties properties) {
+    public GoldApiComPriceFeed(RestClient.Builder builder, MarketProperties properties, MarketSettings settings) {
         this.client = builder.baseUrl(properties.feeds().goldApiCom().url()).build();
+        this.settings = settings;
     }
 
     @Override
@@ -35,7 +36,7 @@ public class GoldApiComPriceFeed implements PriceFeed {
 
     @Override
     public boolean supports(Instrument instrument) {
-        return instrument == Instrument.XAU || instrument == Instrument.XAG;
+        return settings.goldApiComEnabled() && (instrument == Instrument.XAU || instrument == Instrument.XAG);
     }
 
     @Override

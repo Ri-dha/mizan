@@ -20,6 +20,7 @@ public interface UserMapper {
     @Mapping(target = "locale", source = "user.locale")
     @Mapping(target = "verified", source = "user.verified")
     @Mapping(target = "deletionRequestedAt", source = "user.deletionRequestedAt")
+    @Mapping(target = "operator", source = "user.operator")
     @Mapping(target = "household", source = "household")
     CurrentUserResponse toResponse(AppUser user, HouseholdSummary household);
 }
