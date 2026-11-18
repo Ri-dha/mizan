@@ -96,7 +96,9 @@ class KeyResetIntegrationTest extends PostgresIntegrationTest {
         UUID household = jdbc.queryForObject("select household_id from membership where user_id = ?", UUID.class, ownerId);
         assertThat(count("select count(*) from vault_record where household_id = ?", household)).isZero();
         assertThat(count("select count(*) from household_key_grant where household_id = ?", household)).isZero();
+        assertThat(count("select count(*) from household_key_state where household_id = ?", household)).isZero();
         assertThat(grant(owner, ownerId, "HOUSEHOLD")).hasStatus(HttpStatus.OK);
+        assertThat(count("select count(*) from household_key_state where household_id = ? and current_version = 1", household)).isEqualTo(1);
     }
 
     @Test

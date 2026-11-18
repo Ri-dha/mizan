@@ -6,11 +6,14 @@ import iq.mizan.auth.dto.AccountKeysRequest;
 import iq.mizan.common.security.CurrentUser;
 import iq.mizan.vault.dto.GrantRequest;
 import iq.mizan.vault.dto.KeyMemberResponse;
+import iq.mizan.vault.dto.KeyStateResponse;
 import iq.mizan.vault.dto.MyKeysResponse;
 import iq.mizan.vault.dto.ResetKeysRequest;
 import iq.mizan.vault.dto.ResetPreviewResponse;
 import iq.mizan.vault.dto.RewrapRequest;
+import iq.mizan.vault.dto.RotateKeyRequest;
 import iq.mizan.vault.service.KeyResetService;
+import iq.mizan.vault.service.KeyRotationService;
 import iq.mizan.vault.service.KeyService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +46,7 @@ public class KeyController {
 
     private final KeyService keyService;
     private final KeyResetService keyReset;
+    private final KeyRotationService keyRotationService;
 
     @Operation(summary = "The caller's wrapped user key and the household keys granted to them")
     @GetMapping("/me")
@@ -78,6 +82,20 @@ public class KeyController {
                                                          @Valid @RequestBody @Size(min = 1, max = MAX_GRANTS) List<@Valid GrantRequest> requests) {
         keyService.grant(user, requests);
         return ResponseEntity.ok(keyService.members(user));
+    }
+
+    @Operation(summary = "The household's shared key versions and whether one is due for rotation (ADR e2e-4)")
+    @GetMapping("/household/state")
+    @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW') or hasAuthority('REPORTS_VIEW')")
+    public ResponseEntity<List<KeyStateResponse>> state(@AuthenticationPrincipal CurrentUser user) {
+        return ResponseEntity.ok(keyRotationService.state(user));
+    }
+
+    @Operation(summary = "Store a new version of a shared key, wrapped for every remaining member who may hold it")
+    @PostMapping("/household/rotate")
+    @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW') or hasAuthority('REPORTS_VIEW')")
+    public ResponseEntity<KeyStateResponse> rotate(@AuthenticationPrincipal CurrentUser user, @Valid @RequestBody RotateKeyRequest request) {
+        return ResponseEntity.ok(keyRotationService.rotate(user, request));
     }
 
     @Operation(summary = "What starting over without a recovery code would remove (ADR e2e-3)")

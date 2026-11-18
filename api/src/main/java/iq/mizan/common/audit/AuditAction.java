@@ -15,6 +15,7 @@ public enum AuditAction {
     KEYS_REWRAPPED,
     KEYS_RESET,
     KEY_GRANTED,
+    KEY_ROTATED,
     VAULT_MIGRATED,
     HOUSEHOLD_UPDATED,
     MEMBER_INVITED,

@@ -8,5 +8,7 @@ public record TestAccounts(
         String ownerPassword,
         String ownerPhone,
         String otherEmail,
-        String otherPassword) {
+        String otherPassword,
+        String thirdEmail,
+        String thirdPassword) {
 }

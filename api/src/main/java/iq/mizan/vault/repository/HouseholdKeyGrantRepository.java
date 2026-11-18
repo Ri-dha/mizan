@@ -15,4 +15,8 @@ public interface HouseholdKeyGrantRepository extends JpaRepository<HouseholdKeyG
     boolean existsByHouseholdIdAndUserIdAndKeyKindAndKeyVersion(UUID householdId, UUID userId, KeyKind kind, int version);
 
     boolean existsByHouseholdIdAndKeyKind(UUID householdId, KeyKind kind);
+
+    List<HouseholdKeyGrant> findByHouseholdIdAndKeyKindAndKeyVersion(UUID householdId, KeyKind kind, int version);
+
+    List<HouseholdKeyGrant> findByHouseholdIdAndKeyKind(UUID householdId, KeyKind kind);
 }

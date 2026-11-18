@@ -1,5 +1,6 @@
 package iq.mizan.sync.service;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -23,5 +24,17 @@ public final class VaultFields {
 
     public static boolean isCiphertext(Object value) {
         return value instanceof String text && CIPHERTEXT.matcher(text).matches();
+    }
+
+    /** Which key sealed a value: its kind letter and version, read from the plain header. */
+    public record Seal(char keyKind, int keyVersion) {
+    }
+
+    public static Optional<Seal> sealOf(Object value) {
+        if (!isCiphertext(value)) {
+            return Optional.empty();
+        }
+        String[] parts = ((String) value).split("\\.", 4);
+        return Optional.of(new Seal(parts[1].charAt(0), Integer.parseInt(parts[2])));
     }
 }

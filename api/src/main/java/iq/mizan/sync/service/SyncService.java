@@ -2,9 +2,11 @@ package iq.mizan.sync.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -64,6 +66,7 @@ public class SyncService {
     private final AuditService auditService;
     private final JsonMapper jsonMapper;
     private final SyncProperties properties;
+    private final SharedKeyVersions sharedKeys;
 
     /** Applies a batch atomically; every op is acknowledged exactly once, however often it is sent. */
     @Transactional
@@ -76,12 +79,13 @@ public class SyncService {
 
         List<UUID> applied = new ArrayList<>();
         List<ConflictResponse> conflicts = new ArrayList<>();
+        SealCheck seals = new SealCheck(user.householdId());
         for (SyncOp op : request.ops()) {
             if (receiptRepository.existsById(op.opId())) {
                 applied.add(op.opId());
                 continue;
             }
-            conflicts.addAll(apply(user, device, op));
+            conflicts.addAll(apply(user, device, op, seals));
             receiptRepository.save(SyncOpReceipt.of(op.opId(), device.getId()));
             applied.add(op.opId());
         }
@@ -136,9 +140,9 @@ public class SyncService {
                 .toList();
     }
 
-    private List<ConflictResponse> apply(CurrentUser user, SyncDevice device, SyncOp op) {
+    private List<ConflictResponse> apply(CurrentUser user, SyncDevice device, SyncOp op, SealCheck seals) {
         SyncTable table = registry.require(op.table());
-        Map<String, Object> incoming = validated(table, op);
+        Map<String, Object> incoming = validated(table, op, seals);
         Map<String, String> clocks = op.fields().keySet().stream().collect(Collectors.toMap(
                 Function.identity(), field -> HybridLogicalClock.validated(op.clocks().get(field), field),
                 (a, b) -> a, LinkedHashMap::new));
@@ -191,7 +195,7 @@ public class SyncService {
     }
 
     /** Plain fields keep their meaning; every other field must arrive as ciphertext. */
-    private Map<String, Object> validated(SyncTable table, SyncOp op) {
+    private Map<String, Object> validated(SyncTable table, SyncOp op, SealCheck seals) {
         Map<String, Object> values = new LinkedHashMap<>();
         op.fields().forEach((field, value) -> {
             if (!table.fields().containsKey(field)) {
@@ -206,6 +210,7 @@ public class SyncService {
             } else if (VaultFields.DELETED_AT.equals(field)) {
                 values.put(field, SyncColumnType.TIMESTAMP.normalize(value, jsonMapper));
             } else if (VaultFields.isCiphertext(value)) {
+                seals.requireCurrent(op, field, value);
                 values.put(field, value);
             } else {
                 throw ApiException.of(ErrorCode.SYNC_PLAIN_VALUE_REFUSED,
@@ -233,5 +238,31 @@ public class SyncService {
                 .entityId(op.rowId())
                 .after(Map.of("table", op.table(), "fields", List.copyOf(accepted.keySet())))
                 .build());
+    }
+
+    /**
+     * ADR e2e-4: after a rotation, a shared value sealed with any other version is refused, so a
+     * device that missed the rotation fetches the new key and pushes again. Looked up once a push.
+     */
+    private final class SealCheck {
+
+        private final UUID householdId;
+        private final Map<Character, OptionalInt> current = new HashMap<>();
+
+        SealCheck(UUID householdId) {
+            this.householdId = householdId;
+        }
+
+        void requireCurrent(SyncOp op, String field, Object value) {
+            VaultFields.sealOf(value).ifPresent(seal -> {
+                OptionalInt version = current.computeIfAbsent(seal.keyKind(), kind -> sharedKeys.current(householdId, kind));
+                if (version.isPresent() && version.getAsInt() != seal.keyVersion()) {
+                    throw ApiException.of(ErrorCode.KEY_ROTATED,
+                                    "Field '%s' is sealed with key version %d; the current version is %d".formatted(field, seal.keyVersion(), version.getAsInt()))
+                            .property("opId", op.opId())
+                            .property("keyVersion", version.getAsInt());
+                }
+            });
+        }
     }
 }

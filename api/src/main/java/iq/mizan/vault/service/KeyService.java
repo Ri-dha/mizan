@@ -27,6 +27,7 @@ import iq.mizan.vault.entity.HouseholdKeyGrant;
 import iq.mizan.vault.entity.KeyKind;
 import iq.mizan.vault.entity.UserKey;
 import iq.mizan.vault.repository.HouseholdKeyGrantRepository;
+import iq.mizan.vault.repository.KeyStateRepository;
 import iq.mizan.vault.repository.UserKeyRepository;
 
 import lombok.AllArgsConstructor;
@@ -45,6 +46,7 @@ public class KeyService {
 
     private final UserKeyRepository userKeys;
     private final HouseholdKeyGrantRepository grants;
+    private final KeyStateRepository states;
     private final HouseholdService households;
     private final AuditService auditService;
     private final Clock clock;
@@ -114,7 +116,7 @@ public class KeyService {
             if (recipient == null) {
                 throw refused("The recipient is not a member of this household");
             }
-            if (!recipient.permissions().contains(permissionToHold(request.keyKind()))) {
+            if (!KeyHolding.mayHold(recipient, request.keyKind())) {
                 throw refused("A %s may not hold the %s key".formatted(recipient.role(), request.keyKind()));
             }
             if (userKeys.findById(request.userId()).isEmpty()) {
@@ -130,6 +132,9 @@ public class KeyService {
             if (!callerHolds && !startsHousehold) {
                 throw refused("Only a member holding this key may grant it");
             }
+            if (startsHousehold) {
+                states.start(householdId, request.keyKind(), FIRST_VERSION);
+            }
             grants.saveAndFlush(HouseholdKeyGrant.of(householdId, request.userId(), request.keyKind(), request.keyVersion(),
                     request.wrappedKey(), user.userId(), clock.instant()));
             auditService.record(AuditRecord.of(AuditAction.KEY_GRANTED, AuditEntityType.HOUSEHOLD)
@@ -137,10 +142,6 @@ public class KeyService {
                     .after(Map.of("recipient", request.userId().toString(), "kind", request.keyKind().name(), "version", request.keyVersion()))
                     .build());
         }
-    }
-
-    private static Permission permissionToHold(KeyKind kind) {
-        return kind == KeyKind.HOUSEHOLD ? Permission.HOUSEHOLD_VIEW : Permission.REPORTS_VIEW;
     }
 
     private static ApiException refused(String detail) {

@@ -34,6 +34,12 @@ docs/manual/  one Markdown source → in-app /help and static /docs
   ECDH P-256 pair. Each household has a household key and a report key, versioned and granted by
   wrapping them to members' public keys (`/api/v1/keys`, `web/src/vault/keyring.ts`). Members hold
   both, viewers the household key, advisors only the report key, dependents neither.
+- When someone's access to a shared key ends (removal, leaving, a role that may not hold it,
+  lapsed advisor access, account deletion), the next sync of a remaining key holder's device
+  rotates it (ADR e2e-4): the server computes that a rotation is due from the grants of the
+  current version (`KeyRotationService`, `household_key_state`), accepts exactly one new version
+  wrapped for every remaining member, deletes the leaver's grants, and refuses pushes sealed with
+  any other version (`KEY_ROTATED`). Old records keep their version; newcomers get every version.
 - Every synced field except `visibility` and `deletedAt` is sealed on the device as
   `e1.<h|u|r>.<version>.<base64url>` (AES-GCM, padded to 32 bytes, AAD = table, record id, field;
   `web/src/vault/records.ts`). The server stores records in `vault_record` and rejects plain

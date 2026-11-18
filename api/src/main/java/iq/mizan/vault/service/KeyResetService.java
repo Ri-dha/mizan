@@ -72,6 +72,7 @@ public class KeyResetService {
             sharedDeleted += jdbc.sql("delete from vault_record where household_id = ? and visibility = 'SHARED'")
                     .param(household.householdId()).update();
             grantsDeleted += jdbc.sql("delete from household_key_grant where household_id = ?").param(household.householdId()).update();
+            jdbc.sql("delete from household_key_state where household_id = ?").param(household.householdId()).update();
         }
 
         auditService.record(AuditRecord.of(AuditAction.KEYS_RESET, AuditEntityType.USER).actorId(userId).entityId(userId)

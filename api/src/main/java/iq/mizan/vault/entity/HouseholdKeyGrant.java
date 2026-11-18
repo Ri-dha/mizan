@@ -27,7 +27,8 @@ public class HouseholdKeyGrant {
     @Column(name = "household_id", nullable = false)
     private UUID householdId;
 
-    @Column(name = "user_id", nullable = false)
+    /** Null once the account is deleted: the grant stays as evidence for rotation (ADR e2e-4). */
+    @Column(name = "user_id")
     private UUID userId;
 
     @Enumerated(EnumType.STRING)
