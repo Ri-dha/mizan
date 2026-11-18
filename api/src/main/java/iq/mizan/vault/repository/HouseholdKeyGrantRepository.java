@@ -19,4 +19,6 @@ public interface HouseholdKeyGrantRepository extends JpaRepository<HouseholdKeyG
     List<HouseholdKeyGrant> findByHouseholdIdAndKeyKindAndKeyVersion(UUID householdId, KeyKind kind, int version);
 
     List<HouseholdKeyGrant> findByHouseholdIdAndKeyKind(UUID householdId, KeyKind kind);
+
+    List<HouseholdKeyGrant> findByHouseholdIdOrderByKeyKindAscKeyVersionAsc(UUID householdId);
 }

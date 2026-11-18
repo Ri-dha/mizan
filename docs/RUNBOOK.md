@@ -105,6 +105,19 @@ cd api && ./mvnw -q compile && java -cp target/classes iq.mizan.notification.pus
 at `mizan.notifications.daily-cron` in `mizan.notifications.time-zone` (Asia/Baghdad). Set
 `MIZAN_NOTIFICATIONS_TRANSPORT=log` to print instead of sending.
 
+## API memory and connections
+
+The API image runs with `JAVA_OPTS` set for one small instance: serial collector, 192 MB heap,
+160 MB metaspace, 64 MB code cache, and it exits on running out of memory so Docker restarts it
+(measured about 480 MB in use). Compose caps the container at `API_MEM_LIMIT` (640m). Raise
+`-Xmx` through `API_JAVA_OPTS` and the limit together if the heap fills (`jvm.memory.used` in
+the metrics). Production keeps 2 to 6 database connections (`DB_POOL_MIN_IDLE`, `DB_POOL_MAX`).
+Every transaction binds the tenancy settings in one statement (`TenantSession.bind`).
+
+Access lines are INFO only for errors, client errors and requests over
+`MIZAN_SLOW_REQUEST` (1s); fast successful ones are DEBUG (ADR obs-3). For a full trace of
+requests set `LOGGING_LEVEL_IQ_MIZAN_HTTP=DEBUG`.
+
 ## Logs and performance in Kibana
 
 The `observability` profile runs a single-node Elasticsearch with security off, Kibana bound to

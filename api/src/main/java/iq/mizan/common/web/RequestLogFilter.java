@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.slf4j.spi.LoggingEventBuilder;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
@@ -19,7 +20,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 /**
  * Puts the request on every log line written while it runs (httpMethod, httpPath) and writes
  * one access line when it ends with the status and duration, so Kibana can chart latency and
- * errors per path without any other instrumentation.
+ * errors per path without any other instrumentation. Fast successful requests, most of them
+ * periodic syncs, are DEBUG; failures, client errors and slow requests stay visible at INFO.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
@@ -30,6 +32,13 @@ public class RequestLogFilter extends OncePerRequestFilter {
     private static final String PATH = "httpPath";
     private static final long NANOS_PER_MILLI = 1_000_000L;
     private static final int SERVER_ERROR = 500;
+    private static final int CLIENT_ERROR = 400;
+
+    private final long slowAfterMillis;
+
+    public RequestLogFilter(RequestLogProperties properties) {
+        this.slowAfterMillis = properties.slowAfter().toMillis();
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -47,7 +56,7 @@ public class RequestLogFilter extends OncePerRequestFilter {
         } finally {
             long millis = (System.nanoTime() - started) / NANOS_PER_MILLI;
             int status = response.getStatus();
-            var line = (status >= SERVER_ERROR ? log.atError() : log.atInfo())
+            var line = levelFor(status, millis)
                     .addKeyValue("httpStatus", status)
                     .addKeyValue("durationMs", millis)
                     .addKeyValue("clientIp", ClientAddress.of(request));
@@ -55,5 +64,12 @@ public class RequestLogFilter extends OncePerRequestFilter {
             MDC.remove(METHOD);
             MDC.remove(PATH);
         }
+    }
+
+    private LoggingEventBuilder levelFor(int status, long millis) {
+        if (status >= SERVER_ERROR) {
+            return log.atError();
+        }
+        return status >= CLIENT_ERROR || millis >= slowAfterMillis ? log.atInfo() : log.atDebug();
     }
 }

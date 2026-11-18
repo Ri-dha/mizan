@@ -85,16 +85,22 @@ public class KeyService {
                 .after(Map.of("password", request.wrappedByPassword() != null, "recovery", request.wrappedByRecovery() != null)).build());
     }
 
+    /** Two queries for the whole household, whatever its size; devices ask on every sync. */
     @Transactional(readOnly = true)
     public List<KeyMemberResponse> members(CurrentUser user) {
-        return households.activeMembers(user.householdId()).stream()
+        List<MemberAccess> members = households.activeMembers(user.householdId());
+        Map<UUID, String> publicKeys = userKeys.findAllById(members.stream().map(MemberAccess::userId).toList()).stream()
+                .collect(Collectors.toMap(UserKey::getUserId, UserKey::getPublicKey));
+        Map<UUID, List<KeyMemberResponse.HeldKey>> held = grants.findByHouseholdIdOrderByKeyKindAscKeyVersionAsc(user.householdId()).stream()
+                .filter(grant -> grant.getUserId() != null)
+                .collect(Collectors.groupingBy(HouseholdKeyGrant::getUserId,
+                        Collectors.mapping(grant -> new KeyMemberResponse.HeldKey(grant.getKeyKind().name(), grant.getKeyVersion()), Collectors.toList())));
+        return members.stream()
                 .map(member -> new KeyMemberResponse(member.userId(), member.displayName(), member.role(),
                         member.permissions().contains(Permission.HOUSEHOLD_VIEW),
                         member.permissions().contains(Permission.REPORTS_VIEW),
-                        userKeys.findById(member.userId()).map(UserKey::getPublicKey).orElse(null),
-                        grants.findByHouseholdIdAndUserIdOrderByKeyKindAscKeyVersionAsc(user.householdId(), member.userId()).stream()
-                                .map(grant -> new KeyMemberResponse.HeldKey(grant.getKeyKind().name(), grant.getKeyVersion()))
-                                .toList()))
+                        publicKeys.get(member.userId()),
+                        held.getOrDefault(member.userId(), List.of())))
                 .toList();
     }
 

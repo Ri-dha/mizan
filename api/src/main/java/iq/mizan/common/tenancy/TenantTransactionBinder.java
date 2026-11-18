@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -31,7 +30,6 @@ public class TenantTransactionBinder {
     private static final Object BOUND_MARKER = new Object();
 
     private final CurrentUserAccessor currentUserAccessor;
-    private final JdbcClient jdbcClient;
     private final TenantSession tenantSession;
 
     @Before("within(iq.mizan..*) && (@within(org.springframework.transaction.annotation.Transactional)"
@@ -45,14 +43,8 @@ public class TenantTransactionBinder {
     }
 
     private void bind(CurrentUser user) {
-        jdbcClient.sql("set local role " + APP_ROLE).update();
-        tenantSession.bind(user.userId(), user.householdId());
-        if (!user.permissions().contains(Permission.HOUSEHOLD_VIEW)) {
-            tenantSession.restrict();
-        }
-        if (user.permissions().contains(Permission.REPORTS_VIEW)) {
-            tenantSession.allowReportReading();
-        }
+        tenantSession.bind(APP_ROLE, user.userId(), user.householdId(),
+                !user.permissions().contains(Permission.HOUSEHOLD_VIEW), user.permissions().contains(Permission.REPORTS_VIEW));
 
         TransactionSynchronizationManager.bindResource(BOUND_MARKER, Boolean.TRUE);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

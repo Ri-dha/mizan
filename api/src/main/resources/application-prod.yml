@@ -10,11 +10,16 @@ spring:
     password: ${DB_PASSWORD}
     hikari:
       pool-name: mizan-pool
-      maximum-pool-size: ${DB_POOL_MAX:10}
+      # One small instance: a few connections serve it, and each idle one costs Postgres memory.
+      maximum-pool-size: ${DB_POOL_MAX:6}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
 
 springdoc:
   swagger-ui:
     enabled: false
+  # The OpenAPI document is generated for `npm run api:types` against a local API, not served here.
+  api-docs:
+    enabled: ${OPENAPI_DOCS_ENABLED:false}
 
 mizan:
   web:

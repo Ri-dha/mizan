@@ -72,7 +72,10 @@ services:
         condition: service_healthy
       seaweedfs:
         condition: service_healthy
+    # About 480 MB in use with the image's JVM settings; the limit stops a leak taking the host.
+    mem_limit: ${API_MEM_LIMIT:-640m}
     environment:
+      JAVA_OPTS: ${API_JAVA_OPTS:--XX:+UseSerialGC -Xmx192m -XX:MaxMetaspaceSize=160m -XX:ReservedCodeCacheSize=64m -XX:+ExitOnOutOfMemoryError}
       # dev inside Docker keeps the stub prices; set prod in .env for a real deployment.
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DOCKER_COMPOSE_ENABLED: "false"

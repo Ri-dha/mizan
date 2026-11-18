@@ -22,20 +22,22 @@ public class TenantSession {
         jdbcClient.sql("select set_config('app.system', 'on', true)").query().singleRow();
     }
 
-    /** §4.2: a dependent sees only what they own; the policies check this flag next to the household. */
-    public void restrict() {
-        jdbcClient.sql("select set_config('app.restricted', 'on', true)").query().singleRow();
-    }
+    private static final String ON = "on";
+    private static final String OFF = "off";
 
-    /** Advisors read the shared annual reports and nothing else (ADR e2e-1). */
-    public void allowReportReading() {
-        jdbcClient.sql("select set_config('app.reports', 'on', true)").query().singleRow();
-    }
-
-    public void bind(UUID userId, UUID householdId) {
-        jdbcClient.sql("select set_config('app.user_id', ?, true), set_config('app.household_id', ?, true)")
+    /**
+     * Everything the policies read, in one statement: the role the session runs as, who and which
+     * household, whether it is restricted to its own rows (§4.2, dependents) and whether it may
+     * read the advisor reports (ADR e2e-1). One round trip per transaction instead of four.
+     */
+    public void bind(String role, UUID userId, UUID householdId, boolean restricted, boolean readsReports) {
+        jdbcClient.sql("select set_config('role', ?, true), set_config('app.user_id', ?, true), set_config('app.household_id', ?, true), "
+                        + "set_config('app.restricted', ?, true), set_config('app.reports', ?, true)")
+                .param(role)
                 .param(userId.toString())
                 .param(householdId.toString())
+                .param(restricted ? ON : OFF)
+                .param(readsReports ? ON : OFF)
                 .query().singleRow();
     }
 }

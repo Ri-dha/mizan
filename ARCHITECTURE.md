@@ -160,7 +160,8 @@ In MizanApp (ADR split-1); its `ARCHITECTURE.md` describes the client side.
 
 The API logs one Logstash-shaped JSON object per line (`logback-spring.xml`: readable console plus
 JSON file in dev, JSON stdout in prod, plain in test) with `correlationId`, `traceId`, `spanId`,
-`userId`, `httpMethod`, `httpPath`, and one access line per request. Logstash ships API lines to
+`userId`, `httpMethod`, `httpPath`, and an access line per request: INFO for errors, client
+errors and requests over 1 s, DEBUG otherwise (ADR obs-3). Logstash ships API lines to
 `mizan-logs-*` and other containers to `containers-logs-*`; Micrometer pushes metrics to
 `mizan-metrics-*`; Kibana has a prebuilt "Mizan overview" dashboard. Every index is deleted
 after a set age through lifecycle policies (ADR obs-2: logs 14 days, container logs and metrics
