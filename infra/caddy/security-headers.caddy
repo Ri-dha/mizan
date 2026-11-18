@@ -1,9 +1,0 @@
-# ADR csp-and-job-lock-2. Imported by the Caddyfile and read by `vite preview`, so the policy
-# is tested where it is served. Receipts go straight to object storage, hence its origin.
-header {
-	Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: {$MIZAN_STORAGE_ORIGIN}; connect-src 'self' {$MIZAN_STORAGE_ORIGIN}; font-src 'self' data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
-	X-Content-Type-Options nosniff
-	X-Frame-Options DENY
-	Referrer-Policy strict-origin-when-cross-origin
-	Permissions-Policy "camera=(self), geolocation=()"
-}

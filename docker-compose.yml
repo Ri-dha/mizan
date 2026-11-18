@@ -112,8 +112,9 @@ services:
   # Caddy serves the built PWA, terminates TLS for SITE_ADDRESS and proxies /api to the API.
   web:
     logging: *logging
+    # The web image lives in Ri-dha/MizanApp, checked out next to this repository (ADR split-1).
     build:
-      context: .
+      context: ${MIZAN_APP_DIR:-../MizanApp}
       dockerfile: web/Dockerfile
     profiles: ["prod"]
     depends_on:

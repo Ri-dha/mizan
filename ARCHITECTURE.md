@@ -5,6 +5,13 @@ register (cash, gold and silver, belongings, debts), Arabic and English, usable 
 is the source of truth for how it is built. Decisions behind it are in `docs/adr/`; changing any of
 them means a new ADR and an edit here in the same task.
 
+## Repositories (ADR split-1)
+
+- `Ri-dha/mizan` (`MizanApi`): the server, compose, backup and observability, the runbook.
+- `Ri-dha/MizanApp` (`MizanApp`): the web app, the shared test vectors, the manual, the web
+  image's Caddy config, and from T-mobile-app the shared core and the phone app.
+- This file is kept in both; each repository details its own side.
+
 ## Shape
 
 ```
@@ -141,12 +148,7 @@ entities or repositories.
 
 ## Web (`web/src`)
 
-`features/*` screens, `db/` the only writer to synced tables, `sync/` engine and device duties,
-`vault/` keys and field sealing, `lock/` PIN and WebAuthn, `attachments/` encrypted receipts, `market/` quotes, history and resolution, `ocr/`
-Tesseract on device, `tours/` react-joyride, `help/` bundled manual, `pwa/` install and service
-worker, `i18n/` en and ar with RTL. UI is standard shadcn/ui (Radix, Tailwind v4)
-vendored in `components/ui`, themed by the tokens in `index.css` (ADR ui-1). Light or dark follows
-the device unless Settings says otherwise; `public/theme-boot.js` sets it before first paint.
+In MizanApp (ADR split-1); its `ARCHITECTURE.md` describes the client side.
 
 ## Observability (ADR obs-1)
 

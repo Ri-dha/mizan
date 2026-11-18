@@ -27,8 +27,6 @@ the newest file in `docs/handovers/`, and the ADRs in `docs/adr/` for the area y
 
 ```bash
 cd api && ./mvnw -B test                     # JUnit, Testcontainers Postgres, jqwik
-cd web && npm run typecheck && npm test && npm run build
-cd web && npm audit --audit-level=high       # CI runs this too
 ```
 
 CI (`.github/workflows/ci.yml`) runs exactly these on every push to `main`. The API suite needs
@@ -40,28 +38,28 @@ Docker; it starts its own Postgres and does not use port 5432.
   (`BR-03`, `FR-TRX-07`) is a welcome one-line comment. Any longer "why" belongs in an ADR or a
   learning.
 - Money is integer minor units with a currency. Never a float.
-- Domain maths gets a case in `shared/test-vectors/` first. The server no longer calculates
-  (ADR e2e-1); the vectors are the contract for every client (web now, Flutter later).
+- The clients (web, and the Expo app from T-mobile-app) live in `Ri-dha/MizanApp`, checked out as
+  `../MizanApp` (ADR split-1). Domain maths, the vault and the shared test vectors are there; the
+  server no longer calculates (ADR e2e-1). An API change lands here first and stays backward
+  compatible until the clients follow; the clients regenerate their types from the OpenAPI document.
 - The server must never receive a plain amount, name or note (ADR e2e-1, e2e-2). A new synced
   table is a `SyncTable` bean listing its field names. Its rows live in `vault_record`, so it
   needs no Flyway table. Every field
-  except `visibility` and `deletedAt` is sealed by `web/src/vault/records.ts`. Never add a server
-  feature that reads record values; do it on the device (`web/src/sync/duties.ts`).
+  except `visibility` and `deletedAt` is sealed on the device (MizanApp `web/src/vault/records.ts`).
+  Never add a server feature that reads record values; do it on the device.
 - Never edit an applied migration; add the next `V0NN__`.
-- Web writes to syncable tables only through `web/src/db/write.ts`.
-- Every user-facing string in both `web/src/i18n/en.json` and `ar.json`. Manual pages exist in
-  both `docs/manual/en` and `docs/manual/ar` (the build fails otherwise).
 - Config never hardcoded: `application.yml` under `mizan.*` with `${MIZAN_X:default}`.
 
 ## Never commit
 
 - `.env` or any real secret, keys or tokens (scan the staged diff before committing).
-- `api/logs/`, `web/public/ocr/`, `web/*.pem`, `web/dist/`, `node_modules/`, `api/target/`.
+- `api/logs/`, `api/target/`.
 - `CLAUDE.md` and `PLAN.md` are local and gitignored; durable facts go in this file,
   `ARCHITECTURE.md` and `docs/`.
 
 ## Local environment facts
 
-- Project root is `myWallet/Mizan` (moved there on 2026-11-18). Compose project name is pinned to
+- This repository is `myWallet/MizanApi`, next to `myWallet/MizanApp` (split from `myWallet/Mizan`
+  on 2026-11-18, ADR split-1). Compose project name is pinned to
   `mizan`, so volumes are `mizan_pgdata`, `mizan_seaweeddata`, `mizan_esdata`.
 - Dev test accounts live only in the local database; their credentials are not recorded here.

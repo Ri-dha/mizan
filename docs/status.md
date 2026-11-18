@@ -5,7 +5,7 @@ Long-lived facts only. Change in its own small commit when one of them changes.
 - **Phase**: the BRD's planned scope (v1, v2, v3, Phase 4) is delivered, followed by owner
   additions: end-to-end encryption, the IQWealth dollar, shadcn/ui with light and dark, price
   history and the operator dashboard (all on `main` since d5099dc). Next planned: phone apps with
-  Expo (T-mobile-app, ADR mobile-1; T-flutter-app abandoned).
+  Expo (T-mobile-app, ADR mobile-1; T-flutter-app abandoned), tracked in MizanApp (ADR split-1).
 - **Repository**: github.com/Ri-dha/mizan. Branches: `main` (released) and `develop` (testing;
   task branches start here). Local checkout `myWallet/Mizan`.
 - **Tracker**: none yet; keys are slugs (see AGENTS.md).
