@@ -1,13 +1,13 @@
 # Handover — 2026-11-19 — Sync tables that stop growing; cached price reads
 
-## Completed (uncommitted, MizanApi worktree ../.wt-trim, branch perf/trim-tables-and-cache)
+## Completed (3039d61 on develop and main)
 - ADR sync-2; V026; `SyncHousekeeping`; identical-clock retries; per-op sync audit removed.
 - Price cache (`CacheConfig`, `MarketCache`, `@Cacheable` reads, cleared after commit) and ETags
   on market GETs. Tests: SyncHousekeepingTest (3), market cache and 304 (3), snapshot retry.
   API 112 tests.
 
 ## In flight
-- Nothing half-done. Awaiting the owner's word to commit.
+- Nothing.
 
 ## Next steps
 - Remaining from the analysis: Filebeat instead of Logstash, Kibana on demand, a "what changed?"

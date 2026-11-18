@@ -1,5 +1,5 @@
 # T-trim-tables-and-cache — Stop the sync tables growing; serve shared prices from memory
-- Status: in-review (2026-11-19), branch perf/trim-tables-and-cache (worktree ../.wt-trim), uncommitted
+- Status: done (2026-11-19), 3039d61 on develop and main
 - Context: items 1 and 3 of the 2026-11-19 resource analysis; owner chose to stop the per-op
   audit rows. ADR sync-2.
 - Notes: `SyncHousekeeping` job and V026 indexes; `FieldMerger` skips identical clocks and
