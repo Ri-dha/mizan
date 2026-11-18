@@ -18,7 +18,15 @@ public record MarketProperties(
         Stub stub) {
 
     public record Feeds(MetalsDev metalsDev, GoldApi goldApi, OpenExchangeRates openExchangeRates, ExchangeRateApi exchangeRateApi,
-                        long parallelRateIqdMicros, LocalDealer localDealer, GoldApiCom goldApiCom, BaghdadBullion baghdadBullion) {
+                        long parallelRateIqdMicros, LocalDealer localDealer, GoldApiCom goldApiCom, BaghdadBullion baghdadBullion,
+                        IqWealth iqWealth) {
+    }
+
+    /**
+     * IQWealth's Baghdad market and Central Bank dollar. {@code reserve} requests of the daily quota
+     * are never spent by polling; {@code parallelSide} is BUY, SELL or MID.
+     */
+    public record IqWealth(String url, String apiKey, String parallelSide, int reserve, String zone, String dayCron, String nightCron) {
     }
 
     /** The Baghdad dealer whose bid and ask per gram are the default local source. */
