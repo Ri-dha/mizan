@@ -1,6 +1,5 @@
 # T-storage-public-endpoint — Presign storage URLs a browser can reach
-- Status: in-review (2026-11-19), server half b48b895; web half on feat/storage-same-origin in
-  MizanApp plus the web service default here (MIZAN_STORAGE_ORIGIN empty), uncommitted
+- Status: done (2026-11-19): MizanApi b48b895 and 1e973a6, MizanApp f53b409, on develop and main
 - Context: found while writing ADR csp-and-job-lock-2; ADR storage-4. Owner chose the site's own
   address over a storage subdomain, and asked for the server change first (2026-11-19).
 - Notes: `S3Config` presigns with `MIZAN_STORAGE_ENDPOINT`, which the prod Compose file sets to
