@@ -202,6 +202,7 @@ any deployment when the switch was made.
 |---|---|---|
 | Market refresh | off unless `MIZAN_MARKET_AUTO_REFRESH` | Timed refresh of every feed |
 | Recycle-bin purge | 03:30 daily | Hard-deletes rows soft-deleted more than 30 days ago |
+| Sync housekeeping | 03:40 daily | Keeps the newest `sync_log` entry per record; drops push receipts after `receipt-retention` (30 days) |
 | Account purge | 03:45 daily | Deletes accounts and households whose deletion request is older than 30 days |
 
 Every instance schedules every job, and the `scheduled_job_lock` table lets one of them run it

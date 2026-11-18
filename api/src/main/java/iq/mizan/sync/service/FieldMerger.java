@@ -38,6 +38,10 @@ public final class FieldMerger {
         incomingFields.forEach((field, incomingValue) -> {
             String incomingClock = incomingClocks.get(field);
             String storedClock = storedClocks.get(field);
+            if (Objects.equals(incomingClock, storedClock)) {
+                // The same write sent again (a retry whose receipt is gone); devices seal anew each push, so values differ.
+                return;
+            }
             if (HybridLogicalClock.isAfter(incomingClock, storedClock)) {
                 accepted.put(field, incomingValue);
                 clocks.put(field, incomingClock);

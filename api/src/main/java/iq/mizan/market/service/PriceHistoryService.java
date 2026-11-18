@@ -21,6 +21,7 @@ import iq.mizan.market.repository.PriceHistoryRepository;
 import iq.mizan.market.repository.PriceTickRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +37,9 @@ public class PriceHistoryService {
     private final PriceTickRepository ticks;
     private final MarketProperties properties;
     private final Clock clock;
+    private final MarketCache cache;
 
+    @Cacheable(MarketCache.HISTORY)
     @Transactional(readOnly = true)
     public List<HistoryPointResponse> history(Instrument instrument, LocalDate from, LocalDate to, HistoryInterval interval) {
         LocalDate end = to == null ? LocalDate.now(clock) : to;
@@ -65,6 +68,7 @@ public class PriceHistoryService {
         return points;
     }
 
+    @Cacheable(MarketCache.CHANGES)
     @Transactional(readOnly = true)
     public PriceChangesResponse changes(Instrument instrument, Instant from, Instant before, int limit) {
         Instant end = before == null ? clock.instant().plusSeconds(1) : before;
@@ -91,6 +95,7 @@ public class PriceHistoryService {
     public PriceChangeResponse deleteTick(long id) {
         PriceTick tick = ticks.findById(id).orElseThrow(() -> ApiException.of(ErrorCode.RESOURCE_NOT_FOUND, "No such price change"));
         ticks.delete(tick);
+        cache.clearAfterCommit();
         return new PriceChangeResponse(tick.getId(), tick.getObservedAt(), tick.getPriceMicros(), null, tick.getSource());
     }
 

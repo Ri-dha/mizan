@@ -18,6 +18,10 @@ spring:
     open-in-view: false
   cache:
     type: caffeine
+    # Shared price reads (MarketCache); cleared when a price is stored, expiring as a backstop.
+    cache-names: market-quotes,market-history,market-changes
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=60s
 
 # Appenders and profiles live in logback-spring.xml; these shape the JSON lines it writes:
 # @timestamp, level, logger_name, thread_name, message, application, plus every MDC key
@@ -154,6 +158,10 @@ mizan:
     # BR-15: how long a soft-deleted record can still be restored.
     recycle-bin-retention: 30d
     purge-cron: "0 30 3 * * *"
+    # Receipts only stop a device's retry being applied twice; a retry later than this is still
+    # recognised by its clocks. Superseded sync log entries go at the same time (ADR sync-2).
+    receipt-retention: 30d
+    housekeeping-cron: "0 40 3 * * *"
 
   # --- Market data (FR-MKT-01..06) ---
   # Providers are tried in order; each is only registered when its key is set. The stub

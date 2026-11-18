@@ -24,6 +24,7 @@ import tools.jackson.databind.JsonNode;
 class VaultIntegrationTest extends PostgresIntegrationTest {
 
     private static final String CLOCK = "1700000000000:0000:test";
+    private static final String LATER_CLOCK = "1700000000001:0000:test";
     private static final long BALANCE = 1_250_000;
 
     @Autowired
@@ -64,10 +65,17 @@ class VaultIntegrationTest extends PostgresIntegrationTest {
     void aSnapshotCannotBeRewrittenOnceStored() {
         UUID snapshot = UUID.randomUUID();
         push(owner, ownerDevice, op("net_worth_snapshot", snapshot, sealedFields("totalAssets", BALANCE)));
+        String stored = jdbc.queryForObject("select fields::text from vault_record where id = ?", String.class, snapshot);
 
         MvcTestResult rewrite = api.post("/api/v1/sync/push", owner, Map.of("deviceId", ownerDevice,
-                "ops", List.of(op("net_worth_snapshot", snapshot, sealedFields("totalAssets", 1)))));
+                "ops", List.of(op("net_worth_snapshot", snapshot, sealedFields("totalAssets", 1), LATER_CLOCK))));
         assertThat(rewrite).hasStatus(HttpStatus.CONFLICT);
+
+        // ADR sync-2: the same write sent again (identical clocks) is a retry: acknowledged, nothing changes.
+        MvcTestResult retry = api.post("/api/v1/sync/push", owner, Map.of("deviceId", ownerDevice,
+                "ops", List.of(op("net_worth_snapshot", snapshot, sealedFields("totalAssets", 1)))));
+        assertThat(retry).hasStatus(HttpStatus.OK);
+        assertThat(jdbc.queryForObject("select fields::text from vault_record where id = ?", String.class, snapshot)).isEqualTo(stored);
     }
 
     @Test
@@ -151,8 +159,12 @@ class VaultIntegrationTest extends PostgresIntegrationTest {
     }
 
     private static Map<String, Object> op(String table, UUID rowId, Map<String, Object> fields) {
+        return op(table, rowId, fields, CLOCK);
+    }
+
+    private static Map<String, Object> op(String table, UUID rowId, Map<String, Object> fields, String clock) {
         Map<String, String> clocks = new HashMap<>();
-        fields.keySet().forEach(field -> clocks.put(field, CLOCK));
+        fields.keySet().forEach(field -> clocks.put(field, clock));
         return Map.of("opId", UUID.randomUUID().toString(), "table", table, "rowId", rowId.toString(), "fields", fields, "clocks", clocks);
     }
 }

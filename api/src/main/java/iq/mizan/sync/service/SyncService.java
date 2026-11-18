@@ -11,10 +11,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import iq.mizan.common.audit.AuditAction;
-import iq.mizan.common.audit.AuditEntityType;
-import iq.mizan.common.audit.AuditRecord;
-import iq.mizan.common.audit.AuditService;
 import iq.mizan.common.exception.ApiException;
 import iq.mizan.common.exception.ErrorCode;
 import iq.mizan.common.security.CurrentUser;
@@ -63,7 +59,6 @@ public class SyncService {
     private final SyncOpReceiptRepository receiptRepository;
     private final DeviceService deviceService;
     private final SyncMapper syncMapper;
-    private final AuditService auditService;
     private final JsonMapper jsonMapper;
     private final SyncProperties properties;
     private final SharedKeyVersions sharedKeys;
@@ -152,6 +147,9 @@ public class SyncService {
             throw ApiException.of(ErrorCode.SYNC_TABLE_MISMATCH,
                     "Record %s belongs to '%s'".formatted(op.rowId(), stored.tableName())).property("opId", op.opId());
         }
+        if (stored != null && table.appendOnly() && stored.clocks().equals(clocks)) {
+            return List.of();
+        }
         if (stored != null && table.appendOnly()) {
             throw ApiException.of(ErrorCode.SYNC_RECORD_IMMUTABLE,
                     "Records of '%s' cannot change once written".formatted(op.table())).property("opId", op.opId());
@@ -167,10 +165,8 @@ public class SyncService {
         try {
             if (stored == null) {
                 vault.insert(op.rowId(), user.householdId(), user.userId(), op.table(), merged, outcome.clocks());
-                audit(AuditAction.SYNC_INSERTED, user, op, outcome.accepted());
             } else if (outcome.changed()) {
                 vault.update(op.rowId(), merged, outcome.clocks());
-                audit(AuditAction.SYNC_UPDATED, user, op, outcome.accepted());
             }
         } catch (DataIntegrityViolationException e) {
             throw ApiException.of(ErrorCode.VALIDATION_FAILED,
@@ -231,15 +227,6 @@ public class SyncService {
     }
 
     /** Field names only: the values are ciphertext and would only bloat the trail. */
-    private void audit(AuditAction action, CurrentUser user, SyncOp op, Map<String, Object> accepted) {
-        auditService.record(AuditRecord.of(action, AuditEntityType.SYNC_RECORD)
-                .actorId(user.userId())
-                .householdId(user.householdId())
-                .entityId(op.rowId())
-                .after(Map.of("table", op.table(), "fields", List.copyOf(accepted.keySet())))
-                .build());
-    }
-
     /**
      * ADR e2e-4: after a rotation, a shared value sealed with any other version is refused, so a
      * device that missed the rotation fetches the new key and pushes again. Looked up once a push.

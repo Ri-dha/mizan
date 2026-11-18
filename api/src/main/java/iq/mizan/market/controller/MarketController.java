@@ -20,6 +20,7 @@ import jakarta.validation.constraints.Min;
 
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Market", description = "Cached spot prices and dollar rates, with their source and age")
 public class MarketController {
 
+    /**
+     * Prices change a few times an hour and every device asks on each sync: devices keep the
+     * answer and revalidate it, so an unchanged one comes back as a 304 with no body (ETag filter).
+     */
+    private static final CacheControl REVALIDATE = CacheControl.noCache().cachePrivate();
+
     private final MarketService marketService;
     private final PriceHistoryService priceHistory;
 
@@ -41,7 +48,7 @@ public class MarketController {
     @GetMapping("/quotes")
     @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
     public ResponseEntity<List<QuoteResponse>> quotes() {
-        return ResponseEntity.ok(marketService.quotes());
+        return ResponseEntity.ok().cacheControl(REVALIDATE).body(marketService.quotes());
     }
 
     @Operation(summary = "Fetch fresh prices from the feeds now (at most once per cooldown) and return the quotes")
@@ -55,7 +62,7 @@ public class MarketController {
     @GetMapping("/catalogue")
     @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
     public ResponseEntity<CatalogueResponse> catalogue() {
-        return marketService.catalogue().map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
+        return marketService.catalogue().map(body -> ResponseEntity.ok().cacheControl(REVALIDATE).body(body)).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @Operation(summary = "Price history by day, week (from Saturday) or month: open, high, low and close of each period")
@@ -66,7 +73,7 @@ public class MarketController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "DAY") HistoryInterval interval) {
-        return ResponseEntity.ok(priceHistory.history(instrument, from, to, interval));
+        return ResponseEntity.ok().cacheControl(REVALIDATE).body(priceHistory.history(instrument, from, to, interval));
     }
 
     @Operation(summary = "Every change of a price, newest first, with the price it replaced; page with nextBefore")
@@ -77,6 +84,6 @@ public class MarketController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant before,
             @RequestParam(defaultValue = "100") @Min(1) @Max(PriceHistoryService.MAX_CHANGES_PAGE) int limit) {
-        return ResponseEntity.ok(priceHistory.changes(instrument, from, before, limit));
+        return ResponseEntity.ok().cacheControl(REVALIDATE).body(priceHistory.changes(instrument, from, before, limit));
     }
 }

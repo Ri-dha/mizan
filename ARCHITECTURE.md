@@ -65,7 +65,9 @@ docs/manual/  one Markdown source → in-app /help and static /docs
 - A write stamps each changed field with a hybrid logical clock (`<ms>:<counter>:<node>`) and adds
   an outbox op (`web/src/db/write.ts`). The engine (`web/src/sync/engine.ts`) pushes the outbox,
   pulls the server's change log after a cursor, and merges per field: the newer stamp wins, the
-  loser is recorded as a conflict and shown on the Sync screen.
+  loser is recorded as a conflict and shown on the Sync screen. A field arriving with the clock
+  already stored is a retry and changes nothing (ADR sync-2); a nightly job keeps only the newest
+  `sync_log` entry per record and a month of push receipts. Synced records are not audited one by one.
 - The server (`api/.../sync`) applies pushes idempotently by op id, merges sealed fields by their
   clocks, writes `sync_log` through a trigger on `vault_record`, and refuses any change to a
   stored append-only record (net worth snapshots). Records waiting for a key the device has not
@@ -118,6 +120,10 @@ lot disposal (FIFO, specific, weighted average), depreciation, net worth. jqwik 
 property tests prove aggregates reconcile.
 
 ## Market data (ADR prices-1)
+
+- Quotes, history and changes are the same for everyone and asked for on every sync, so they are
+  cached in memory (`MarketCache`, cleared after each stored price, 60 s expiry) outside the
+  transaction, and their GETs carry an ETag so an unchanged answer is a 304.
 
 - Instruments: `XAU`, `XAG` (USD/oz), `USDIQD_OFFICIAL`, `USDIQD_PARALLEL`, `XAU_LOCAL`,
   `XAG_LOCAL` (dealer ask, IQD per gram of pure metal), `XAU_LOCAL_BID`, `XAG_LOCAL_BID`.

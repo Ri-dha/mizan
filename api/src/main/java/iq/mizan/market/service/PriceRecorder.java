@@ -36,6 +36,7 @@ class PriceRecorder {
     private final PriceHistoryRepository history;
     private final PriceTickRepository ticks;
     private final JdbcClient jdbc;
+    private final MarketCache cache;
     private final Clock clock;
 
     /** Its own short transaction, so the lock is not held across the other instruments' network calls. */
@@ -53,6 +54,7 @@ class PriceRecorder {
         history.findById(new PriceHistory.Key(instrument, day)).ifPresentOrElse(
                 point -> point.record(price.priceMicros(), source),
                 () -> history.save(PriceHistory.of(instrument, day, price.priceMicros(), source)));
+        cache.clearAfterCommit();
     }
 
     /** A tick per change, not per fetch: a feed answering the same price again adds nothing. */

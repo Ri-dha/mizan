@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
+import iq.mizan.market.entity.Instrument;
 import iq.mizan.market.service.MarketService;
 import iq.mizan.support.ApiClient;
 import iq.mizan.support.PostgresIntegrationTest;
@@ -13,7 +15,10 @@ import iq.mizan.support.TestAccounts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import tools.jackson.databind.JsonNode;
 
 class MarketIntegrationTest extends PostgresIntegrationTest {
@@ -82,5 +87,44 @@ class MarketIntegrationTest extends PostgresIntegrationTest {
     @Test
     void anonymousCallersGetNothing() {
         assertThat(api.get("/api/v1/market/quotes", null)).hasStatus(org.springframework.http.HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void aNewPriceIsServedAtOnceThoughQuotesAreCached() {
+        assertThat(goldMicros()).isEqualTo(2_650_000_000L);
+
+        marketService.correct(Instrument.XAU, 2_700_000_000L);
+
+        assertThat(goldMicros()).isEqualTo(2_700_000_000L);
+    }
+
+    @Test
+    void quotesComeFromMemoryUntilAPriceIsStored() {
+        assertThat(goldMicros()).isEqualTo(2_650_000_000L);
+        jdbc.update("update price_quote set price_micros = 1 where instrument = 'XAU'");
+
+        assertThat(goldMicros()).isEqualTo(2_650_000_000L);
+    }
+
+    @Test
+    void anUnchangedAnswerComesBackEmptyWithA304() {
+        MvcTestResult first = api.get("/api/v1/market/quotes", token);
+        String etag = first.getResponse().getHeader(HttpHeaders.ETAG);
+        assertThat(etag).isNotBlank();
+        assertThat(first.getResponse().getHeader(HttpHeaders.CACHE_CONTROL)).contains("no-cache").contains("private");
+
+        MvcTestResult again = api.get("/api/v1/market/quotes", token, Map.of(HttpHeaders.IF_NONE_MATCH, etag));
+
+        assertThat(again).hasStatus(HttpStatus.NOT_MODIFIED);
+        assertThat(again.getResponse().getContentAsByteArray()).isEmpty();
+    }
+
+    private long goldMicros() {
+        for (JsonNode quote : api.body(api.get("/api/v1/market/quotes", token))) {
+            if ("XAU".equals(quote.get("instrument").asString())) {
+                return quote.get("priceMicros").asLong();
+            }
+        }
+        throw new AssertionError("No gold quote");
     }
 }

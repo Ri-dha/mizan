@@ -131,6 +131,14 @@ public class ApiClient {
         return request.exchange();
     }
 
+    public MvcTestResult get(String path, String accessToken, Map<String, String> headers) {
+        var request = mvc.get().uri(path).header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+        for (Map.Entry<String, String> header : headers.entrySet()) {
+            request = request.header(header.getKey(), header.getValue());
+        }
+        return request.exchange();
+    }
+
     public JsonNode body(MvcTestResult result) {
         try {
             return json.readTree(result.getResponse().getContentAsString());
