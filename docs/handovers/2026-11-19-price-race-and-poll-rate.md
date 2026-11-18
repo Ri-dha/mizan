@@ -1,13 +1,13 @@
 # Handover — 2026-11-19 — Price refresh race; IQWealth every 15 minutes
 
-## Completed (uncommitted, MizanApi worktree ../.wt-price-race, branch fix/price-refresh-race)
+## Completed (7728113 on develop and main)
 - `market/service/PriceRecorder.java` (locked, own transaction), `MarketService` delegates to it
   and uses a compare-and-set cooldown; `PriceRecorderConcurrencyTest`; history test uses the recorder.
 - `day-cron` `0 0/15 8-21 * * *` (56 by day + 3 at night = 59); comments, ARCHITECTURE, RUNBOOK.
 - API 106 tests pass.
 
 ## In flight
-- Nothing half-done. Awaiting the owner's word to commit.
+- Nothing.
 
 ## Next steps
 - With 59 scheduled calls and a 40 reserve, a restart or a manual fetch can make the last
