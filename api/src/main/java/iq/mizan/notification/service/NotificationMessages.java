@@ -1,46 +1,36 @@
 package iq.mizan.notification.service;
 
-import java.text.NumberFormat;
-import java.util.Locale;
-
 import iq.mizan.notification.push.PushMessage;
 
 import org.springframework.stereotype.Component;
 
-/** The wording of each reminder in the member's language; amounts are whole base units. */
+/**
+ * The wording of each reminder in the member's language. Under end-to-end encryption the server
+ * never knows which bill, which source or how much, so the text is generic and the app shows the
+ * details once it is opened and unlocked (ADR e2e-1).
+ */
 @Component
 public class NotificationMessages {
 
-    private static final Locale ARABIC = Locale.forLanguageTag("ar-IQ");
-
-    public PushMessage billDue(String locale, String name, long amount, String currency, int daysAway) {
-        String money = money(locale, amount, currency);
-        return arabic(locale)
-                ? new PushMessage("BILL_DUE", "فاتورة مستحقة", daysAway == 0 ? "%s (%s) تستحق اليوم".formatted(name, money)
-                        : "%s (%s) تستحق خلال %d أيام".formatted(name, money, daysAway), "/bills")
-                : new PushMessage("BILL_DUE", "Bill due", daysAway == 0 ? "%s (%s) is due today".formatted(name, money)
-                        : "%s (%s) is due in %d days".formatted(name, money, daysAway), "/bills");
+    public PushMessage reminder(String locale, ReminderKind kind) {
+        boolean arabic = arabic(locale);
+        return switch (kind) {
+            case BILL_DUE -> arabic
+                    ? new PushMessage(kind.name(), "فاتورة مستحقة", "لديك فاتورة مستحقة. افتح ميزان لرؤيتها.", "/bills")
+                    : new PushMessage(kind.name(), "Bill due", "A bill is due. Open Mizan to see it.", "/bills");
+            case PAY_DAY -> arabic
+                    ? new PushMessage(kind.name(), "يوم الراتب", "دخل متوقع اليوم. علّمه كمستلم لتوزيعه.", "/income")
+                    : new PushMessage(kind.name(), "Pay day", "Income is expected today. Mark it received to allocate it.", "/income");
+            case OVERSPEND -> arabic
+                    ? new PushMessage(kind.name(), "اقتربت من الحد", "أحد أقسامك قارب حده هذا الشهر.", "/plan")
+                    : new PushMessage(kind.name(), "Close to the limit", "One of your buckets is close to its limit this month.", "/plan");
+            case MONTH_CLOSE -> arabic
+                    ? new PushMessage(kind.name(), "ينتهي الشهر غداً", "راجع شهرك قبل إقفاله.", "/networth")
+                    : new PushMessage(kind.name(), "The month ends tomorrow", "Review your month before it closes.", "/networth");
+        };
     }
 
-    public PushMessage payDay(String locale, String source, long amount, String currency) {
-        String money = money(locale, amount, currency);
-        return arabic(locale)
-                ? new PushMessage("PAY_DAY", "يوم الراتب", "%s (%s) متوقع اليوم. علّمه كمستلم لتوزيعه.".formatted(source, money), "/income")
-                : new PushMessage("PAY_DAY", "Pay day", "%s (%s) is expected today. Mark it received to allocate it.".formatted(source, money), "/income");
-    }
-
-    public PushMessage overspend(String locale, String bucket, int percent) {
-        return arabic(locale)
-                ? new PushMessage("OVERSPEND", "اقتربت من الحد", "أنفقت %d%% من %s هذا الشهر.".formatted(percent, bucket), "/plan")
-                : new PushMessage("OVERSPEND", "Close to the limit", "You have spent %d%% of %s this month.".formatted(percent, bucket), "/plan");
-    }
-
-    public PushMessage monthClose(String locale, String monthKey) {
-        return arabic(locale)
-                ? new PushMessage("MONTH_CLOSE", "ينتهي الشهر غداً", "راجع شهر %s قبل إقفاله.".formatted(monthKey), "/networth")
-                : new PushMessage("MONTH_CLOSE", "The month ends tomorrow", "Review %s before it closes.".formatted(monthKey), "/networth");
-    }
-
+    /** Public market data, so the move itself can be named. */
     public PushMessage metalMove(String locale, String metal, double percent) {
         String direction = percent >= 0 ? (arabic(locale) ? "ارتفع" : "rose") : (arabic(locale) ? "انخفض" : "fell");
         String metalName = arabic(locale) ? ("GOLD".equals(metal) ? "الذهب" : "الفضة") : ("GOLD".equals(metal) ? "Gold" : "Silver");
@@ -57,11 +47,5 @@ public class NotificationMessages {
 
     private static boolean arabic(String locale) {
         return locale != null && locale.startsWith("ar");
-    }
-
-    private static String money(String locale, long amount, String currency) {
-        NumberFormat format = NumberFormat.getIntegerInstance(arabic(locale) ? ARABIC : Locale.UK);
-        long whole = "IQD".equals(currency) ? amount : amount / 100;
-        return format.format(whole) + " " + currency;
     }
 }

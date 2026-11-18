@@ -30,8 +30,4 @@ public class MonthCloseSyncTable implements SyncTable {
         return FIELDS;
     }
 
-    @Override
-    public boolean readOnly() {
-        return true;
-    }
 }

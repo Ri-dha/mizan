@@ -1,5 +1,6 @@
+import { authKeyFor } from "./auth"
 import { api, refreshAccessToken, unwrap } from "./client"
-import { rememberFromServer, clearLocalData } from "./auth"
+import { rememberFromServer, clearHouseholdData } from "./auth"
 import { resetSyncState, syncNow } from "@/sync/engine"
 
 export type Role = "OWNER" | "MEMBER" | "VIEWER" | "DEPENDENT" | "ADVISOR"
@@ -14,14 +15,14 @@ export const changeRole = (userId: string, role: Role) =>
   unwrap(api.PATCH("/api/v1/households/current/members/{userId}", { params: { path: { userId } }, body: { role } }))
 export const removeMember = (userId: string) => unwrap(api.DELETE("/api/v1/households/current/members/{userId}", { params: { path: { userId } } }))
 export const transferOwnership = (userId: string) => unwrap(api.POST("/api/v1/households/current/transfer-ownership", { body: { userId } }))
-export const requestHouseholdDeletion = (password: string) => unwrap(api.POST("/api/v1/households/current/deletion-request", { body: { password } }))
+export const requestHouseholdDeletion = async (password: string) => unwrap(api.POST("/api/v1/households/current/deletion-request", { body: { authKey: await authKeyFor(password) } }))
 export const cancelHouseholdDeletion = () => unwrap(api.DELETE("/api/v1/households/current/deletion-request"))
 export const previewInvitation = (token: string) => unwrap(api.GET("/api/v1/invitations/{token}", { params: { path: { token } } }))
 
 /** The token carries the household, so after a change of household the session is rebuilt from scratch. */
 async function rebuildSession() {
   if (!(await refreshAccessToken())) throw new Error("SESSION_REFRESH_FAILED")
-  await clearLocalData()
+  await clearHouseholdData()
   await resetSyncState()
   await rememberFromServer(null)
   await syncNow()

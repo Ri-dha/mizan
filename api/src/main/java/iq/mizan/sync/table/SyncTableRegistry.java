@@ -31,6 +31,10 @@ public class SyncTableRegistry {
         return table;
     }
 
+    public java.util.Collection<SyncTable> all() {
+        return tables.values();
+    }
+
     public static String columnFor(String field) {
         return field.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase();
     }

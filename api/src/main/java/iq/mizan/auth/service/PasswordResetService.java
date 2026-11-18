@@ -35,7 +35,7 @@ public class PasswordResetService {
     }
 
     @Transactional
-    public void confirm(String rawIdentifier, String code, String newPassword, String ipAddress) {
+    public void confirm(String rawIdentifier, String code, String newAuthKey, String ipAddress) {
         Identifier identifier = Identifier.parse(rawIdentifier, authProperties.defaultCountryCode());
         AppUser user = userLookup.byIdentifier(identifier)
                 .filter(AppUser::isActive)
@@ -43,7 +43,7 @@ public class PasswordResetService {
                         ErrorCode.INVALID_VERIFICATION_CODE, "The code is wrong or has expired"));
 
         verificationService.consumePasswordReset(user.getId(), code);
-        user.changePassword(passwordEncoder.encode(newPassword));
+        user.changePassword(passwordEncoder.encode(newAuthKey));
         sessionRevoker.revokeAllSessions(user.getId());
 
         auditService.record(AuditRecord.of(AuditAction.PASSWORD_RESET, AuditEntityType.USER)

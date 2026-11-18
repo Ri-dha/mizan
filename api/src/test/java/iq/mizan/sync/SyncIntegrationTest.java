@@ -20,6 +20,7 @@ import tools.jackson.databind.JsonNode;
 class SyncIntegrationTest extends PostgresIntegrationTest {
 
     private static final String TABLE = "cash_account";
+    private static final java.util.Set<String> PLAIN = java.util.Set.of("visibility", "deletedAt");
 
     @Autowired
     private ApiClient api;
@@ -52,7 +53,8 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
         JsonNode record = accounts.getFirst();
         assertThat(record.get("table").asString()).isEqualTo(TABLE);
         assertThat(record.get("rowId").asString()).isEqualTo(rowId.toString());
-        assertThat(record.get("fields").get("balance").asLong()).isEqualTo(250000);
+        assertThat(record.get("fields").get("balance").asString()).isEqualTo(ApiClient.sealed(250000));
+        assertThat(record.get("encrypted").asBoolean()).isTrue();
         assertThat(record.get("fields").get("visibility").asString()).isEqualTo("SHARED");
         assertThat(record.get("clocks").get("name").asString()).isEqualTo(clock(1));
         assertThat(pull.get("nextSeq").asLong()).isPositive();
@@ -72,12 +74,12 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
         assertThat(tabletPush.get("conflicts")).hasSize(1);
         JsonNode conflict = tabletPush.get("conflicts").get(0);
         assertThat(conflict.get("field").asString()).isEqualTo("name");
-        assertThat(conflict.get("clientValue").asString()).isEqualTo("Purse");
-        assertThat(conflict.get("serverValue").asString()).isEqualTo("Wallet");
+        assertThat(conflict.get("clientValue").asString()).isEqualTo(ApiClient.sealed("Purse"));
+        assertThat(conflict.get("serverValue").asString()).isEqualTo(ApiClient.sealed("Wallet"));
 
         JsonNode fields = pullSingle(owner, phone).get("fields");
-        assertThat(fields.get("name").asString()).isEqualTo("Wallet");
-        assertThat(fields.get("balance").asLong()).isEqualTo(99000);
+        assertThat(fields.get("name").asString()).isEqualTo(ApiClient.sealed("Wallet"));
+        assertThat(fields.get("balance").asString()).isEqualTo(ApiClient.sealed(99000));
 
         JsonNode logged = api.body(api.get("/api/v1/sync/conflicts?deviceId=" + tablet, owner));
         assertThat(logged).hasSize(1);
@@ -94,7 +96,7 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
         JsonNode replay = push(owner, phone, op);
 
         assertThat(replay.get("applied")).hasSize(1);
-        assertThat(pullSingle(owner, phone).get("fields").get("balance").asLong()).isEqualTo(2000);
+        assertThat(pullSingle(owner, phone).get("fields").get("balance").asString()).isEqualTo(ApiClient.sealed(2000));
     }
 
     @Test
@@ -129,7 +131,7 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
                 "ops", List.of(new SyncOpBuilder(rowId).field("name", "Mine now", clock(9)).build())));
         assertThat(hijack).hasStatus(HttpStatus.BAD_REQUEST);
 
-        assertThat(pullSingle(owner, tablet).get("fields").get("name").asString()).isEqualTo("Wallet");
+        assertThat(pullSingle(owner, tablet).get("fields").get("name").asString()).isEqualTo(ApiClient.sealed("Wallet"));
         assertThat(api.get("/api/v1/sync/pull?deviceId=" + phone + "&since=0", other)).hasStatus(HttpStatus.NOT_FOUND);
     }
 
@@ -147,13 +149,38 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
         assertThat(api.body(unknownField).get("code").asString()).isEqualTo("SYNC_FIELD_UNKNOWN");
     }
 
+    /** ADR e2e-1: a client that sends plain values, such as an old cached web app, is refused outright. */
     @Test
-    void moneyMustBeWholeMinorUnits() {
-        MvcTestResult result = api.post("/api/v1/sync/push", owner, Map.of("deviceId", phone, "ops",
-                List.of(op(UUID.randomUUID(), Map.of("name", "W", "kind", "WALLET", "currency", "IQD", "balance", 10.5), clock(1)))));
+    void plainValuesAreRefused() {
+        MvcTestResult result = api.post("/api/v1/sync/push", owner, Map.of("deviceId", phone, "ops", List.of(Map.of(
+                "opId", UUID.randomUUID(), "table", TABLE, "rowId", UUID.randomUUID(),
+                "fields", Map.of("name", "Wallet", "balance", 250000), "clocks", Map.of("name", clock(1), "balance", clock(1))))));
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(api.body(result).get("code").asString()).isEqualTo("VALIDATION_FAILED");
+        assertThat(api.body(result).get("code").asString()).isEqualTo("SYNC_PLAIN_VALUE_REFUSED");
+        assertThat(cashAccounts(api.body(api.get("/api/v1/sync/pull?deviceId=" + tablet + "&since=0", owner)))).isEmpty();
+    }
+
+    @Test
+    void visibilityMustBeSharedOrPrivate() {
+        MvcTestResult result = api.post("/api/v1/sync/push", owner, Map.of("deviceId", phone, "ops",
+                List.of(new SyncOpBuilder(UUID.randomUUID()).field("visibility", "EVERYONE", clock(1)).build())));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    /** A record id is bound to its table; another type cannot overwrite it. */
+    @Test
+    void aRecordCannotChangeTable() {
+        UUID rowId = UUID.randomUUID();
+        push(owner, phone, op(rowId, Map.of("name", "Wallet"), clock(1)));
+
+        MvcTestResult result = api.post("/api/v1/sync/push", owner, Map.of("deviceId", phone, "ops", List.of(Map.of(
+                "opId", UUID.randomUUID(), "table", "goal", "rowId", rowId,
+                "fields", Map.of("name", ApiClient.sealed("Goal")), "clocks", Map.of("name", clock(2))))));
+
+        assertThat(result).hasStatus(HttpStatus.CONFLICT);
+        assertThat(api.body(result).get("code").asString()).isEqualTo("SYNC_TABLE_MISMATCH");
     }
 
     private String registerDevice(String token, String name) {
@@ -200,8 +227,9 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
             this.rowId = rowId;
         }
 
+        /** Seals every value but the two plain fields, as a device does before pushing (ADR e2e-1). */
         SyncOpBuilder field(String name, Object value, String clock) {
-            fields.put(name, value);
+            fields.put(name, PLAIN.contains(name) ? value : ApiClient.sealed(value));
             clocks.put(name, clock);
             return this;
         }

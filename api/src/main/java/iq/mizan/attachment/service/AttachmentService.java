@@ -10,8 +10,9 @@ import iq.mizan.common.exception.ApiException;
 import iq.mizan.common.exception.ErrorCode;
 import iq.mizan.common.security.CurrentUser;
 import iq.mizan.common.storage.StorageProperties;
-import iq.mizan.sync.service.StoredRow;
 import iq.mizan.sync.service.SyncRowRepository;
+import iq.mizan.sync.service.VaultFields;
+import iq.mizan.sync.service.VaultRowRepository;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,46 +26,53 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 /**
  * Hands out short-lived URLs for the bytes behind a synced attachment row. The row must already
  * be visible to the caller (row-level security decides), so a device syncs metadata first and
- * uploads second. Object keys are derived here, never taken from the client.
+ * uploads second. Object keys are derived here, never taken from the client. The bytes are
+ * ciphertext and so is the metadata, hence the generic content type.
  */
 @Service
 @AllArgsConstructor
 public class AttachmentService {
 
-    private final SyncRowRepository rows;
+    private static final String CIPHERTEXT_CONTENT_TYPE = "application/octet-stream";
+
+    private final VaultRowRepository vault;
+    private final SyncRowRepository legacyRows;
     private final AttachmentSyncTable table;
     private final S3Presigner presigner;
     private final StorageProperties storage;
 
     @Transactional(readOnly = true)
     public PresignedUrlResponse uploadUrl(CurrentUser user, UUID attachmentId) {
-        StoredRow row = visible(attachmentId);
-        String key = objectKey(user, row.id());
-        String mimeType = String.valueOf(row.fields().get("mimeType"));
+        requireVisible(attachmentId);
         var presigned = presigner.presignPutObject(PutObjectPresignRequest.builder()
                 .signatureDuration(storage.urlTtl())
                 .putObjectRequest(PutObjectRequest.builder()
-                        .bucket(storage.bucket()).key(key).contentType(mimeType).build())
+                        .bucket(storage.bucket()).key(objectKey(user, attachmentId)).contentType(CIPHERTEXT_CONTENT_TYPE).build())
                 .build());
         return new PresignedUrlResponse(presigned.url().toString(), "PUT", Instant.now().plus(storage.urlTtl()));
     }
 
     @Transactional(readOnly = true)
     public PresignedUrlResponse downloadUrl(CurrentUser user, UUID attachmentId) {
-        StoredRow row = visible(attachmentId);
+        requireVisible(attachmentId);
         var presigned = presigner.presignGetObject(GetObjectPresignRequest.builder()
                 .signatureDuration(storage.urlTtl())
                 .getObjectRequest(GetObjectRequest.builder()
-                        .bucket(storage.bucket()).key(objectKey(user, row.id())).build())
+                        .bucket(storage.bucket()).key(objectKey(user, attachmentId)).build())
                 .build());
         return new PresignedUrlResponse(presigned.url().toString(), "GET", Instant.now().plus(storage.urlTtl()));
     }
 
-    private StoredRow visible(UUID attachmentId) {
-        return rows.fetch(table, List.of(attachmentId)).stream()
-                .filter(row -> row.fields().get("deletedAt") == null)
-                .findFirst()
-                .orElseThrow(() -> ApiException.of(ErrorCode.RESOURCE_NOT_FOUND, "No such attachment"));
+    /** Encrypted rows first; a household that has not migrated yet still has the plain row. */
+    private void requireVisible(UUID attachmentId) {
+        boolean encrypted = vault.find(attachmentId, AttachmentSyncTable.NAME)
+                .filter(row -> row.fields().get(VaultFields.DELETED_AT) == null)
+                .isPresent();
+        boolean legacy = !encrypted && legacyRows.fetch(table, List.of(attachmentId)).stream()
+                .anyMatch(row -> row.fields().get(VaultFields.DELETED_AT) == null);
+        if (!encrypted && !legacy) {
+            throw ApiException.of(ErrorCode.RESOURCE_NOT_FOUND, "No such attachment");
+        }
     }
 
     private static String objectKey(CurrentUser user, UUID attachmentId) {

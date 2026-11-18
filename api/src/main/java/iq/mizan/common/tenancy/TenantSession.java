@@ -27,6 +27,11 @@ public class TenantSession {
         jdbcClient.sql("select set_config('app.restricted', 'on', true)").query().singleRow();
     }
 
+    /** Advisors read the shared annual reports and nothing else (ADR e2e-1). */
+    public void allowReportReading() {
+        jdbcClient.sql("select set_config('app.reports', 'on', true)").query().singleRow();
+    }
+
     public void bind(UUID userId, UUID householdId) {
         jdbcClient.sql("select set_config('app.user_id', ?, true), set_config('app.household_id', ?, true)")
                 .param(userId.toString())

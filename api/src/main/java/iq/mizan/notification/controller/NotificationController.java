@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import iq.mizan.common.security.CurrentUser;
+import iq.mizan.notification.dto.ScheduleRequest;
 import iq.mizan.notification.dto.SubscribeRequest;
 import iq.mizan.notification.dto.SubscriptionResponse;
 import iq.mizan.notification.dto.UnsubscribeRequest;
@@ -25,6 +26,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,6 +65,12 @@ public class NotificationController {
     public ResponseEntity<Void> unsubscribe(@AuthenticationPrincipal CurrentUser user, @Valid @RequestBody UnsubscribeRequest request) {
         notificationService.unsubscribe(user, request.endpoint());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Replace the caller's upcoming reminders; the device works them out from its encrypted records (ADR e2e-1)")
+    @PutMapping("/schedule")
+    public ResponseEntity<Map<String, Integer>> schedule(@AuthenticationPrincipal CurrentUser user, @Valid @RequestBody ScheduleRequest request) {
+        return ResponseEntity.ok(Map.of("scheduled", notificationService.replaceSchedule(user, request)));
     }
 
     @Operation(summary = "Send a test notification to every subscribed device of the caller")

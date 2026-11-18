@@ -47,9 +47,8 @@ class WebPushCryptoTest {
         assertThat(VapidKeys.encodePublic(publicKey)).isEqualTo(pair.publicKey());
         assertThat(VapidKeys.encodePrivate(VapidKeys.decodePrivate(pair.privateKey()))).isEqualTo(pair.privateKey());
 
-        NotificationProperties properties = new NotificationProperties(true, "webpush", "-", "UTC", Duration.ofHours(24),
-                new NotificationProperties.Vapid("mailto:test@mizan.iq", pair.publicKey(), pair.privateKey()),
-                new NotificationProperties.Defaults(3, 9000, 200));
+        NotificationProperties properties = new NotificationProperties(true, "webpush", Duration.ofMinutes(5), Duration.ofHours(6),
+                "-", "UTC", Duration.ofHours(24), new NotificationProperties.Vapid("mailto:test@mizan.iq", pair.publicKey(), pair.privateKey()));
         WebPushSender sender = new WebPushSender(RestClient.builder(), JsonMapper.builder().build(), properties, Clock.systemUTC());
 
         String token = tokenOf(sender, "https://fcm.googleapis.com/fcm/send/abc123");

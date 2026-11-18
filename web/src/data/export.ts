@@ -6,7 +6,7 @@ export const EXPORT_FORMAT = "mizan-export"
 export const EXPORT_VERSION = 1
 
 /** Tables the server writes; an import never pushes them (they come back through sync). */
-const SERVER_ONLY: ReadonlySet<SyncTableName> = new Set(["net_worth_snapshot", "month_close"])
+const DERIVED: ReadonlySet<SyncTableName> = new Set(["net_worth_snapshot", "month_close", "member_contribution", "annual_report"])
 const ENVELOPE = new Set(["clocks"])
 
 export interface ExportFile {
@@ -72,7 +72,7 @@ export function validateImport(raw: unknown): ImportPreview {
         throw new ImportError("ROW_WITHOUT_ID", `Row ${i} of ${table} has no id`)
       }
     })
-    if (SERVER_ONLY.has(table as SyncTableName)) skipped.push(table)
+    if (DERIVED.has(table as SyncTableName)) skipped.push(table)
     else counts[table] = rows.length
   }
   if (Object.keys(counts).length === 0) throw new ImportError("EMPTY", "The export contains no importable rows")

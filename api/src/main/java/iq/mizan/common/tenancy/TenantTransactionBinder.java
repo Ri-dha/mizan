@@ -50,6 +50,9 @@ public class TenantTransactionBinder {
         if (!user.permissions().contains(Permission.HOUSEHOLD_VIEW)) {
             tenantSession.restrict();
         }
+        if (user.permissions().contains(Permission.REPORTS_VIEW)) {
+            tenantSession.allowReportReading();
+        }
 
         TransactionSynchronizationManager.bindResource(BOUND_MARKER, Boolean.TRUE);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

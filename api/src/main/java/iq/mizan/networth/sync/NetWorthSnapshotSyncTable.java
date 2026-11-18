@@ -36,7 +36,7 @@ public class NetWorthSnapshotSyncTable implements SyncTable {
     }
 
     @Override
-    public boolean readOnly() {
+    public boolean appendOnly() {
         return true;
     }
 }

@@ -9,6 +9,8 @@ export interface Syncable {
   ownerId: string | null
   clocks: Record<string, string>
   deletedAt: string | null
+  /** Local only: the server holds this row sealed, so an append-only row must not be sent again. */
+  vaulted?: boolean
 }
 
 export interface CashAccount extends Syncable {
@@ -144,6 +146,8 @@ export interface Attachment extends Syncable {
   mimeType: string
   byteSize: number
   iv: string
+  /** A per-file key (ADR e2e-1); receipts from before it use this device's own key. */
+  blobKey?: string | null
   uploadedAt: string | null
 }
 
@@ -384,6 +388,51 @@ export interface MonthClose extends Syncable {
   reopenedAt: string | null
 }
 
+/** A member's private holdings as one total, so the household figure counts them without itemising them. */
+export interface MemberContribution extends Syncable {
+  visibility: Visibility
+  memberId: string
+  totalAssets: number
+  totalLiabilities: number
+  composition: { shares: { assetClass: string; amount: number; percent: number }[]; illiquidAssets: number }
+  computedAt: string
+}
+
+export interface AnnualReportMonth {
+  monthKey: string
+  received: number
+  spent: number
+  saved: number
+  savingRate: number | null
+}
+
+/** §4.2 P4: what an advisor may read, built by members' devices over shared records only. */
+export interface AnnualReport extends Syncable {
+  visibility: Visibility
+  year: number
+  report: {
+    baseCurrency: string
+    months: AnnualReportMonth[]
+    received: number
+    spent: number
+    savingRate: number | null
+    snapshots: { monthKey: string; netWorth: number }[]
+  }
+  computedAt: string
+}
+
+/** A pulled record sealed under a key this device has not been granted yet; retried after each grant refresh. */
+export interface SealedRecord {
+  key: string
+  record: {
+    table: string
+    rowId: string
+    ownerId: string
+    fields: Record<string, unknown>
+    clocks: Record<string, string>
+  }
+}
+
 export interface OutboxOp {
   opId: string
   table: SyncTableName
@@ -437,6 +486,8 @@ export const SYNC_TABLES = {
   bucket_move: "bucketMoves",
   privacy_setting: "privacySettings",
   notification_setting: "notificationSettings",
+  member_contribution: "memberContributions",
+  annual_report: "annualReports",
 } as const
 
 export type SyncTableName = keyof typeof SYNC_TABLES
@@ -470,6 +521,9 @@ export class MizanDatabase extends Dexie {
   bucketMoves!: EntityTable<BucketMove, "id">
   privacySettings!: EntityTable<PrivacySetting, "id">
   notificationSettings!: EntityTable<NotificationSetting, "id">
+  memberContributions!: EntityTable<MemberContribution, "id">
+  annualReports!: EntityTable<AnnualReport, "id">
+  sealedInbox!: EntityTable<SealedRecord, "key">
   outbox!: EntityTable<OutboxOp, "opId">
   conflicts!: EntityTable<LocalConflict, "id">
   meta!: EntityTable<MetaEntry, "key">
@@ -529,6 +583,11 @@ export class MizanDatabase extends Dexie {
     })
     this.version(11).stores({
       transactions: "id, deletedAt, monthKey, occurredOn, bucketId, type, [monthKey+bucketId], splitGroupId, assetId",
+    })
+    this.version(12).stores({
+      memberContributions: "id, deletedAt, memberId",
+      annualReports: "id, deletedAt, year",
+      sealedInbox: "key",
     })
   }
 }

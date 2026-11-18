@@ -9,7 +9,9 @@ import iq.mizan.common.audit.AuditRecord;
 import iq.mizan.common.audit.AuditService;
 import iq.mizan.common.exception.ApiException;
 import iq.mizan.common.exception.ErrorCode;
+import iq.mizan.auth.dto.AccountKeysRequest;
 import iq.mizan.household.service.HouseholdService;
+import iq.mizan.vault.service.KeyService;
 import iq.mizan.household.service.HouseholdSummary;
 
 import lombok.AllArgsConstructor;
@@ -30,10 +32,11 @@ public class RegistrationService {
     private final TokenIssuer tokenIssuer;
     private final AuditService auditService;
     private final AuthProperties authProperties;
+    private final KeyService keyService;
 
     @Transactional
     public TokenPair register(
-            String rawIdentifier, String rawPassword, String displayName, String locale,
+            String rawIdentifier, String authKey, AccountKeysRequest keys, String displayName, String locale,
             String userAgent, String ipAddress) {
 
         Identifier identifier = Identifier.parse(rawIdentifier, authProperties.defaultCountryCode());
@@ -44,11 +47,12 @@ public class RegistrationService {
         AppUser user;
         try {
             user = userRepository.saveAndFlush(AppUser.register(
-                    identifier, displayName, passwordEncoder.encode(rawPassword), locale));
+                    identifier, displayName, passwordEncoder.encode(authKey), locale));
         } catch (DataIntegrityViolationException e) {
             throw identifierAlreadyRegistered();
         }
 
+        keyService.storeAccountKeys(user.getId(), keys.wrappedByPassword(), keys.wrappedByRecovery(), keys.publicKey(), keys.encryptedPrivateKey());
         HouseholdSummary household = householdService.createForOwner(user.getId(), displayName);
         verificationService.sendContactVerification(user);
 

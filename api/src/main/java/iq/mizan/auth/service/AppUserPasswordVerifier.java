@@ -17,9 +17,9 @@ public class AppUserPasswordVerifier implements PasswordVerifier {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public boolean matches(UUID userId, String rawPassword) {
+    public boolean matches(UUID userId, String authKey) {
         return userRepository.findById(userId)
-                .map(user -> passwordEncoder.matches(rawPassword, user.getPasswordHash()))
+                .map(user -> passwordEncoder.matches(authKey, user.getPasswordHash()))
                 .orElse(false);
     }
 }

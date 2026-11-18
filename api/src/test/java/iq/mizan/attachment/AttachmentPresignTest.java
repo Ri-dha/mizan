@@ -38,8 +38,8 @@ class AttachmentPresignTest extends PostgresIntegrationTest {
         String clock = "1700000000000:0000:test";
         MvcTestResult push = api.post("/api/v1/sync/push", owner, Map.of("deviceId", device, "ops", List.of(Map.of(
                 "opId", UUID.randomUUID(), "table", "attachment", "rowId", attachmentId,
-                "fields", Map.of("ownerType", "TRANSACTION", "ownerRecordId", UUID.randomUUID(),
-                        "mimeType", "image/jpeg", "byteSize", 1234, "iv", "abc="),
+                "fields", Map.of("ownerType", ApiClient.sealed("TRANSACTION"), "ownerRecordId", ApiClient.sealed(UUID.randomUUID()),
+                        "mimeType", ApiClient.sealed("image/jpeg"), "byteSize", ApiClient.sealed(1234), "iv", ApiClient.sealed("abc=")),
                 "clocks", Map.of("ownerType", clock, "ownerRecordId", clock, "mimeType", clock, "byteSize", clock, "iv", clock)))));
         assertThat(push).hasStatus(HttpStatus.OK);
 

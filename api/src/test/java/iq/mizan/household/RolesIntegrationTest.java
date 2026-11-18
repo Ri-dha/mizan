@@ -17,9 +17,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import tools.jackson.databind.JsonNode;
 
-/** §4.2 P3 and P4: a dependent sees only their own records; an advisor sees reports, never records, and only for a while. */
+/** §4.2 P3 and P4: a dependent sees only their own records; an advisor sees shared annual reports, never records, and only for a while. */
 class RolesIntegrationTest extends PostgresIntegrationTest {
 
     private static final String CLOCK = "1700000000000:0000:test";
@@ -63,7 +64,7 @@ class RolesIntegrationTest extends PostgresIntegrationTest {
         String dependentDevice = device(dependent);
 
         JsonNode pull = api.body(api.get("/api/v1/sync/pull?deviceId=" + dependentDevice + "&since=0", dependent));
-        assertThat(tables(pull)).doesNotContain("cash_account", "income_receipt", "ledger_transaction", "plan", "bucket");
+        assertThat(tables(pull)).doesNotContain("cash_account", "income_receipt", "ledger_transaction");
 
         UUID goalId = UUID.randomUUID();
         push(dependent, dependentDevice, op("goal", goalId, fields("visibility", "PRIVATE", "name", "Bicycle", "targetAmount", 400_000, "currency", "IQD", "status", "ACTIVE")));
@@ -74,27 +75,29 @@ class RolesIntegrationTest extends PostgresIntegrationTest {
         for (JsonNode record : ownerPull.get("records")) {
             assertThat(record.get("rowId").asString()).isNotEqualTo(goalId.toString());
         }
-        assertThat(api.get("/api/v1/reports/annual?year=2026", dependent)).hasStatus(HttpStatus.FORBIDDEN);
+        MvcTestResult sharedWrite = api.post("/api/v1/sync/push", dependent, Map.of("deviceId", dependentDevice,
+                "ops", List.of(op("goal", UUID.randomUUID(), fields("name", "Family car", "targetAmount", 9_000_000)))));
+        assertThat(sharedWrite).hasStatus(HttpStatus.FORBIDDEN);
     }
 
     @Test
-    void anAdvisorGetsAggregatesOverSharedRecordsAndNothingElseUntilAccessExpires() {
+    void anAdvisorPullsOnlySharedAnnualReportsAndNothingElseUntilAccessExpires() {
+        UUID sharedReport = UUID.randomUUID();
+        UUID privateReport = UUID.randomUUID();
+        push(owner, ownerDevice,
+                op("annual_report", sharedReport, fields("year", 2026, "report", "{\"received\":1500000}", "computedAt", "2026-10-01T00:00:00Z")),
+                op("annual_report", privateReport, fields("visibility", "PRIVATE", "year", 2026, "report", "{}", "computedAt", "2026-10-01T00:00:00Z")));
         String advisor = join("ADVISOR", null);
+        String advisorDevice = device(advisor);
 
-        JsonNode report = api.body(api.get("/api/v1/reports/annual?year=2026", advisor));
-        assertThat(report.get("received").asLong()).isEqualTo(1_500_000);
-        assertThat(report.get("spent").asLong()).isEqualTo(300_000);
-        assertThat(report.get("savingRate").asDouble()).isEqualTo(80.0);
-        JsonNode september = null;
-        for (JsonNode month : report.get("months")) {
-            if (MONTH.equals(month.get("monthKey").asString())) {
-                september = month;
-            }
-        }
-        assertThat(september).isNotNull();
-        assertThat(september.get("saved").asLong()).isEqualTo(1_200_000);
+        JsonNode pull = api.body(api.get("/api/v1/sync/pull?deviceId=" + advisorDevice + "&since=0", advisor));
+        List<String> rows = new ArrayList<>();
+        pull.get("records").forEach(record -> rows.add(record.get("rowId").asString()));
+        assertThat(tables(pull)).containsOnly("annual_report");
+        assertThat(rows).containsExactly(sharedReport.toString());
 
-        assertThat(api.post("/api/v1/sync/devices", advisor, Map.of("name", "Laptop"))).hasStatus(HttpStatus.FORBIDDEN);
+        assertThat(api.post("/api/v1/sync/push", advisor, Map.of("deviceId", advisorDevice, "ops",
+                List.of(op("annual_report", UUID.randomUUID(), fields("year", 2025)))))).hasStatus(HttpStatus.FORBIDDEN);
         assertThat(api.get("/api/v1/households/current/members", advisor)).hasStatus(HttpStatus.FORBIDDEN);
 
         JsonNode members = api.body(api.get("/api/v1/households/current/members", owner));
@@ -111,28 +114,6 @@ class RolesIntegrationTest extends PostgresIntegrationTest {
         assertThat(api.body(api.get("/api/v1/households/current/members", owner))).hasSize(1);
         otherSession = api.refresh(otherSession.refreshToken());
         assertThat(api.body(api.get("/api/v1/me", otherSession.accessToken())).get("household").get("name").asString()).isEqualTo("Noor");
-    }
-
-    @Test
-    void ownersAndMembersSeeTheSameReportAndBuybackValuationAppliesToNetWorth() {
-        JsonNode report = api.body(api.get("/api/v1/reports/annual?year=2026", owner));
-        assertThat(report.get("spent").asLong()).isEqualTo(300_000);
-
-        push(owner, ownerDevice,
-                op("metal_lot", UUID.randomUUID(), fields("metal", "GOLD", "purityLabel", "21k", "purityBasisPoints", 8750, "weightMg", 5000,
-                        "weightUnitEntered", "MITHQAL", "quantityEntered", "1", "purchaseDate", "2026-06-01", "metalCost", 520_000,
-                        "makingCharge", 30_000, "fees", 0, "currency", "IQD", "fxRateMicros", 1_000_000, "form", "JEWELLERY")),
-                op("market_setting", UUID.randomUUID(), fields("rateKind", "PARALLEL", "goldPremiumBasisPoints", 0, "silverPremiumBasisPoints", 0,
-                        "goldMethod", "FIFO", "silverMethod", "FIFO", "valuationBasis", "BUYBACK", "goldBuybackBasisPoints", 300, "silverBuybackBasisPoints", 0, "priceSource", "WORLD")));
-        JsonNode figures = api.body(api.get("/api/v1/networth/current", owner));
-        long metals = 0;
-        for (JsonNode share : figures.get("composition")) {
-            if ("METALS".equals(share.get("assetClass").asString())) {
-                metals = share.get("amount").asLong();
-            }
-        }
-        assertThat(metals).isEqualTo(531_501);
-        assertThat(figures.get("rateSet").get("valuationBasis").asString()).isEqualTo("BUYBACK");
     }
 
     private String join(String role, Integer accessDays) {
@@ -160,8 +141,15 @@ class RolesIntegrationTest extends PostgresIntegrationTest {
 
     private static Map<String, Object> fields(Object... keysAndValues) {
         Map<String, Object> map = new java.util.LinkedHashMap<>();
+        boolean isPrivate = false;
         for (int i = 0; i < keysAndValues.length; i += 2) {
-            map.put((String) keysAndValues[i], keysAndValues[i + 1]);
+            isPrivate |= "visibility".equals(keysAndValues[i]) && "PRIVATE".equals(keysAndValues[i + 1]);
+        }
+        for (int i = 0; i < keysAndValues.length; i += 2) {
+            String field = (String) keysAndValues[i];
+            Object value = keysAndValues[i + 1];
+            boolean plain = "visibility".equals(field) || "deletedAt".equals(field);
+            map.put(field, plain ? value : isPrivate ? ApiClient.sealedPrivate(value) : ApiClient.sealed(value));
         }
         return map;
     }

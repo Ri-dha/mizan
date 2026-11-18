@@ -117,6 +117,30 @@ public class HouseholdService {
                 .list();
     }
 
+    /** Who is in the household and what each may do, for modules that must not touch membership entities. */
+    @Transactional(readOnly = true)
+    public List<MemberAccess> activeMembers(UUID householdId) {
+        return jdbc.sql("select m.user_id, u.display_name, m.role from membership m join app_user u on u.id = m.user_id "
+                        + "where m.household_id = ? and m.status = 'ACTIVE' and (m.expires_at is null or m.expires_at > ?) order by m.joined_at")
+                .param(householdId).param(java.sql.Timestamp.from(clock.instant()))
+                .query((rs, i) -> {
+                    HouseholdRole role = HouseholdRole.valueOf(rs.getString("role"));
+                    return new MemberAccess(rs.getObject("user_id", UUID.class), rs.getString("display_name"), role.name(), role.permissions());
+                })
+                .list();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isVaultMigrated(UUID householdId) {
+        return jdbc.sql("select vault_migrated_at is not null from household where id = ?").param(householdId)
+                .query(Boolean.class).optional().orElse(false);
+    }
+
+    @Transactional
+    public void markVaultMigrated(UUID householdId) {
+        jdbc.sql("update household set vault_migrated_at = coalesce(vault_migrated_at, now()) where id = ?").param(householdId).update();
+    }
+
     @Transactional
     public InvitationResponse invite(UUID userId, UUID householdId, HouseholdRole role, String contact, Integer accessDays) {
         Household household = household(householdId);

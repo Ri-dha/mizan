@@ -26,15 +26,19 @@ export async function ensureDataKey(): Promise<CryptoKey> {
   return key
 }
 
-export async function encryptBytes(plain: ArrayBuffer): Promise<{ iv: string; cipher: ArrayBuffer }> {
-  const key = await ensureDataKey()
+/** ADR e2e-1: each file has its own key, carried sealed in its attachment row. */
+export async function encryptBytes(plain: ArrayBuffer): Promise<{ iv: string; cipher: ArrayBuffer; blobKey: string }> {
+  const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"])
   const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES))
   const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plain)
-  return { iv: toBase64(iv), cipher }
+  return { iv: toBase64(iv), cipher, blobKey: toBase64(new Uint8Array(await crypto.subtle.exportKey("raw", key))) }
 }
 
-export async function decryptBytes(cipher: ArrayBuffer, iv: string): Promise<ArrayBuffer> {
-  const key = await ensureDataKey()
+/** Files from before ADR e2e-1 have no key of their own and were sealed with this device's. */
+export async function decryptBytes(cipher: ArrayBuffer, iv: string, blobKey?: string | null): Promise<ArrayBuffer> {
+  const key = blobKey
+    ? await crypto.subtle.importKey("raw", fromBase64(blobKey) as BufferSource, { name: "AES-GCM" }, false, ["decrypt"])
+    : await ensureDataKey()
   return crypto.subtle.decrypt({ name: "AES-GCM", iv: fromBase64(iv) as BufferSource }, key, cipher)
 }
 

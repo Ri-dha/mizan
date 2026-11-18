@@ -37,9 +37,9 @@ public class RecycleBinPurge {
     public void purge() {
         jdbcClient.sql("select set_config('app.system', 'on', true)").query().singleRow();
         OffsetDateTime cutoff = OffsetDateTime.now(clock).minus(retention()).withOffsetSameInstant(ZoneOffset.UTC);
-        int total = 0;
+        int total = jdbcClient.sql("delete from vault_record where deleted_at < ?").param(cutoff).update();
         for (SyncTable table : tables) {
-            if (!table.fields().containsKey("deletedAt")) {
+            if (!table.fields().containsKey("deletedAt") || !plainTableExists(table)) {
                 continue;
             }
             total += jdbcClient.sql("delete from " + table.name() + " where deleted_at < ?").param(cutoff).update();
@@ -47,6 +47,11 @@ public class RecycleBinPurge {
         if (total > 0) {
             log.info("Purged {} rows deleted before {}", total, cutoff);
         }
+    }
+
+    /** Record types added after ADR e2e-1 only ever lived in vault_record. */
+    private boolean plainTableExists(SyncTable table) {
+        return jdbcClient.sql("select to_regclass(?) is not null").param("public." + table.name()).query(Boolean.class).single();
     }
 
     private Duration retention() {

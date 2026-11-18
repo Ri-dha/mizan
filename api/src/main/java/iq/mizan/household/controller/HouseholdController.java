@@ -136,7 +136,7 @@ public class HouseholdController {
     @PreAuthorize("hasAuthority('HOUSEHOLD_DELETE')")
     public ResponseEntity<HouseholdResponse> requestDeletion(
             @AuthenticationPrincipal CurrentUser user, @Valid @RequestBody ConfirmPasswordRequest request) {
-        return ResponseEntity.ok(householdService.requestDeletion(user.userId(), user.householdId(), request.password()));
+        return ResponseEntity.ok(householdService.requestDeletion(user.userId(), user.householdId(), request.authKey()));
     }
 
     @Operation(summary = "Withdraw a pending household deletion")

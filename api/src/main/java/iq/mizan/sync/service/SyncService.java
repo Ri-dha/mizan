@@ -1,6 +1,7 @@
 package iq.mizan.sync.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import iq.mizan.common.audit.AuditService;
 import iq.mizan.common.exception.ApiException;
 import iq.mizan.common.exception.ErrorCode;
 import iq.mizan.common.security.CurrentUser;
+import iq.mizan.common.security.Permission;
 import iq.mizan.sync.SyncProperties;
 import iq.mizan.sync.dto.ConflictResponse;
 import iq.mizan.sync.dto.SyncOp;
@@ -28,6 +30,7 @@ import iq.mizan.sync.entity.SyncOpReceipt;
 import iq.mizan.sync.mapper.SyncMapper;
 import iq.mizan.sync.repository.SyncConflictRepository;
 import iq.mizan.sync.repository.SyncOpReceiptRepository;
+import iq.mizan.sync.table.SyncColumnType;
 import iq.mizan.sync.table.SyncTable;
 import iq.mizan.sync.table.SyncTableRegistry;
 
@@ -38,14 +41,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 
+/**
+ * Push stores ciphertext the server cannot read and merges it per field by clock alone
+ * (ADR sync-1, ADR e2e-1). Pull serves encrypted rows, and legacy plain rows until their
+ * household has migrated.
+ */
 @Service
 @AllArgsConstructor
 public class SyncService {
 
     private static final int CONFLICT_PAGE = 200;
+    private static final String VAULT_PREFIX = "vault:";
 
     private final SyncTableRegistry registry;
-    private final SyncRowRepository rows;
+    private final SyncRowRepository legacyRows;
+    private final VaultRowRepository vault;
     private final SyncLogRepository log;
     private final SyncConflictRepository conflictRepository;
     private final SyncOpReceiptRepository receiptRepository;
@@ -91,18 +101,25 @@ public class SyncService {
             entries = entries.subList(0, limit);
         }
 
-        Map<String, Map<UUID, Long>> latestSeqByTable = new LinkedHashMap<>();
-        entries.forEach(entry -> latestSeqByTable
-                .computeIfAbsent(entry.tableName(), t -> new LinkedHashMap<>())
-                .put(entry.rowId(), entry.seq()));
+        Map<UUID, Long> vaultSeq = new LinkedHashMap<>();
+        Map<String, Map<UUID, Long>> legacySeq = new LinkedHashMap<>();
+        for (SyncLogRepository.Entry entry : entries) {
+            if (entry.tableName().startsWith(VAULT_PREFIX)) {
+                vaultSeq.put(entry.rowId(), entry.seq());
+            } else {
+                legacySeq.computeIfAbsent(entry.tableName(), t -> new LinkedHashMap<>()).put(entry.rowId(), entry.seq());
+            }
+        }
 
         List<SyncRecordResponse> records = new ArrayList<>();
-        latestSeqByTable.forEach((tableName, seqByRow) -> {
+        vault.fetch(vaultSeq.keySet()).forEach(row -> records.add(new SyncRecordResponse(
+                row.tableName(), row.id(), row.ownerId(), row.fields(), row.clocks(), vaultSeq.get(row.id()), true)));
+        legacySeq.forEach((tableName, seqByRow) -> {
             SyncTable table = registry.require(tableName);
-            rows.fetch(table, seqByRow.keySet()).forEach(row -> records.add(new SyncRecordResponse(
-                    tableName, row.id(), row.ownerId(), row.fields(), row.clocks(), seqByRow.get(row.id()))));
+            legacyRows.fetch(table, seqByRow.keySet()).forEach(row -> records.add(new SyncRecordResponse(
+                    tableName, row.id(), row.ownerId(), row.fields(), row.clocks(), seqByRow.get(row.id()), false)));
         });
-        records.sort(java.util.Comparator.comparingLong(SyncRecordResponse::seq));
+        records.sort(Comparator.comparingLong(SyncRecordResponse::seq));
 
         long nextSeq = entries.isEmpty() ? since : entries.getLast().seq();
         device.recordPull(nextSeq);
@@ -121,27 +138,35 @@ public class SyncService {
 
     private List<ConflictResponse> apply(CurrentUser user, SyncDevice device, SyncOp op) {
         SyncTable table = registry.require(op.table());
-        if (table.readOnly()) {
-            throw ApiException.of(ErrorCode.SYNC_TABLE_READ_ONLY,
-                    "Table '%s' is written by the server only".formatted(op.table())).property("opId", op.opId());
-        }
-        Map<String, Object> incoming = normalised(table, op);
+        Map<String, Object> incoming = validated(table, op);
         Map<String, String> clocks = op.fields().keySet().stream().collect(Collectors.toMap(
                 Function.identity(), field -> HybridLogicalClock.validated(op.clocks().get(field), field),
                 (a, b) -> a, LinkedHashMap::new));
 
-        StoredRow stored = rows.lockForUpdate(table, op.rowId()).orElse(null);
+        VaultRow stored = vault.lockForUpdate(op.rowId()).orElse(null);
+        if (stored != null && !stored.tableName().equals(op.table())) {
+            throw ApiException.of(ErrorCode.SYNC_TABLE_MISMATCH,
+                    "Record %s belongs to '%s'".formatted(op.rowId(), stored.tableName())).property("opId", op.opId());
+        }
+        if (stored != null && table.appendOnly()) {
+            throw ApiException.of(ErrorCode.SYNC_RECORD_IMMUTABLE,
+                    "Records of '%s' cannot change once written".formatted(op.table())).property("opId", op.opId());
+        }
         FieldMerger.Outcome outcome = stored == null
                 ? FieldMerger.merge(Map.of(), Map.of(), incoming, clocks)
                 : FieldMerger.merge(stored.fields(), stored.clocks(), incoming, clocks);
 
+        Map<String, Object> merged = new LinkedHashMap<>(stored == null ? Map.of() : stored.fields());
+        merged.putAll(outcome.accepted());
+        refuseSharedWritesFromRestrictedSessions(user, merged, op);
+
         try {
             if (stored == null) {
-                rows.insert(table, op.rowId(), user.householdId(), user.userId(), outcome.accepted(), outcome.clocks());
-                audit(AuditAction.SYNC_INSERTED, user, op, null, outcome.accepted());
+                vault.insert(op.rowId(), user.householdId(), user.userId(), op.table(), merged, outcome.clocks());
+                audit(AuditAction.SYNC_INSERTED, user, op, outcome.accepted());
             } else if (outcome.changed()) {
-                rows.update(table, op.rowId(), outcome.accepted(), outcome.clocks());
-                audit(AuditAction.SYNC_UPDATED, user, op, stored.fields(), outcome.accepted());
+                vault.update(op.rowId(), merged, outcome.clocks());
+                audit(AuditAction.SYNC_UPDATED, user, op, outcome.accepted());
             }
         } catch (DataIntegrityViolationException e) {
             throw ApiException.of(ErrorCode.VALIDATION_FAILED,
@@ -165,27 +190,48 @@ public class SyncService {
                 .toList();
     }
 
-    private Map<String, Object> normalised(SyncTable table, SyncOp op) {
-        Map<String, Object> normalised = new LinkedHashMap<>();
+    /** Plain fields keep their meaning; every other field must arrive as ciphertext. */
+    private Map<String, Object> validated(SyncTable table, SyncOp op) {
+        Map<String, Object> values = new LinkedHashMap<>();
         op.fields().forEach((field, value) -> {
-            var type = table.fields().get(field);
-            if (type == null) {
+            if (!table.fields().containsKey(field)) {
                 throw ApiException.of(ErrorCode.SYNC_FIELD_UNKNOWN,
                         "Table '%s' has no field '%s'".formatted(op.table(), field));
             }
-            normalised.put(field, type.normalize(value, jsonMapper));
+            if (VaultFields.VISIBILITY.equals(field)) {
+                if (!VaultFields.VISIBILITIES.contains(String.valueOf(value))) {
+                    throw ApiException.of(ErrorCode.VALIDATION_FAILED, "Visibility must be SHARED or PRIVATE");
+                }
+                values.put(field, value);
+            } else if (VaultFields.DELETED_AT.equals(field)) {
+                values.put(field, SyncColumnType.TIMESTAMP.normalize(value, jsonMapper));
+            } else if (VaultFields.isCiphertext(value)) {
+                values.put(field, value);
+            } else {
+                throw ApiException.of(ErrorCode.SYNC_PLAIN_VALUE_REFUSED,
+                        "Field '%s' of '%s' must be encrypted on the device".formatted(field, op.table()))
+                        .property("opId", op.opId());
+            }
         });
-        return normalised;
+        return values;
     }
 
-    private void audit(AuditAction action, CurrentUser user, SyncOp op,
-                       Map<String, Object> before, Map<String, Object> after) {
+    /** Dependents never hold the household key, so nothing they write may be readable by the household. */
+    private static void refuseSharedWritesFromRestrictedSessions(CurrentUser user, Map<String, Object> merged, SyncOp op) {
+        boolean shared = !"PRIVATE".equals(merged.getOrDefault(VaultFields.VISIBILITY, VaultFields.SHARED));
+        if (shared && !user.permissions().contains(Permission.HOUSEHOLD_VIEW)) {
+            throw ApiException.of(ErrorCode.SYNC_SHARED_WRITE_REFUSED,
+                    "This role may only write private records").property("opId", op.opId());
+        }
+    }
+
+    /** Field names only: the values are ciphertext and would only bloat the trail. */
+    private void audit(AuditAction action, CurrentUser user, SyncOp op, Map<String, Object> accepted) {
         auditService.record(AuditRecord.of(action, AuditEntityType.SYNC_RECORD)
                 .actorId(user.userId())
                 .householdId(user.householdId())
                 .entityId(op.rowId())
-                .before(before)
-                .after(Map.of("table", op.table(), "fields", after))
+                .after(Map.of("table", op.table(), "fields", List.copyOf(accepted.keySet())))
                 .build());
     }
 }

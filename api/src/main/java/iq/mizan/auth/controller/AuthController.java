@@ -51,7 +51,7 @@ public class AuthController {
     public ResponseEntity<TokenResponse> register(
             @Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
         TokenPair pair = registrationService.register(
-                request.identifier(), request.password(), request.displayName(),
+                request.identifier(), request.authKey(), request.keys(), request.displayName(),
                 request.localeOrDefault(), ClientRequest.userAgent(httpRequest), ClientRequest.ip(httpRequest));
         return withRefreshCookie(httpRequest, pair, HttpStatus.CREATED);
     }
@@ -62,7 +62,7 @@ public class AuthController {
     public ResponseEntity<TokenResponse> login(
             @Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         TokenPair pair = authenticationService.login(
-                request.identifier(), request.password(),
+                request.identifier(), request.authKey(), request.legacyPassword(),
                 ClientRequest.userAgent(httpRequest), ClientRequest.ip(httpRequest));
         return withRefreshCookie(httpRequest, pair, HttpStatus.OK);
     }
@@ -121,7 +121,7 @@ public class AuthController {
     public ResponseEntity<Void> confirmPasswordReset(
             @Valid @RequestBody PasswordResetConfirmRequest request, HttpServletRequest httpRequest) {
         passwordResetService.confirm(
-                request.identifier(), request.code(), request.newPassword(), ClientRequest.ip(httpRequest));
+                request.identifier(), request.code(), request.newAuthKey(), ClientRequest.ip(httpRequest));
         return ResponseEntity.noContent().build();
     }
 

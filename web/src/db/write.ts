@@ -2,7 +2,7 @@ import { db, localTableFor, type Syncable, type SyncTableName } from "./schema"
 import { META_KEYS, readMeta, writeMeta } from "./meta"
 import { formatHlc, newNodeId, tick, type HlcState } from "@/sync/hlc"
 
-export const ENVELOPE_FIELDS: ReadonlySet<string> = new Set(["id", "ownerId", "clocks"])
+export const ENVELOPE_FIELDS: ReadonlySet<string> = new Set(["id", "ownerId", "clocks", "vaulted"])
 
 async function loadClock(): Promise<HlcState> {
   return (await readMeta<HlcState>(META_KEYS.hlc)) ?? { wall: 0, counter: 0, node: newNodeId() }
@@ -29,7 +29,8 @@ export async function writeFields<T extends Syncable>(
   await db.transaction("rw", [local, db.outbox, db.meta], async () => {
     const stamp = await nextStamp()
     const existing = (await local.get(id)) as T | undefined
-    const fields = Object.fromEntries(Object.entries(changes).filter(([key]) => !ENVELOPE_FIELDS.has(key)))
+    const changed = Object.fromEntries(Object.entries(changes).filter(([key]) => !ENVELOPE_FIELDS.has(key)))
+    const fields = movesBetweenKeys(existing, changed) ? { ...payloadOf(existing!), ...changed } : changed
     const clocks = Object.fromEntries(Object.keys(fields).map((field) => [field, stamp]))
 
     await local.put({
@@ -47,6 +48,19 @@ export async function writeFields<T extends Syncable>(
       createdAt: Date.now(),
     })
   })
+}
+
+/**
+ * ADR e2e-1: a row changing visibility is sealed under a different key, so every field is sent
+ * again with a fresh stamp; otherwise the old ciphertext stays readable to the old audience.
+ */
+function movesBetweenKeys(existing: Syncable | undefined, changed: Record<string, unknown>): boolean {
+  if (!existing || !("visibility" in changed)) return false
+  return (existing as Syncable & { visibility?: unknown }).visibility !== changed.visibility
+}
+
+export function payloadOf(row: Syncable): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(row).filter(([key]) => !ENVELOPE_FIELDS.has(key)))
 }
 
 export async function softDelete(table: SyncTableName, id: string) {

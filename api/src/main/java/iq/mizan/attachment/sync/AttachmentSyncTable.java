@@ -12,7 +12,7 @@ public class AttachmentSyncTable implements SyncTable {
 
     public static final String NAME = "attachment";
 
-    private static final Map<String, SyncColumnType> FIELDS = Map.ofEntries(
+    private static final Map<String, SyncColumnType> LEGACY_FIELDS = Map.ofEntries(
             Map.entry("visibility", SyncColumnType.TEXT),
             Map.entry("ownerType", SyncColumnType.TEXT),
             Map.entry("ownerRecordId", SyncColumnType.UUID_VALUE),
@@ -22,6 +22,15 @@ public class AttachmentSyncTable implements SyncTable {
             Map.entry("uploadedAt", SyncColumnType.TIMESTAMP),
             Map.entry("deletedAt", SyncColumnType.TIMESTAMP));
 
+    /** The per-file key travels sealed with the row, so every member who can open the row can open the file. */
+    private static final Map<String, SyncColumnType> FIELDS = withBlobKey();
+
+    private static Map<String, SyncColumnType> withBlobKey() {
+        Map<String, SyncColumnType> fields = new java.util.HashMap<>(LEGACY_FIELDS);
+        fields.put("blobKey", SyncColumnType.TEXT);
+        return Map.copyOf(fields);
+    }
+
     @Override
     public String name() {
         return NAME;
@@ -30,5 +39,10 @@ public class AttachmentSyncTable implements SyncTable {
     @Override
     public Map<String, SyncColumnType> fields() {
         return FIELDS;
+    }
+
+    @Override
+    public Map<String, SyncColumnType> legacyFields() {
+        return LEGACY_FIELDS;
     }
 }

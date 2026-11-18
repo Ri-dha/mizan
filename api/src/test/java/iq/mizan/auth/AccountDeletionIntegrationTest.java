@@ -43,7 +43,7 @@ class AccountDeletionIntegrationTest extends PostgresIntegrationTest {
 
         JsonNode requested = api.body(api.post("/api/v1/me/deletion-request", token, null));
         assertThat(requested.get("deletionRequestedAt").isNull()).isFalse();
-        assertThat(api.post("/api/v1/auth/login", null, Map.of("identifier", accounts.ownerEmail(), "password", accounts.ownerPassword())))
+        assertThat(api.login(accounts.ownerEmail(), accounts.ownerPassword()))
                 .hasStatus(HttpStatus.OK);
 
         assertThat(deletionService.purgeExpired()).isZero();

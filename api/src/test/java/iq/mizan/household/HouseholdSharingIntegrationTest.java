@@ -73,7 +73,7 @@ class HouseholdSharingIntegrationTest extends PostgresIntegrationTest {
         JsonNode pull = api.body(api.get("/api/v1/sync/pull?deviceId=" + memberDevice + "&since=0", member));
         List<String> tables = new ArrayList<>();
         pull.get("records").forEach(record -> tables.add(record.get("table").asString()));
-        assertThat(tables).contains("cash_account", "plan", "bucket").doesNotContain("metal_lot");
+        assertThat(tables).contains("cash_account").doesNotContain("metal_lot");
 
         push(member, memberDevice, op("cash_account", UUID.randomUUID(), fields("name", "Noor's purse", "kind", "WALLET", "currency", "IQD", "balance", 5000)));
         JsonNode ownerPull = api.body(api.get("/api/v1/sync/pull?deviceId=" + ownerDevice + "&since=0", owner));
@@ -83,27 +83,28 @@ class HouseholdSharingIntegrationTest extends PostgresIntegrationTest {
                 names.add(record.get("fields").get("name").asString());
             }
         });
-        assertThat(names).contains("Wallet", "Noor's purse");
+        assertThat(names).contains(ApiClient.sealed("Wallet"), ApiClient.sealed("Noor's purse"));
     }
 
     @Test
-    void theHouseholdFigureCountsPrivateRowsWithoutItemisingThem() {
+    void theHouseholdFigureTravelsAsSealedContributionsWithoutItemisingPrivateRows() {
         String member = join(HouseholdRoleName.MEMBER);
+        UUID contribution = UUID.randomUUID();
+        push(owner, ownerDevice, op("member_contribution", contribution, fields("memberId", UUID.randomUUID(),
+                "totalAssets", SHARED_WALLET + PRIVATE_GOLD, "totalLiabilities", 0, "composition", "{}", "computedAt", "2026-09-30T00:00:00Z")));
 
-        JsonNode figures = api.body(api.get("/api/v1/networth/current", member));
-        assertThat(figures.get("totalAssets").asLong()).isEqualTo(SHARED_WALLET + PRIVATE_GOLD);
-
-        api.body(api.post("/api/v1/months/2026-09/close", owner, null));
         JsonNode pull = api.body(api.get("/api/v1/sync/pull?deviceId=" + device(member) + "&since=0", member));
-        boolean sawSnapshot = false;
+        boolean sawContribution = false;
         for (JsonNode record : pull.get("records")) {
-            if ("net_worth_snapshot".equals(record.get("table").asString())) {
-                sawSnapshot = true;
-                assertThat(record.get("fields").get("totalAssets").asLong()).isEqualTo(SHARED_WALLET + PRIVATE_GOLD);
+            if ("member_contribution".equals(record.get("table").asString())) {
+                sawContribution = true;
+                assertThat(record.get("fields").get("totalAssets").asString()).isEqualTo(ApiClient.sealed(SHARED_WALLET + PRIVATE_GOLD));
             }
             assertThat(record.get("table").asString()).isNotEqualTo("metal_lot");
         }
-        assertThat(sawSnapshot).isTrue();
+        assertThat(sawContribution).isTrue();
+        assertThat(jdbc.queryForObject("select count(*) from vault_record where fields::text like ?", Long.class,
+                "%" + (SHARED_WALLET + PRIVATE_GOLD) + "%")).isZero();
     }
 
     @Test
@@ -185,10 +186,10 @@ class HouseholdSharingIntegrationTest extends PostgresIntegrationTest {
     @Test
     void householdDeletionNeedsThePasswordWaitsForTheGracePeriodAndFallsMembersBack() {
         String member = join(HouseholdRoleName.MEMBER);
-        assertThat(api.post("/api/v1/households/current/deletion-request", owner, Map.of("password", "wrong"))).hasStatus(HttpStatus.UNAUTHORIZED);
-        assertThat(api.post("/api/v1/households/current/deletion-request", member, Map.of("password", accounts.otherPassword()))).hasStatus(HttpStatus.FORBIDDEN);
+        assertThat(api.post("/api/v1/households/current/deletion-request", owner, Map.of("authKey", ApiClient.authKey("wrong")))).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(api.post("/api/v1/households/current/deletion-request", member, Map.of("authKey", ApiClient.authKey(accounts.otherPassword())))).hasStatus(HttpStatus.FORBIDDEN);
 
-        JsonNode requested = api.body(api.post("/api/v1/households/current/deletion-request", owner, Map.of("password", accounts.ownerPassword())));
+        JsonNode requested = api.body(api.post("/api/v1/households/current/deletion-request", owner, Map.of("authKey", ApiClient.authKey(accounts.ownerPassword()))));
         assertThat(requested.get("deletionRequestedAt").isNull()).isFalse();
         assertThat(api.post("/api/v1/households/current/invitations", owner, Map.of("role", "MEMBER"))).hasStatus(HttpStatus.CONFLICT);
 
@@ -226,8 +227,15 @@ class HouseholdSharingIntegrationTest extends PostgresIntegrationTest {
 
     private static Map<String, Object> fields(Object... keysAndValues) {
         Map<String, Object> map = new java.util.LinkedHashMap<>();
+        boolean isPrivate = false;
         for (int i = 0; i < keysAndValues.length; i += 2) {
-            map.put((String) keysAndValues[i], keysAndValues[i + 1]);
+            isPrivate |= "visibility".equals(keysAndValues[i]) && "PRIVATE".equals(keysAndValues[i + 1]);
+        }
+        for (int i = 0; i < keysAndValues.length; i += 2) {
+            String field = (String) keysAndValues[i];
+            Object value = keysAndValues[i + 1];
+            boolean plain = "visibility".equals(field) || "deletedAt".equals(field);
+            map.put(field, plain ? value : isPrivate ? ApiClient.sealedPrivate(value) : ApiClient.sealed(value));
         }
         return map;
     }

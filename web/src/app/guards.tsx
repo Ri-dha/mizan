@@ -6,10 +6,13 @@ import { LockScreen } from "@/features/lock/LockScreen"
 import { SetPinScreen } from "@/features/lock/SetPinScreen"
 import { useLockState } from "@/lock/store"
 import { startSyncEngine } from "@/sync/engine"
+import { RecoveryScreen, UnlockVaultScreen } from "@/features/vault/VaultScreens"
+import { useVaultState } from "@/vault/account"
 
 export function RequireSession({ children }: { children: ReactNode }) {
   const session = useSession()
   const lock = useLockState()
+  const vault = useVaultState()
 
   useEffect(() => {
     if (session) startSyncEngine()
@@ -19,6 +22,9 @@ export function RequireSession({ children }: { children: ReactNode }) {
   if (session === null) return <Navigate to="/login" replace />
   if (lock === "locked") return <LockScreen />
   if (lock === "no-pin") return <SetPinScreen />
+  if (vault === "unknown") return null
+  if (vault === "missing") return <UnlockVaultScreen />
+  if (vault === "needs-recovery") return <RecoveryScreen />
   return <>{children}</>
 }
 

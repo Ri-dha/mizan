@@ -31,6 +31,12 @@ class AuthFlowIntegrationTest extends PostgresIntegrationTest {
     @Autowired
     private AuditEntryRepository auditEntries;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
     @BeforeEach
     void reset() {
         resetTransactionalData();
@@ -61,7 +67,8 @@ class AuthFlowIntegrationTest extends PostgresIntegrationTest {
         api.register(accounts.ownerEmail(), accounts.ownerPassword(), "Ridha");
 
         var result = api.post("/api/v1/auth/register", null, Map.of(
-                "identifier", accounts.ownerEmail().toUpperCase(), "password", "another-pass-1", "displayName", "Twin"));
+                "identifier", accounts.ownerEmail().toUpperCase(), "authKey", ApiClient.authKey("another-pass-1"), "displayName", "Twin",
+                "keys", ApiClient.accountKeys("twin")));
 
         assertThat(result).hasStatus(HttpStatus.CONFLICT);
         assertThat(api.body(result).get("code").asString()).isEqualTo("IDENTIFIER_ALREADY_REGISTERED");
@@ -115,7 +122,8 @@ class AuthFlowIntegrationTest extends PostgresIntegrationTest {
     @Test
     void refreshTokenTravelsAsAnHttpOnlyCookie() {
         var result = api.post("/api/v1/auth/register", null, Map.of(
-                "identifier", accounts.ownerEmail(), "password", accounts.ownerPassword(), "displayName", "Ridha"));
+                "identifier", accounts.ownerEmail(), "authKey", ApiClient.authKey(accounts.ownerPassword()), "displayName", "Ridha",
+                "keys", ApiClient.accountKeys("owner")));
 
         assertThat(result).hasStatus(HttpStatus.CREATED);
         assertThat(result.getResponse().getHeader("Set-Cookie"))
@@ -132,7 +140,7 @@ class AuthFlowIntegrationTest extends PostgresIntegrationTest {
                 .hasStatus(HttpStatus.NO_CONTENT);
 
         var confirmed = api.post("/api/v1/auth/password-reset/confirm", null, Map.of(
-                "identifier", accounts.ownerEmail(), "code", codeSender.lastCode(), "newPassword", "brand-new-pass-1"));
+                "identifier", accounts.ownerEmail(), "code", codeSender.lastCode(), "newAuthKey", ApiClient.authKey("brand-new-pass-1")));
         assertThat(confirmed).hasStatus(HttpStatus.NO_CONTENT);
 
         assertThat(login(accounts.ownerEmail(), accounts.ownerPassword())).hasStatus(HttpStatus.UNAUTHORIZED);
@@ -161,7 +169,37 @@ class AuthFlowIntegrationTest extends PostgresIntegrationTest {
     }
 
     private org.springframework.test.web.servlet.assertj.MvcTestResult login(String identifier, String password) {
-        return api.post("/api/v1/auth/login", null, Map.of("identifier", identifier, "password", password));
+        return api.login(identifier, password);
+    }
+
+    /** ADR e2e-1: the server stores a hash of the auth key and never receives the password. */
+    @Test
+    void theServerNeverReceivesThePassword() {
+        api.register(accounts.ownerEmail(), accounts.ownerPassword(), "Ridha");
+        String stored = jdbc.queryForObject("select password_hash from app_user", String.class);
+
+        assertThat(passwordEncoder.matches(ApiClient.authKey(accounts.ownerPassword()), stored)).isTrue();
+        assertThat(passwordEncoder.matches(accounts.ownerPassword(), stored)).isFalse();
+        assertThat(jdbc.queryForObject("select auth_scheme from app_user", String.class)).isEqualTo("KEY");
+        assertThat(api.post("/api/v1/auth/login", null, Map.of("identifier", accounts.ownerEmail(), "authKey", accounts.ownerPassword())))
+                .hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    /** Accounts from before end-to-end encryption prove themselves once with the old password, then move to the auth key. */
+    @Test
+    void aLegacyAccountUpgradesAtItsNextSignIn() {
+        api.register(accounts.ownerEmail(), accounts.ownerPassword(), "Ridha");
+        jdbc.update("update app_user set auth_scheme = 'LEGACY', password_hash = ?", passwordEncoder.encode(accounts.ownerPassword()));
+        String authKey = ApiClient.authKey(accounts.ownerPassword());
+
+        assertThat(login(accounts.ownerEmail(), accounts.ownerPassword())).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(api.post("/api/v1/auth/login", null, Map.of("identifier", accounts.ownerEmail(), "authKey", authKey, "legacyPassword", "wrong-one")))
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(api.post("/api/v1/auth/login", null, Map.of("identifier", accounts.ownerEmail(), "authKey", authKey,
+                "legacyPassword", accounts.ownerPassword()))).hasStatus(HttpStatus.OK);
+
+        assertThat(jdbc.queryForObject("select auth_scheme from app_user", String.class)).isEqualTo("KEY");
+        assertThat(login(accounts.ownerEmail(), accounts.ownerPassword())).hasStatus(HttpStatus.OK);
     }
 
     /** In-app browsers send User-Agent strings past 256 characters; a session must still be issued. */
@@ -170,7 +208,8 @@ class AuthFlowIntegrationTest extends PostgresIntegrationTest {
         resetTransactionalData();
         String longUserAgent = "Mozilla/5.0 (Linux; Android 14) " + "X".repeat(700);
         var result = api.postWithHeaders("/api/v1/auth/register",
-                Map.of("identifier", "ua@example.test", "password", accounts.ownerPassword(), "displayName", "Long UA"),
+                Map.of("identifier", "ua@example.test", "authKey", ApiClient.authKey(accounts.ownerPassword()), "displayName", "Long UA",
+                        "keys", ApiClient.accountKeys("ua")),
                 Map.of("User-Agent", longUserAgent));
         assertThat(result).hasStatus(HttpStatus.CREATED);
         assertThat(api.body(result).get("accessToken").asString()).isNotBlank();
