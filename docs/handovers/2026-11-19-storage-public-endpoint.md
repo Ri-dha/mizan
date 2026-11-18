@@ -1,6 +1,6 @@
 # Handover — 2026-11-19 — Storage links a browser can reach (server half)
 
-## Completed (uncommitted, MizanApi, branch feat/storage-public-endpoint)
+## Completed (b48b895 on develop and main)
 - ADR storage-4; `StorageProperties.publicEndpoint` and `linkEndpoint()`; `S3Config` presigner
   uses it; `application.yml` `public-endpoint`; compose: API env, SeaweedFS `S3_EXTERNAL_URL`,
   port on 127.0.0.1; `.env.example`; RUNBOOK deploy step and storage section; ARCHITECTURE.
@@ -11,7 +11,7 @@
   session is working in MizanApp on the phone app.
 
 ## Next steps
-- Owner's word to commit and merge into develop; then the MizanApp half.
+- The MizanApp half.
 
 ## Blockers
 - None.

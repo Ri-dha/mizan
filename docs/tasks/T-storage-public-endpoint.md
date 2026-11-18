@@ -1,5 +1,5 @@
 # T-storage-public-endpoint — Presign storage URLs a browser can reach
-- Status: in-progress (2026-11-19), server half on branch feat/storage-public-endpoint in MizanApi, uncommitted
+- Status: in-progress (2026-11-19), server half done (b48b895 on develop and main); client half open in MizanApp
 - Context: found while writing ADR csp-and-job-lock-2; ADR storage-4. Owner chose the site's own
   address over a storage subdomain, and asked for the server change first (2026-11-19).
 - Notes: `S3Config` presigns with `MIZAN_STORAGE_ENDPOINT`, which the prod Compose file sets to

@@ -1,6 +1,6 @@
 # Status — T-storage-public-endpoint
 
-- Server half: branch `feat/storage-public-endpoint` in MizanApi from develop `d57d43c`; uncommitted.
+- Server half: `b48b895` on develop and main (branch `feat/storage-public-endpoint`).
 - Works: links signed for `MIZAN_STORAGE_PUBLIC_ENDPOINT` (internal endpoint when blank), SeaweedFS
   given `S3_EXTERNAL_URL`, its port bound to 127.0.0.1.
 - Validated: API 95 tests. `PublicStorageLinkTest` runs SeaweedFS with signature checks behind a
