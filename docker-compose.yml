@@ -125,7 +125,9 @@ services:
       - api
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
-      MIZAN_STORAGE_ORIGIN: ${MIZAN_STORAGE_ORIGIN:-http://localhost:8333}
+      # Storage is served by this site (ADR storage-4); set only when it lives on another origin.
+      MIZAN_STORAGE_ORIGIN: ${MIZAN_STORAGE_ORIGIN:-}
+      MIZAN_STORAGE_BUCKET: ${MIZAN_STORAGE_BUCKET:-mizan-attachments}
     ports:
       - "80:80"
       - "443:443"
