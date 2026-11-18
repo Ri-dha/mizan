@@ -4,14 +4,16 @@ import java.util.UUID;
 
 import iq.mizan.household.dto.HouseholdResponse;
 
+import org.jspecify.annotations.Nullable;
+
 public record CurrentUserResponse(
         UUID id,
-        String email,
-        String phone,
+        @Nullable String email,
+        @Nullable String phone,
         String displayName,
         String locale,
         boolean verified,
-        java.time.Instant deletionRequestedAt,
+        java.time.@Nullable Instant deletionRequestedAt,
         /** Runs the service (ADR admin-1): the app shows the operator dashboard. */
         boolean operator,
         HouseholdResponse household) {

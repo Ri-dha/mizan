@@ -5,5 +5,7 @@ import java.util.UUID;
 
 import iq.mizan.household.entity.HouseholdRole;
 
-public record MemberResponse(UUID userId, String displayName, String contact, HouseholdRole role, Instant joinedAt, Instant expiresAt, boolean you) {
+import org.jspecify.annotations.Nullable;
+
+public record MemberResponse(UUID userId, String displayName, String contact, HouseholdRole role, Instant joinedAt, @Nullable Instant expiresAt, boolean you) {
 }

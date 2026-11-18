@@ -5,11 +5,13 @@ import java.util.UUID;
 
 import iq.mizan.household.entity.HouseholdRole;
 
+import org.jspecify.annotations.Nullable;
+
 public record HouseholdResponse(
         UUID id,
         String name,
         String baseCurrency,
         int monthStartDay,
         HouseholdRole role,
-        Instant deletionRequestedAt) {
+        @Nullable Instant deletionRequestedAt) {
 }

@@ -4,5 +4,7 @@ import java.util.UUID;
 
 import iq.mizan.vault.entity.KeyKind;
 
-public record GrantResponse(KeyKind keyKind, int keyVersion, String wrappedKey, UUID grantedBy) {
+import org.jspecify.annotations.Nullable;
+
+public record GrantResponse(KeyKind keyKind, int keyVersion, String wrappedKey, @Nullable UUID grantedBy) {
 }
