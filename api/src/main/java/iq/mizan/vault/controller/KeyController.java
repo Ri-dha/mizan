@@ -7,7 +7,10 @@ import iq.mizan.common.security.CurrentUser;
 import iq.mizan.vault.dto.GrantRequest;
 import iq.mizan.vault.dto.KeyMemberResponse;
 import iq.mizan.vault.dto.MyKeysResponse;
+import iq.mizan.vault.dto.ResetKeysRequest;
+import iq.mizan.vault.dto.ResetPreviewResponse;
 import iq.mizan.vault.dto.RewrapRequest;
+import iq.mizan.vault.service.KeyResetService;
 import iq.mizan.vault.service.KeyService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +42,7 @@ public class KeyController {
     private static final int MAX_GRANTS = 50;
 
     private final KeyService keyService;
+    private final KeyResetService keyReset;
 
     @Operation(summary = "The caller's wrapped user key and the household keys granted to them")
     @GetMapping("/me")
@@ -74,5 +78,17 @@ public class KeyController {
                                                          @Valid @RequestBody @Size(min = 1, max = MAX_GRANTS) List<@Valid GrantRequest> requests) {
         keyService.grant(user, requests);
         return ResponseEntity.ok(keyService.members(user));
+    }
+
+    @Operation(summary = "What starting over without a recovery code would remove (ADR e2e-3)")
+    @GetMapping("/me/reset-preview")
+    public ResponseEntity<ResetPreviewResponse> resetPreview(@AuthenticationPrincipal CurrentUser user) {
+        return ResponseEntity.ok(keyReset.preview(user.userId()));
+    }
+
+    @Operation(summary = "Replace the account's keys; records sealed under the old ones are removed (ADR e2e-3)")
+    @PostMapping("/me/reset")
+    public ResponseEntity<ResetPreviewResponse> reset(@AuthenticationPrincipal CurrentUser user, @Valid @RequestBody ResetKeysRequest request) {
+        return ResponseEntity.ok(keyReset.reset(user.userId(), request));
     }
 }

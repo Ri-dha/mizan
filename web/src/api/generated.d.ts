@@ -182,6 +182,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/keys/me/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replace the account's keys; records sealed under the old ones are removed (ADR e2e-3) */
+        post: operations["reset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/keys/household/grants": {
         parameters: {
             query?: never;
@@ -808,6 +825,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/keys/me/reset-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What starting over without a recovery code would remove (ADR e2e-3) */
+        get: operations["resetPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/keys/household/members": {
         parameters: {
             query?: never;
@@ -1208,6 +1242,26 @@ export interface components {
             fetchedAt?: string;
             stale?: boolean;
         };
+        ResetKeysRequest: {
+            wrappedByPassword: string;
+            wrappedByRecovery: string;
+            publicKey: string;
+            encryptedPrivateKey: string;
+            confirm: string;
+        };
+        Household: {
+            /** Format: uuid */
+            householdId?: string;
+            name?: string;
+            soleKeyHolder?: boolean;
+            /** Format: int64 */
+            sharedRecordsLost?: number;
+        };
+        ResetPreviewResponse: {
+            /** Format: int64 */
+            privateRecords?: number;
+            households?: components["schemas"]["Household"][];
+        };
         GrantRequest: {
             /** Format: uuid */
             userId: string;
@@ -1502,6 +1556,7 @@ export interface components {
             floatingPointNumber?: boolean;
             container?: boolean;
             number?: boolean;
+            string?: boolean;
             missingNode?: boolean;
             valueNode?: boolean;
             /** @enum {string} */
@@ -1517,7 +1572,6 @@ export interface components {
             textual?: boolean;
             boolean?: boolean;
             binary?: boolean;
-            string?: boolean;
             empty?: boolean;
             array?: boolean;
             null?: boolean;
@@ -1927,6 +1981,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["QuoteResponse"][];
+                };
+            };
+        };
+    };
+    reset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetKeysRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ResetPreviewResponse"];
                 };
             };
         };
@@ -2879,6 +2957,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CatalogueResponse"];
+                };
+            };
+        };
+    };
+    resetPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ResetPreviewResponse"];
                 };
             };
         };

@@ -6,9 +6,9 @@
 - Removed: server networth, report, plan-seeding and notification-rule code and the Java `domain`
   package with its tests.
 - Mocked or stubbed: nothing.
-- In flight: nothing. Not yet run against the real dev database (back it up first; port 5432 is
-  held by another project).
-- Blockers: none. Open gaps are proposed tasks: T-e2e-key-reset (needed before real users),
-  T-e2e-key-rotation.
+- In flight: nothing. The dev database was recreated empty on 2026-11-18, so there is no plain
+  data left to migrate locally.
+- Blockers: none. Starting over without a recovery code is T-e2e-key-reset (in review);
+  key rotation after a member leaves is T-e2e-key-rotation (proposed).
 - Validated 2026-11-18 on a clean checkout of d5099dc: API 77 tests in 20 suites, web 165, tsc,
   build. Browser run with two accounts, migration, reset and recovery.

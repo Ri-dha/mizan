@@ -48,6 +48,7 @@ public enum ErrorCode {
     ACCOUNT_KEYS_EXIST(HttpStatus.CONFLICT, "Account Keys Already Exist"),
     ACCOUNT_KEYS_MISSING(HttpStatus.NOT_FOUND, "Account Keys Missing"),
     KEY_GRANT_REFUSED(HttpStatus.FORBIDDEN, "Key Grant Refused"),
+    RESET_NOT_CONFIRMED(HttpStatus.BAD_REQUEST, "Reset Not Confirmed"),
     OPERATOR_REQUIRED(HttpStatus.FORBIDDEN, "Operator Required"),
     REAUTHENTICATION_REQUIRED(HttpStatus.FORBIDDEN, "Re-authentication Required"),
     ACCOUNT_SUSPENDED(HttpStatus.FORBIDDEN, "Account Suspended"),

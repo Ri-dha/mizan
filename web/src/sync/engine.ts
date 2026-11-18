@@ -3,12 +3,12 @@ import { useSyncExternalStore } from "react"
 import { api, ApiError, unwrap } from "@/api/client"
 import { uploadPendingBlobs } from "@/attachments/store"
 import { runBackupIfDue } from "@/backup/store"
-import { loadSession, refreshProfile, type LocalSession } from "@/api/auth"
+import { clearLocalData, loadSession, refreshProfile, rememberFromServer, type LocalSession } from "@/api/auth"
 import { purgeExpiredDeletions } from "@/db/transactions"
 import { refreshQuotes } from "@/market/store"
 import { db, localTableFor, SYNC_TABLES, type Syncable, type SyncTableName } from "@/db/schema"
 import { onVaultReady, vaultReady } from "@/vault/account"
-import { refreshGrants, shareKeysWithMembers } from "@/vault/keyring"
+import { KeysReplacedError, refreshGrants, shareKeysWithMembers } from "@/vault/keyring"
 import { openFields, openValue, sealFields } from "@/vault/records"
 import { mayHoldHouseholdKey } from "@/app/roles"
 import { completeMigrationIfDrained, runDeviceDuties } from "./duties"
@@ -197,7 +197,16 @@ async function applyRecords(records: OpenRecord[]) {
 }
 
 async function exchangeKeys(session: LocalSession) {
-  await refreshGrants()
+  try {
+    await refreshGrants()
+  } catch (error) {
+    // The rows here were removed on the server with the old keys; this device signs in again.
+    if (error instanceof KeysReplacedError) {
+      await clearLocalData()
+      await rememberFromServer(null)
+    }
+    throw error
+  }
   if (mayHoldHouseholdKey(session.role)) await shareKeysWithMembers(session.role === "OWNER")
 }
 

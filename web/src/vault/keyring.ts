@@ -140,9 +140,17 @@ export function canOpen(value: unknown): boolean {
 }
 
 /** Opens every grant addressed to this account; called on each sync so a new grant is picked up. */
+/** Thrown when this account started over on another device (ADR e2e-3): these keys open nothing now. */
+export class KeysReplacedError extends Error {
+  constructor() {
+    super("KEYS_REPLACED")
+  }
+}
+
 export async function refreshGrants(): Promise<void> {
   if (!keyring) return
   const mine = await unwrap(api.GET("/api/v1/keys/me"))
+  if (mine.account?.publicKey && mine.account.publicKey !== keyring.account.publicKey) throw new KeysReplacedError()
   let changed = false
   for (const grant of (mine.grants ?? []) as Grant[]) {
     const kind = grant.keyKind as KeyKind

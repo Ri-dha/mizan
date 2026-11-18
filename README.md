@@ -211,6 +211,7 @@ from `MIZAN_PARALLEL_RATE_IQD_MICROS` (1470 IQD/USD = `1470000000`) or a price t
 | POST | `/api/v1/notifications/test` | bearer | Send a test notification to every subscribed device |
 | PUT | `/api/v1/notifications/schedule` | bearer | Replace this device's reminder schedule: kinds and times only, no names or amounts |
 | GET/PUT/PATCH | `/api/v1/keys/me` | bearer | The caller's wrapped account keys and grants; store them once; re-wrap after a reset or a new recovery code |
+| GET/POST | `/api/v1/keys/me/reset-preview`, `/api/v1/keys/me/reset` | bearer | What starting over without a recovery code removes; replace the keys (confirm word RESET) |
 | GET | `/api/v1/keys/household/members` | bearer, `HOUSEHOLD_VIEW` | Members' public keys and which key versions they hold |
 | POST | `/api/v1/keys/household/grants` | bearer, `HOUSEHOLD_VIEW` | Hand household or report keys, wrapped to members' public keys |
 | GET | `/api/v1/vault/status` | bearer | Whether plain rows from before encryption remain |

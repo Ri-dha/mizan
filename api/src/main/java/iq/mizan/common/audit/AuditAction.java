@@ -13,6 +13,7 @@ public enum AuditAction {
     AUTH_UPGRADED,
     KEYS_CREATED,
     KEYS_REWRAPPED,
+    KEYS_RESET,
     KEY_GRANTED,
     VAULT_MIGRATED,
     HOUSEHOLD_UPDATED,

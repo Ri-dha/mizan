@@ -39,6 +39,10 @@ docs/manual/  one Markdown source → in-app /help and static /docs
 - Rows from before encryption stay in their old plain tables and are pulled with
   `encrypted: false`. Each device re-sends its rows sealed, then `/vault/migration/complete`
   deletes the plain copies.
+- Someone without their recovery code can start over (ADR e2e-3, `/keys/me/reset`): new keys,
+  and the server removes what only the old keys could open (their private records; a household's
+  shared records too when they were its last key holder). Their other devices notice the new
+  public key, wipe their copy and ask for the password.
 - On the device, keys are sealed under a non-extractable IndexedDB key. Rows in IndexedDB are
   still plain (`T-local-encryption`).
 

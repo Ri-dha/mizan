@@ -1,5 +1,5 @@
 import { Copy, KeyRound } from "lucide-react"
-import { useState, type FormEvent, type ReactNode } from "react"
+import { useEffect, useState, type FormEvent, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { acknowledgeRecoveryCode, recoverWithCode, regenerateRecoveryCode, useRecoveryCodeToShow } from "@/vault/account"
+import { acknowledgeRecoveryCode, previewStartOver, recoverWithCode, regenerateRecoveryCode, startOver, useRecoveryCodeToShow, type ResetPreview } from "@/vault/account"
 
 function CenteredCard({ title, description, children }: { title: string; description: string; children: ReactNode }) {
   return (
@@ -68,6 +68,7 @@ export function RecoveryScreen() {
   const [code, setCode] = useState("")
   const [wrong, setWrong] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [startingOver, setStartingOver] = useState(false)
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -81,6 +82,8 @@ export function RecoveryScreen() {
     }
   }
 
+  if (startingOver) return <StartOverScreen onBack={() => setStartingOver(false)} />
+
   return (
     <CenteredCard title={t("vault.recoverTitle")} description={t("vault.recoverBody")}>
       <form onSubmit={submit} className="flex flex-col gap-4">
@@ -89,9 +92,58 @@ export function RecoveryScreen() {
         </Field>
         {wrong && <Alert><AlertDescription>{t("vault.recoverFailed")}</AlertDescription></Alert>}
         <Button type="submit" disabled={busy}>{t("vault.recover")}</Button>
-        <p className="text-sm opacity-70">{t("vault.lostCode")}</p>
+        <p className="text-sm text-muted-foreground">{t("vault.otherDevice")}</p>
+        <Button type="button" variant="ghost" className="text-destructive" onClick={() => setStartingOver(true)}>{t("vault.noCode")}</Button>
         <Button type="button" variant="outline" onClick={() => void logout()}>{t("auth.logout")}</Button>
       </form>
+    </CenteredCard>
+  )
+}
+
+/** ADR e2e-3: says exactly what will be lost, from the server's own count, before anything is removed. */
+function StartOverScreen({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation()
+  const [preview, setPreview] = useState<ResetPreview | null>(null)
+  const [typed, setTyped] = useState("")
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    previewStartOver().then(setPreview).catch((e) => toast(describeError(e)))
+  }, [])
+
+  const word = t("vault.startOverWord")
+  const sole = (preview?.households ?? []).filter((h) => h.soleKeyHolder)
+
+  async function confirm(event: FormEvent) {
+    event.preventDefault()
+    if (typed.trim().toLocaleUpperCase() !== word.toLocaleUpperCase()) return
+    setBusy(true)
+    try {
+      await startOver()
+    } catch (e) {
+      toast(describeError(e))
+      setBusy(false)
+    }
+  }
+
+  return (
+    <CenteredCard title={t("vault.startOverTitle")} description={t("vault.startOverBody")}>
+      {!preview ? <p className="text-sm text-muted-foreground">{t("common.loading")}</p> : (
+        <form onSubmit={confirm} className="flex flex-col gap-4">
+          <Alert variant="destructive">
+            <AlertDescription className="flex flex-col gap-2">
+              <span>{t("vault.startOverPrivate", { count: preview.privateRecords ?? 0 })}</span>
+              {sole.map((h) => <span key={h.householdId}>{t("vault.startOverShared", { name: h.name, count: h.sharedRecordsLost ?? 0 })}</span>)}
+              {sole.length === 0 && <span>{t("vault.startOverKept")}</span>}
+            </AlertDescription>
+          </Alert>
+          <Field id="start-over-word" label={t("vault.startOverType", { word })}>
+            <Input id="start-over-word" autoComplete="off" value={typed} onChange={(e) => setTyped(e.target.value)} required />
+          </Field>
+          <Button type="submit" variant="destructive" disabled={busy || typed.trim().toLocaleUpperCase() !== word.toLocaleUpperCase()}>{t("vault.startOverConfirm")}</Button>
+          <Button type="button" variant="outline" onClick={onBack}>{t("vault.startOverBack")}</Button>
+        </form>
+      )}
     </CenteredCard>
   )
 }

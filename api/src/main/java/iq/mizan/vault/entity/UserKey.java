@@ -54,6 +54,15 @@ public class UserKey {
         return key;
     }
 
+    /** ADR e2e-3: a new key set replaces the old one, which nobody can open any more. */
+    public void replace(String wrappedByPassword, String wrappedByRecovery, String publicKey, String encryptedPrivateKey, Instant now) {
+        this.wrappedByPassword = wrappedByPassword;
+        this.wrappedByRecovery = wrappedByRecovery;
+        this.publicKey = publicKey;
+        this.encryptedPrivateKey = encryptedPrivateKey;
+        this.updatedAt = now;
+    }
+
     /** After a password reset or change the device re-wraps the same user key; nothing else changes. */
     public void rewrapByPassword(String wrapped, Instant now) {
         this.wrappedByPassword = wrapped;

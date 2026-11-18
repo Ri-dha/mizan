@@ -118,6 +118,25 @@ export async function recoverWithCode(code: string): Promise<boolean> {
   return true
 }
 
+export type ResetPreview = Awaited<ReturnType<typeof previewStartOver>>
+export const previewStartOver = () => unwrap(api.GET("/api/v1/keys/me/reset-preview"))
+
+/**
+ * ADR e2e-3: without the recovery code the old keys are gone for good. New keys replace them,
+ * and the server removes what was sealed under the old ones.
+ */
+export async function startOver(): Promise<void> {
+  if (!pendingWrapSecret) throw new Error("VAULT_NO_PASSWORD")
+  const created = await createAccountKeys(pendingWrapSecret)
+  await unwrap(api.POST("/api/v1/keys/me/reset", { body: { ...created.material, confirm: RESET_CONFIRMATION } }))
+  pendingWrapSecret = null
+  await setAccount(created.account)
+  await showRecoveryCode(created.recoveryCode)
+  set("ready")
+}
+
+const RESET_CONFIRMATION = "RESET"
+
 /** A new recovery code replaces the old one, which stops working at once. */
 export async function regenerateRecoveryCode(): Promise<void> {
   const account = openAccount()
