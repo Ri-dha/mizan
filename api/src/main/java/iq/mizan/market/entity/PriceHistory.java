@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/** One closing price per instrument per day (FR-MKT-04); the last fetch of the day wins. */
+/** One row per instrument per day (FR-MKT-04): the close is the last fetch, with the day's open, high and low. */
 @Entity
 @Table(name = "price_history")
 @Getter
@@ -48,18 +48,32 @@ public class PriceHistory {
     @Column(name = "price_micros", nullable = false)
     private long priceMicros;
 
+    @Column(name = "open_micros", nullable = false)
+    private long openMicros;
+
+    @Column(name = "high_micros", nullable = false)
+    private long highMicros;
+
+    @Column(name = "low_micros", nullable = false)
+    private long lowMicros;
+
     @Column(nullable = false)
     private String source;
 
     public static PriceHistory of(Instrument instrument, LocalDate day, long priceMicros, String source) {
         PriceHistory history = new PriceHistory();
         history.key = new Key(instrument, day);
+        history.openMicros = priceMicros;
+        history.highMicros = priceMicros;
+        history.lowMicros = priceMicros;
         history.record(priceMicros, source);
         return history;
     }
 
     public void record(long priceMicros, String source) {
         this.priceMicros = priceMicros;
+        this.highMicros = Math.max(highMicros, priceMicros);
+        this.lowMicros = Math.min(lowMicros, priceMicros);
         this.source = source;
     }
 }

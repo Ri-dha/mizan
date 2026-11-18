@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next"
 import { Link, Navigate } from "react-router"
 
 import { useSession } from "@/api/auth"
+import { DollarTodayCard } from "@/features/prices/DollarTodayCard"
+import { cn } from "@/lib/utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,7 +46,7 @@ export function HomePage() {
         <p className="opacity-70">{t("home.dependentBody", { household: session.householdName })}</p>
         <div className="flex flex-wrap gap-2">
           <Button asChild><Link to="/goals">{t("nav.goals")}</Link></Button>
-          <Button asChild variant="neutral"><Link to="/transactions">{t("nav.transactions")}</Link></Button>
+          <Button asChild variant="outline"><Link to="/transactions">{t("nav.transactions")}</Link></Button>
         </div>
       </div>
     )
@@ -90,10 +92,12 @@ export function HomePage() {
           <CardDescription>{t("networth.assets")}: {formatMoney(worth.current.totalAssets, base, i18n.language)} · {t("networth.liabilities")}: {formatMoney(worth.current.totalLiabilities, base, i18n.language)}</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-between gap-2">
-          <span className={`text-3xl font-heading tabular-nums ${worth.current.netWorth < 0 ? "text-chart-2" : ""}`}>{formatMoney(worth.current.netWorth, base, i18n.language)}</span>
-          <Button asChild variant="neutral"><Link to="/networth">{t("home.openNetWorth")}</Link></Button>
+          <span className={`text-3xl font-semibold tabular-nums ${worth.current.netWorth < 0 ? "text-destructive" : ""}`}>{formatMoney(worth.current.netWorth, base, i18n.language)}</span>
+          <Button asChild variant="outline"><Link to="/networth">{t("home.openNetWorth")}</Link></Button>
         </CardContent>
       </Card>
+
+      <DollarTodayCard />
 
       <Card data-tour="home-plan">
         <CardHeader>
@@ -108,14 +112,14 @@ export function HomePage() {
             return (
               <div key={figure.id} className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
-                  <span className="size-3 rounded-base border-2 border-border" style={{ background: bucket.colour }} />
+                  <span className="size-3 rounded-lg border" style={{ background: bucket.colour }} />
                   {bucket.name}
                 </span>
-                <span className="tabular-nums">{formatMoney(figure.free, base, i18n.language)} <span className="text-xs opacity-70">{t("home.free")}</span></span>
+                <span className={cn("tabular-nums", figure.free < 0 && "text-destructive")}>{formatMoney(figure.free, base, i18n.language)} <span className="text-xs text-muted-foreground">{t("home.free")}</span></span>
               </div>
             )
           })}
-          <Button asChild variant="neutral" className="self-start"><Link to="/plan">{t("home.viewPlan")}</Link></Button>
+          <Button asChild variant="outline" className="self-start"><Link to="/plan">{t("home.viewPlan")}</Link></Button>
         </CardContent>
       </Card>
 
@@ -125,8 +129,8 @@ export function HomePage() {
           <CardDescription>{metals.lines.length === 0 ? t("home.metalsNone") : t("metals.valueNow") + ": " + formatMoney(metalTotals.value, base, i18n.language)}</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-between gap-2">
-          <span className={`text-2xl font-heading tabular-nums ${metalTotals.gain < 0 ? "text-chart-2" : ""}`}>{(metalTotals.gain > 0 ? "+" : "") + formatMoney(metalTotals.gain, base, i18n.language)}</span>
-          <Button asChild variant="neutral"><Link to="/metals">{t("nav.metals")}</Link></Button>
+          <span className={`text-2xl font-semibold tabular-nums ${metalTotals.gain < 0 ? "text-destructive" : ""}`}>{(metalTotals.gain > 0 ? "+" : "") + formatMoney(metalTotals.gain, base, i18n.language)}</span>
+          <Button asChild variant="outline"><Link to="/metals">{t("nav.metals")}</Link></Button>
         </CardContent>
       </Card>
 
@@ -142,7 +146,7 @@ export function HomePage() {
             </div>
           ))}
           {month.bills.every((b) => b.occurrence) && <p className="opacity-70">{t("home.noUpcoming")}</p>}
-          <Button asChild variant="neutral" className="self-start"><Link to="/bills">{t("nav.bills")}</Link></Button>
+          <Button asChild variant="outline" className="self-start"><Link to="/bills">{t("nav.bills")}</Link></Button>
         </CardContent>
       </Card>
 
@@ -159,7 +163,7 @@ export function HomePage() {
             </>
           ) : (
             Object.entries(totals).map(([currency, total]) => (
-              <p key={currency} className="text-3xl font-heading tabular-nums">{formatMoney(total, currency, i18n.language)}</p>
+              <p key={currency} className="text-3xl font-semibold tabular-nums">{formatMoney(total, currency, i18n.language)}</p>
             ))
           )}
         </CardContent>

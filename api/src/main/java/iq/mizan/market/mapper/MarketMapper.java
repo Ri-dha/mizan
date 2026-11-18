@@ -1,8 +1,6 @@
 package iq.mizan.market.mapper;
 
-import iq.mizan.market.dto.HistoryPointResponse;
 import iq.mizan.market.dto.QuoteResponse;
-import iq.mizan.market.entity.PriceHistory;
 import iq.mizan.market.entity.PriceQuote;
 
 import org.mapstruct.Mapper;
@@ -14,7 +12,4 @@ public interface MarketMapper {
 
     @Mapping(target = "stale", source = "stale")
     QuoteResponse toResponse(PriceQuote quote, boolean stale);
-
-    @Mapping(target = "day", source = "key.day")
-    HistoryPointResponse toResponse(PriceHistory history);
 }

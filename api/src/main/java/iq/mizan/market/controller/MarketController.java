@@ -1,16 +1,22 @@
 package iq.mizan.market.controller;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
 import iq.mizan.market.dto.CatalogueResponse;
 import iq.mizan.market.dto.HistoryPointResponse;
+import iq.mizan.market.dto.PriceChangesResponse;
 import iq.mizan.market.dto.QuoteResponse;
 import iq.mizan.market.entity.Instrument;
+import iq.mizan.market.service.HistoryInterval;
 import iq.mizan.market.service.MarketService;
+import iq.mizan.market.service.PriceHistoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -29,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MarketController {
 
     private final MarketService marketService;
+    private final PriceHistoryService priceHistory;
 
     @Operation(summary = "Latest quote per instrument; stale after 24 hours without a refresh")
     @GetMapping("/quotes")
@@ -51,13 +58,25 @@ public class MarketController {
         return marketService.catalogue().map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
-    @Operation(summary = "Daily price history for charts and snapshots")
+    @Operation(summary = "Price history by day, week (from Saturday) or month: open, high, low and close of each period")
     @GetMapping("/history")
-    @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<HistoryPointResponse>> history(
             @RequestParam Instrument instrument,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ResponseEntity.ok(marketService.history(instrument, from, to));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "DAY") HistoryInterval interval) {
+        return ResponseEntity.ok(priceHistory.history(instrument, from, to, interval));
+    }
+
+    @Operation(summary = "Every change of a price, newest first, with the price it replaced; page with nextBefore")
+    @GetMapping("/changes")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<PriceChangesResponse> changes(
+            @RequestParam Instrument instrument,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant before,
+            @RequestParam(defaultValue = "100") @Min(1) @Max(PriceHistoryService.MAX_CHANGES_PAGE) int limit) {
+        return ResponseEntity.ok(priceHistory.changes(instrument, from, before, limit));
     }
 }
