@@ -1,5 +1,5 @@
 # T-split-repos — Move the server and the clients into two repositories
-- Status: in-review (2026-11-18), local only; nothing pushed until the owner approves
+- Status: done (2026-11-18), both repositories pushed and merged to main
 - Context: owner request 2026-11-18; ADR split-1. Before T-mobile-app Phase 2.
 - Notes:
   - `Ri-dha/mizan` (local `myWallet/MizanApi`): branch `chore/split-backend` from develop removes
