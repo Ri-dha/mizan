@@ -1,7 +1,6 @@
 # Status — T-e2e-key-rotation
 
-- Uncommitted: MizanApi `feat/key-rotation` (from develop f508647), MizanApp `feat/key-rotation`
-  in worktree `../.wt-key-rotation` (from develop 940d38a).
+- Merged: MizanApi 58774e0, MizanApp 99d7106, on develop and main.
 - Validated: API 105 tests (KeyRotationIntegrationTest 10: every trigger, refusals, the race,
   stale push, newcomer with both versions, deleted account; reset clears state). Core 182 tests
   (rotation, lost race, not holding current, every version shared, push recovery), web 40, type

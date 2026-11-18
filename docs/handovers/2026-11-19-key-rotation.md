@@ -1,6 +1,6 @@
 # Handover — 2026-11-19 — Rotate shared keys when access ends
 
-## Completed (uncommitted)
+## Completed (MizanApi 58774e0, MizanApp 99d7106, on develop and main)
 - MizanApi `feat/key-rotation`: ADR e2e-4; V025; `KeyStateRepository`, `KeyRotationService`,
   `KeyHolding`; controller endpoints; `SharedKeyVersions` and the seal check in `SyncService`;
   `VaultFields.sealOf`; grant start and reset cleanup; errors `KEY_ROTATED`,
@@ -9,7 +9,7 @@
   engine push recovery, regenerated API types, tests, household notes (en, ar), ADR copy, docs.
 
 ## In flight
-- Nothing half-done. Awaiting the owner's word to commit and merge in both repos.
+- Nothing.
 
 ## Next steps
 - After merging, the other session's MizanApp checkout (feat/mobile-lock) should rebase on develop.

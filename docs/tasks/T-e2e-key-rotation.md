@@ -1,6 +1,5 @@
 # T-e2e-key-rotation — Rotate a shared key when someone's access to it ends
-- Status: in-review (2026-11-19); server on feat/key-rotation in MizanApi, core and web on
-  feat/key-rotation in MizanApp (worktree ../.wt-key-rotation), uncommitted
+- Status: done (2026-11-19): MizanApi 58774e0, MizanApp 99d7106, on develop and main
 - Context: ADR e2e-4 (closes the gap left by ADR e2e-1). Owner agreed: old records are not
   re-encrypted; a remaining member's device rotates automatically; removal, leaving, a role
   change, lapsed advisor access and account deletion all count.
