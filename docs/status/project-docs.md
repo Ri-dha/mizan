@@ -1,7 +1,8 @@
 # Status — project-docs
-- Branch: docs/project-knowledge (from main at 7cfe595), uncommitted.
-- Exists: AGENTS.md, ARCHITECTURE.md, docs/status.md, 10 ADRs, task files for every delivered milestone plus 6 proposed, learnings, a handover.
+- Branch: merged. First commit 2e34fc8; later docs in d5099dc; on main and develop.
+- Exists: AGENTS.md, ARCHITECTURE.md, docs/status.md, 16 ADRs, 29 task files, 3 status snapshots,
+  20 learnings, handovers, the runbook and the user manual (21 pages in English and Arabic).
 - Mocked or stubbed: nothing.
-- In flight: waiting for the user to review and ask for a commit.
+- In flight: nothing; each task keeps its own files current.
 - Blockers: none.
-- Validated: facts checked against the code, migrations, CI workflow and git history on 2026-11-18.
+- Validated: facts checked against the code, migrations and git history on 2026-11-18.

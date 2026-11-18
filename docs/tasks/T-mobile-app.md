@@ -5,7 +5,7 @@
   full parity in the first release; iPhone and Android together; **OCR on hold until the end**
   (see `docs/status/mobile-app.md`).
 - Notes (phases; effort about 9–12 weeks before OCR):
-  0. Owner: commit the uncommitted work on separate branches; install Xcode and Android Studio
+  0. Done 2026-11-18: the web work is on main and develop (d5099dc). Owner: install Xcode and Android Studio
      (Apple Developer $99/year for real iPhones, Google Play $25 at release).
   1. Spike (1–2 days): prove `react-native-quick-crypto` `subtle` matches the web byte for byte
      for PBKDF2-SHA256 600k (timed on a mid-range Android), HKDF, AES-GCM with AAD, AES-KW, ECDH

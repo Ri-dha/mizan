@@ -1,5 +1,5 @@
 # T-admin-dashboard — An operator dashboard for keys, settings and support
-- Status: in-review (2026-11-18), uncommitted on branch docs/project-knowledge
+- Status: done (2026-11-18), commit 8ce73fd on feat/e2e-prices-admin, fast-forwarded to main at d5099dc
 - Context: owner request 2026-11-18. Needs ADR admin-1 (operator role, settings store, what stays
   in the environment). After T-price-history (feed health and price corrections build on ticks).
 - Decisions (owner, 2026-11-18): third, after T-price-history.

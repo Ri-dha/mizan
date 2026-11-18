@@ -13,6 +13,8 @@ the newest file in `docs/handovers/`, and the ADRs in `docs/adr/` for the area y
 
 ## Branches, commits, merges
 
+- `develop` (from 2026-11-18) is the testing branch: branch each task from `develop`, merge it
+  into `develop` to test, and fast-forward `main` from `develop` only when asked.
 - Branch per task: `feat/<slug>`, `fix/<slug>`, `docs/<slug>`.
 - **Never commit, push or merge unless the user asks in that request.** Permission does not carry
   over to the next request.

@@ -1,16 +1,14 @@
 # Status — e2e-encryption
-- Branch: docs/project-knowledge (with the docs work), uncommitted. Nothing committed for this task.
+- Branch: merged. Commit 1c2d7d2 on feat/e2e-prices-admin; main and develop at d5099dc.
 - Exists: V021, the `vault` module, auth keys, sealed sync, key grants, migration endpoint and
   client migration, device-side month close, household figure, annual report, default plan and
-  reminder schedule, recovery and unlock screens, per-file receipt keys, generated API types.
-- Removed: server networth/report/plan-seeding/notification-rule code and the Java `domain`
+  reminder schedule, recovery and unlock screens, per-file receipt keys.
+- Removed: server networth, report, plan-seeding and notification-rule code and the Java `domain`
   package with its tests.
-- Mocked or stubbed: nothing. Advisor screen reads the device-built report only.
-- In flight: waiting for review and a commit request.
-- Blockers: none. Open gaps are proposed tasks: T-e2e-key-rotation, T-e2e-key-reset.
-- Validated 2026-11-18: API `./mvnw -B test` 59 green (an earlier count of 168 included stale reports of deleted tests); web `vitest` 164 green, `tsc -b` clean,
-  oxlint no new findings. Browser run against a throwaway Postgres and MinIO: register, owner
-  bootstraps keys, member joins and is granted keys automatically, member sees shared rows and the
-  household figure (1,750,000 with 500,000 private) but not the private row, a seeded plain legacy
-  row is migrated and deleted from its plain table, password reset then recovery code reopens
-  everything. Database searched for the names and amounts used: none found.
+- Mocked or stubbed: nothing.
+- In flight: nothing. Not yet run against the real dev database (back it up first; port 5432 is
+  held by another project).
+- Blockers: none. Open gaps are proposed tasks: T-e2e-key-reset (needed before real users),
+  T-e2e-key-rotation.
+- Validated 2026-11-18 on a clean checkout of d5099dc: API 77 tests in 20 suites, web 165, tsc,
+  build. Browser run with two accounts, migration, reset and recovery.

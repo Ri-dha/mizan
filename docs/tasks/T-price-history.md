@@ -1,5 +1,5 @@
 # T-price-history — Keep every price change and let people see it
-- Status: in-review (2026-11-18), uncommitted on branch docs/project-knowledge
+- Status: done (2026-11-18), commit f30a780 on feat/e2e-prices-admin, fast-forwarded to main at d5099dc
 - Context: owner request 2026-11-18. Builds on T-iqwealth-fx. Needs ADR prices-2 (tick storage,
   scheduled gold polling). After T-shadcn-ui so the screen is built in the new look.
 - Decisions (owner, 2026-11-18): second, after T-shadcn-ui; dollar, gold and silver only. Other

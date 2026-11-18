@@ -1,5 +1,5 @@
 # T-shadcn-ui — Move the web app from neobrutalism to standard shadcn/ui, light and dark
-- Status: in-review (2026-11-18), uncommitted on branch docs/project-knowledge
+- Status: done (2026-11-18), commit b77e121 on feat/e2e-prices-admin, fast-forwarded to main at d5099dc
 - Context: owner request 2026-11-18. Supersedes the "neobrutalism.dev components" part of ADR
   foundation-1 (needs ADR ui-1 before work starts). Do this before T-price-history and
   T-admin-dashboard so their new screens are built once, in the new look.

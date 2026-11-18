@@ -1,5 +1,5 @@
 # T-iqwealth-fx — Take the Baghdad market dollar from IQWealth
-- Status: in-review (2026-11-18), uncommitted on branch docs/project-knowledge
+- Status: done (2026-11-18), commit b3142a1 on feat/e2e-prices-admin, fast-forwarded to main at d5099dc
 - Context: the market dollar had no feed (operator setting or user override only). The owner chose
   IQWealth's free key, spread over the day by a background job. ARCHITECTURE.md "Market data".
 - Notes: `market/feed/IqWealthFxFeed.java` (cache, budget, 429 and 401/403 handling),

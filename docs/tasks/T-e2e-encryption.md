@@ -1,5 +1,5 @@
 # T-e2e-encryption — Encrypt every financial record end to end
-- Status: in-review (2026-11-18), uncommitted on branch docs/project-knowledge
+- Status: done (2026-11-18), commit 1c2d7d2 on feat/e2e-prices-admin, fast-forwarded to main at d5099dc
 - Context: ADR e2e-1, ADR e2e-2. The owner chose option 3 after a database query showed plain
   balances. Follow-ups: T-e2e-key-rotation, T-e2e-key-reset, T-local-encryption.
 - Notes: Server: V021 migration (`vault_record`, `user_key`, `household_key_grant`,
