@@ -180,7 +180,7 @@ any deployment when the switch was made.
 | Reminder dispatch | every 5 minutes | Sends the reminders devices scheduled (kinds and times only), once each |
 | Metal price alerts | 09:00 Asia/Baghdad | Public gold and silver moves beyond each member's threshold |
 | Market poll | every 30 min, 07:00–22:00 Asia/Baghdad | Refreshes every feed; records a price change only when it moves |
-| IQWealth dollar | every 20 min 08:00–22:00, and 23:00, 02:00, 05:00 | One request each, never past the reserve |
+| IQWealth dollar | every 15 min 08:00–21:45, and 23:00, 02:00, 05:00 (59 a day) | One request each, never past the reserve |
 | Receipt photo expiry | 03:00 | Deletes receipt photos 30 days after upload (ADR storage-2) |
 | Attachment object purge | 03:15 | Removes storage objects (receipts, backups) whose rows left the recycle bin |
 | Household deletion purge | 04:15 | Deletes households seven days after the owner confirmed |

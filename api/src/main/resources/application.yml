@@ -190,14 +190,14 @@ mizan:
       # IQWealth (iraqsm.com): the Baghdad market and Central Bank dollar, ahead of the sources above.
       # Free keys allow 100 requests a day for personal, non-commercial use and require the
       # "Data: IQWealth" credit; anything public needs their Business plan. Blank key: off.
-      # The crons spend about 45 a day; the reserve is never spent by polling.
+      # The crons spend 59 a day (56 by day, 3 at night); the reserve is never spent by polling.
       iq-wealth:
         url: "${MIZAN_IQWEALTH_URL:https://iraqsm.com/api/v1}"
         api-key: "${MIZAN_IQWEALTH_API_KEY:}"
         parallel-side: "${MIZAN_IQWEALTH_PARALLEL_SIDE:MID}"
         reserve: 40
         zone: Asia/Baghdad
-        day-cron: "0 0/20 8-21 * * *"
+        day-cron: "0 0/15 8-21 * * *"
         night-cron: "0 0 23,2,5 * * *"
       # Phase 4: the local market's own quote. Any JSON endpoint; e.g. {"gold21": 547000} with
       # gold-path=gold21 and gold-unit=MITHQAL_21K. Registered only when the URL is set.

@@ -26,7 +26,7 @@ class PriceHistoryIntegrationTest extends PostgresIntegrationTest {
     private static final Instrument DOLLAR = Instrument.USDIQD_PARALLEL;
 
     @Autowired
-    private MarketService marketService;
+    private PriceRecorder recorder;
 
     @Autowired
     private ApiClient api;
@@ -47,7 +47,7 @@ class PriceHistoryIntegrationTest extends PostgresIntegrationTest {
     }
 
     private void observe(String at, long iqd) {
-        marketService.store(DOLLAR, "iraqsm.com", new FetchedPrice(iqd * 1_000_000L, Instant.parse(at)));
+        recorder.store(DOLLAR, "iraqsm.com", new FetchedPrice(iqd * 1_000_000L, Instant.parse(at)));
     }
 
     @Test

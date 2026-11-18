@@ -31,7 +31,7 @@ public class IqWealthPoller {
     private final MarketService marketService;
     private final JobLock jobLock;
 
-    /** Shorter than the 20-minute schedule, longer than any gap between two instances firing it. */
+    /** Shorter than the 15-minute schedule, longer than any gap between two instances firing it. */
     private static final Duration POLL_AT_MOST = Duration.ofMinutes(2);
     private static final Duration POLL_AT_LEAST = Duration.ofMinutes(5);
 

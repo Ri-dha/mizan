@@ -2,14 +2,13 @@ package iq.mizan.market.service;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import iq.mizan.market.MarketSettings;
 import iq.mizan.market.dto.CatalogueResponse;
@@ -17,15 +16,10 @@ import iq.mizan.market.repository.MarketCatalogueRepository;
 import tools.jackson.databind.json.JsonMapper;
 import iq.mizan.market.dto.QuoteResponse;
 import iq.mizan.market.entity.Instrument;
-import iq.mizan.market.entity.PriceHistory;
-import iq.mizan.market.entity.PriceQuote;
-import iq.mizan.market.entity.PriceTick;
 import iq.mizan.market.feed.FetchedPrice;
 import iq.mizan.market.feed.PriceFeed;
 import iq.mizan.market.mapper.MarketMapper;
-import iq.mizan.market.repository.PriceHistoryRepository;
 import iq.mizan.market.repository.PriceQuoteRepository;
-import iq.mizan.market.repository.PriceTickRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -46,14 +40,13 @@ public class MarketService {
 
     private final List<PriceFeed> feeds;
     private final PriceQuoteRepository quotes;
-    private final PriceHistoryRepository history;
-    private final PriceTickRepository ticks;
+    private final PriceRecorder recorder;
     private final MarketCatalogueRepository catalogues;
     private final JsonMapper json;
     private final MarketMapper mapper;
     private final MarketSettings settings;
     private final Clock clock;
-    private volatile Instant lastManualRefresh = Instant.EPOCH;
+    private final AtomicReference<Instant> lastManualRefresh = new AtomicReference<>(Instant.EPOCH);
     private final Map<String, FeedHealth> health = new ConcurrentHashMap<>();
 
     /** Since this instance started; a feed that never answered or failed is not listed. */
@@ -78,7 +71,7 @@ public class MarketService {
     /** An operator's correction: recorded like any price, from source "correction". */
     @Transactional
     public void correct(Instrument instrument, long priceMicros) {
-        store(instrument, CORRECTION_SOURCE, new FetchedPrice(priceMicros, clock.instant()));
+        recorder.store(instrument, CORRECTION_SOURCE, new FetchedPrice(priceMicros, clock.instant()));
     }
 
     public static final String CORRECTION_SOURCE = "correction";
@@ -91,15 +84,15 @@ public class MarketService {
     @Transactional
     public void refresh(Set<Instrument> instruments) {
         for (Instrument instrument : instruments) {
-            fetchFromFirstAnsweringFeed(instrument).ifPresent(fetched -> store(instrument, fetched.feed().name(), fetched.price()));
+            fetchFromFirstAnsweringFeed(instrument).ifPresent(fetched -> recorder.store(instrument, fetched.feed().name(), fetched.price()));
         }
     }
 
     /** A user asking for fresh prices gets them, but not more often than the cooldown, whoever asks. */
     public List<QuoteResponse> refreshOnRequest() {
         Instant now = clock.instant();
-        if (lastManualRefresh.plus(settings.refreshCooldown()).isBefore(now)) {
-            lastManualRefresh = now;
+        Instant last = lastManualRefresh.get();
+        if (last.plus(settings.refreshCooldown()).isBefore(now) && lastManualRefresh.compareAndSet(last, now)) {
             refresh();
         }
         return quotes();
@@ -140,31 +133,5 @@ public class MarketService {
             }
         }
         return Optional.empty();
-    }
-
-    @Transactional
-    void store(Instrument instrument, String source, FetchedPrice price) {
-        Instant now = clock.instant();
-        quotes.findById(instrument).ifPresentOrElse(
-                quote -> quote.update(price.priceMicros(), source, price.quotedAt(), now),
-                () -> quotes.save(PriceQuote.of(instrument, price.priceMicros(), source, price.quotedAt(), now)));
-
-        recordTickIfChanged(instrument, source, price);
-
-        LocalDate day = price.quotedAt().atZone(ZoneOffset.UTC).toLocalDate();
-        history.findById(new PriceHistory.Key(instrument, day)).ifPresentOrElse(
-                point -> point.record(price.priceMicros(), source),
-                () -> history.save(PriceHistory.of(instrument, day, price.priceMicros(), source)));
-    }
-
-    /** A tick per change, not per fetch: a feed answering the same price again adds nothing. */
-    private void recordTickIfChanged(Instrument instrument, String source, FetchedPrice price) {
-        boolean unchanged = ticks.findFirstByInstrumentOrderByObservedAtDesc(instrument)
-                .map(last -> last.getPriceMicros() == price.priceMicros())
-                .orElse(false);
-        if (unchanged || ticks.existsByInstrumentAndObservedAt(instrument, price.quotedAt())) {
-            return;
-        }
-        ticks.save(PriceTick.of(instrument, price.quotedAt(), price.priceMicros(), source));
     }
 }
