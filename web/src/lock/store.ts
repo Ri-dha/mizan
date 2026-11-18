@@ -37,6 +37,12 @@ export async function initialiseLock() {
   set(pin ? "locked" : "no-pin")
 }
 
+/** The meta store was wiped under a running app (another account signed in), so the PIN is re-read. */
+export async function resetLock() {
+  dataKey = null
+  await initialiseLock()
+}
+
 export async function setPin(pin: string): Promise<CryptoKey> {
   const key = dataKey ?? (await generateDataKey())
   await writeMeta(META_KEYS.pin, await wrapDataKey(key, secretFromPin(pin)))

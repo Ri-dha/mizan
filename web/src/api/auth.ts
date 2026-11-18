@@ -3,6 +3,7 @@ import { useSyncExternalStore } from "react"
 import { api, setAccessToken, setSessionLostHandler, unwrap } from "./client"
 import { db } from "@/db/schema"
 import { META_KEYS, deleteMeta, readMeta, writeMeta } from "@/db/meta"
+import { resetLock } from "@/lock/store"
 
 export interface LocalSession {
   userId: string
@@ -145,4 +146,5 @@ export async function clearLocalData() {
   await db.transaction("rw", db.tables, async () => {
     for (const table of db.tables) await table.clear()
   })
+  await resetLock()
 }
