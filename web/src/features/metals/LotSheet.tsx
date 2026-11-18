@@ -119,7 +119,7 @@ export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot 
         <form onSubmit={submit} className="flex flex-col gap-4 px-4">
           <div className="grid grid-cols-2 gap-2">
             {(["GOLD", "SILVER"] as const).map((m) => (
-              <Button key={m} type="button" size="sm" variant={metal === m ? "default" : "neutral"} onClick={() => { setMetal(m); setPurity(m === "GOLD" ? "21k" : "999") }}>{t(`metals.metal.${m}`)}</Button>
+              <Button key={m} type="button" size="sm" variant={metal === m ? "default" : "outline"} onClick={() => { setMetal(m); setPurity(m === "GOLD" ? "21k" : "999") }}>{t(`metals.metal.${m}`)}</Button>
             ))}
           </div>
           <Field id="purity" label={t("metals.purity")}>
@@ -151,7 +151,7 @@ export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot 
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <Field id="metalCost" label={t("metals.metalCost")} hint={hasPrice ? t("metals.todayHint", { perGram: formatMoney(Math.round(perGramMicros / 1e6), base, i18n.language), total: formatMoney(todayInCurrency, currency, i18n.language) }) : undefined}>
               <Input id="metalCost" inputMode="decimal" dir="ltr" value={metalCost} onChange={(e) => { setCostTouched(true); setMetalCost(e.target.value) }} required />
-              {hasPrice && costTouched && <Button type="button" size="sm" variant="neutral" className="mt-1" onClick={() => { setMetalCost(fromMinorUnits(todayInCurrency, currency)); setCostTouched(false) }}>{t("metals.useToday")}</Button>}
+              {hasPrice && costTouched && <Button type="button" size="sm" variant="outline" className="mt-1" onClick={() => { setMetalCost(fromMinorUnits(todayInCurrency, currency)); setCostTouched(false) }}>{t("metals.useToday")}</Button>}
             </Field>
             <Field id="currency" label={t("accounts.currency")}>
               <Select value={currency} onValueChange={setCurrency}>
@@ -194,7 +194,7 @@ export function LotSheet({ open, lot, onClose }: { open: boolean; lot: MetalLot 
             <Label htmlFor="private">{t("accounts.private")}</Label>
           </div>
           <SheetFooter className="flex-row justify-between px-0">
-            {lot && <Button type="button" variant="neutral" onClick={() => void removeLot(lot.id).then(onClose)}>{t("accounts.delete")}</Button>}
+            {lot && <Button type="button" variant="outline" onClick={() => void removeLot(lot.id).then(onClose)}>{t("accounts.delete")}</Button>}
             <Button type="submit" disabled={weightMg <= 0}>{t("accounts.save")}</Button>
           </SheetFooter>
         </form>

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { useLiveQuery } from "dexie-react-hooks"
 import { useTranslation } from "react-i18next"
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { toast } from "sonner"
 
 import { useSession } from "@/api/auth"
-import { api, unwrap } from "@/api/client"
+import { closeMonth, householdFigure, reopenMonth } from "@/db/householdFigure"
 import { describeError } from "@/app/errors"
 import { currentMonthKey, formatMonthKey, shiftMonth } from "@/app/month"
 import { Badge } from "@/components/ui/badge"
@@ -19,6 +20,7 @@ import { useMetals } from "@/features/metals/useMetals"
 import { attributeChange, type Reading } from "@/domain/networth/attribution"
 import { toBaseAmount } from "@/db/income"
 import { HelpButton } from "@/components/HelpButton"
+import { SourceCredit } from "@/components/SourceCredit"
 import { useScreenTour } from "@/tours/useTour"
 
 const MONTHS_LISTED = 12
@@ -30,11 +32,7 @@ export function NetWorthPage() {
   const startDay = session?.monthStartDay ?? 1
   const view = useNetWorth()
   const [busy, setBusy] = useState<string | null>(null)
-  const [household, setHousehold] = useState<{ netWorth: number } | null>(null)
-  useEffect(() => {
-    if (!navigator.onLine) return
-    unwrap(api.GET("/api/v1/networth/current")).then((figures) => setHousehold({ netWorth: figures.netWorth ?? 0 })).catch(() => setHousehold(null))
-  }, [view.current.netWorth])
+  const household = useLiveQuery(async () => (session ? { netWorth: (await householdFigure(session)).result.netWorth } : null), [session, view.current.netWorth], null)
   const prefs = usePreferences()
   useScreenTour("networth")
   const metals = useMetals()
@@ -69,8 +67,10 @@ export function NetWorthPage() {
   async function act(monthKey: string, action: "close" | "reopen") {
     setBusy(monthKey)
     try {
-      await unwrap(api.POST(action === "close" ? "/api/v1/months/{monthKey}/close" : "/api/v1/months/{monthKey}/reopen", { params: { path: { monthKey } } }))
-      await syncNow()
+      if (!session) return
+      if (action === "close") await closeMonth(session, monthKey)
+      else await reopenMonth(monthKey)
+      void syncNow()
       toast(t(action === "close" ? "networth.closed" : "networth.reopened", { month: formatMonthKey(monthKey, i18n.language) }))
     } catch (e) {
       toast(describeError(e))
@@ -92,15 +92,15 @@ export function NetWorthPage() {
           <CardDescription>{t("networth.formula")}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <p className={`text-4xl font-heading tabular-nums ${view.current.netWorth < 0 ? "text-chart-2" : ""}`}>{money(view.current.netWorth)}</p>
+          <p className={`text-4xl font-semibold tabular-nums ${view.current.netWorth < 0 ? "text-destructive" : ""}`}>{money(view.current.netWorth)}</p>
           {household && household.netWorth !== view.current.netWorth && (
             <p className="text-sm opacity-70">{t("networth.householdFigure", { value: money(household.netWorth) })}</p>
           )}
           {prefs.showUsd && usdIqd > 0 && <p className="text-lg opacity-70 tabular-nums">≈ {inUsd(view.current.netWorth)} <span className="text-xs">({t(`metals.rateKinds.${String(view.rateSet.rateKind)}`)})</span></p>}
           <div className="grid gap-2 sm:grid-cols-2">
-            <div className="rounded-base border-2 border-border p-3">
+            <div className="rounded-lg border p-3">
               <p className="text-sm opacity-70">{t("networth.assets")}</p>
-              <p className="font-heading tabular-nums">{money(view.current.totalAssets)}</p>
+              <p className="font-semibold tabular-nums">{money(view.current.totalAssets)}</p>
               <p className="mb-1 text-xs opacity-70">{t("networth.liquidLine", { liquid: money(view.current.liquidAssets), illiquid: money(view.current.illiquidAssets) })}</p>
               {view.current.composition.filter((share) => share.amount !== 0 || ["CASH", "METALS", "RECEIVABLES"].includes(share.assetClass)).map((share) => (
                 <div key={share.assetClass} className="flex justify-between text-sm">
@@ -109,11 +109,12 @@ export function NetWorthPage() {
                 </div>
               ))}
             </div>
-            <div className="rounded-base border-2 border-border p-3">
+            <div className="rounded-lg border p-3">
               <p className="text-sm opacity-70">{t("networth.liabilities")}</p>
-              <p className="font-heading tabular-nums">{money(view.current.totalLiabilities)}</p>
+              <p className="font-semibold tabular-nums">{money(view.current.totalLiabilities)}</p>
               <p className="mt-2 text-xs opacity-70">
-                {t("networth.ratesInUse", { rate: money(Math.round(Number(view.rateSet.usdIqdMicros) / 1e6)), kind: t(`metals.rateKinds.${String(view.rateSet.rateKind)}`), gold: String(view.rateSet.xauSource) })}
+                {t("networth.ratesInUse", { rate: money(Math.round(Number(view.rateSet.usdIqdMicros) / 1e6)), kind: t(`metals.rateKinds.${String(view.rateSet.rateKind)}`), gold: String(view.rateSet.xauSource) })}{" "}
+                <SourceCredit source={String(view.rateSet.usdIqdSource)} />
               </p>
             </div>
           </div>
@@ -128,9 +129,9 @@ export function NetWorthPage() {
           </CardHeader>
           <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
             {(["total", "saving", "priceMovement", "debtRepayment", "newPurchases"] as const).map((key) => (
-              <div key={key} className={`rounded-base border-2 border-border p-3 ${key === "total" ? "bg-secondary-background" : ""}`}>
+              <div key={key} className={`rounded-lg border p-3 ${key === "total" ? "bg-card" : ""}`}>
                 <p className="text-xs opacity-70">{t(`networth.attribution.${key}`)}</p>
-                <p className={`font-heading tabular-nums ${attribution[key] < 0 ? "text-chart-2" : ""}`}>{(attribution[key] > 0 ? "+" : "") + money(attribution[key])}</p>
+                <p className={`font-semibold tabular-nums ${attribution[key] < 0 ? "text-destructive" : ""}`}>{(attribution[key] > 0 ? "+" : "") + money(attribution[key])}</p>
               </div>
             ))}
           </CardContent>
@@ -147,10 +148,10 @@ export function NetWorthPage() {
             <ResponsiveContainer>
               <LineChart data={trend} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                 <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" opacity={0.3} />
-                <XAxis dataKey="label" stroke="var(--foreground)" fontSize={12} />
-                <YAxis stroke="var(--foreground)" fontSize={12} tickFormatter={(v: number) => new Intl.NumberFormat("en", { notation: "compact" }).format(v)} width={56} />
-                <Tooltip formatter={(v) => money(Number(v))} contentStyle={{ background: "var(--secondary-background)", border: "2px solid var(--border)", borderRadius: 5, color: "var(--foreground)" }} />
-                <Line type="monotone" dataKey="value" stroke="var(--main)" strokeWidth={3} dot={{ r: 5, fill: "var(--main)", stroke: "var(--border)", strokeWidth: 2 }} />
+                <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={12} />
+                <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v: number) => new Intl.NumberFormat("en", { notation: "compact" }).format(v)} width={56} />
+                <Tooltip formatter={(v) => money(Number(v))} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 5, color: "var(--foreground)" }} />
+                <Line type="monotone" dataKey="value" stroke="var(--primary)" strokeWidth={3} dot={{ r: 5, fill: "var(--primary)", stroke: "var(--border)", strokeWidth: 2 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -167,16 +168,16 @@ export function NetWorthPage() {
             const closed = isMonthClosed(key, view.closes)
             const snapshot = snapshotFor(key, view.closes, view.snapshots)
             return (
-              <div key={key} className="flex flex-wrap items-center justify-between gap-2 rounded-base border-2 border-border p-3">
+              <div key={key} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
                 <div className="flex min-w-0 flex-col">
-                  <span className="font-heading">{formatMonthKey(key, i18n.language)} {closed && <Badge variant="neutral">{t("networth.closedBadge")}</Badge>}</span>
+                  <span className="font-semibold">{formatMonthKey(key, i18n.language)} {closed && <Badge variant="secondary">{t("networth.closedBadge")}</Badge>}</span>
                   {snapshot && closed && (
                     <span className="text-sm opacity-70">
                       {t("networth.snapshotLine", { value: money(snapshot.netWorth), at: new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(snapshot.takenAt)), rate: money(Math.round(Number(snapshot.rateSet.usdIqdMicros ?? 0) / 1e6)) })}
                     </span>
                   )}
                 </div>
-                <Button size="sm" variant={closed ? "neutral" : "default"} disabled={busy === key || !navigator.onLine} onClick={() => void act(key, closed ? "reopen" : "close")}>
+                <Button size="sm" variant={closed ? "outline" : "default"} disabled={busy === key || !navigator.onLine} onClick={() => void act(key, closed ? "reopen" : "close")}>
                   {closed ? t("networth.reopen") : t("networth.close")}
                 </Button>
               </div>

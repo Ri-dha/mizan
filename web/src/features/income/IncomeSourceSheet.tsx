@@ -160,28 +160,28 @@ export function IncomeSourceSheet({ open, source, history, onClose }: Props) {
             <Label htmlFor="private">{t("accounts.private")}</Label>
           </div>
           <SheetFooter className="flex-row justify-between px-0">
-            {source && <Button type="button" variant="neutral" onClick={() => void endSource()}>{t("income.endSource")}</Button>}
+            {source && <Button type="button" variant="outline" onClick={() => void endSource()}>{t("income.endSource")}</Button>}
             <Button type="submit">{t("accounts.save")}</Button>
           </SheetFooter>
         </form>
 
         {source && (
           <div className="flex flex-col gap-3 px-4 pb-6">
-            <p className="font-heading">{t("income.history")}</p>
+            <p className="font-semibold">{t("income.history")}</p>
             {timeline.length === 0 && <p className="text-sm opacity-70">{t("income.historyFrom", { amount: formatMoney(source.amount, source.currency, i18n.language), date: date(source.activeFrom) })}</p>}
             {[...timeline].reverse().map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between gap-2 rounded-base border-2 border-border p-2 text-sm">
+              <div key={entry.id} className="flex items-center justify-between gap-2 rounded-lg border p-2 text-sm">
                 <span>
                   {t("income.historyFrom", { amount: formatMoney(entry.amount, entry.currency, i18n.language), date: date(entry.effectiveFrom) })}
                   {entry.note ? <span className="opacity-70"> · {entry.note}</span> : null}
                 </span>
                 {timeline.length > 1 && (
-                  <Button size="sm" variant="neutral" onClick={() => void removeAmountChange(entry, source, history)}>{t("accounts.delete")}</Button>
+                  <Button size="sm" variant="outline" onClick={() => void removeAmountChange(entry, source, history)}>{t("accounts.delete")}</Button>
                 )}
               </div>
             ))}
-            <form onSubmit={submitRaise} className="flex flex-col gap-3 rounded-base border-2 border-border p-3">
-              <p className="font-heading">{t("income.recordRaise")}</p>
+            <form onSubmit={submitRaise} className="flex flex-col gap-3 rounded-lg border p-3">
+              <p className="font-semibold">{t("income.recordRaise")}</p>
               <div className="grid grid-cols-2 gap-2">
                 <Field id="raiseAmount" label={t("income.newAmount")}>
                   <Input id="raiseAmount" inputMode="decimal" dir="ltr" value={raiseAmount} onChange={(e) => setRaiseAmount(e.target.value)} required />

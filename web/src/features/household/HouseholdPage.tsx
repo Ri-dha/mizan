@@ -133,9 +133,9 @@ export function HouseholdPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {members.map((member) => (
-            <div key={member.userId} className="flex flex-wrap items-center justify-between gap-2 rounded-base border-2 border-border p-3">
+            <div key={member.userId} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
               <div className="flex min-w-0 flex-col">
-                <span className="font-heading">{member.displayName} {member.you && <Badge variant="neutral">{t("household.you")}</Badge>}</span>
+                <span className="font-semibold">{member.displayName} {member.you && <Badge variant="secondary">{t("household.you")}</Badge>}</span>
                 <span className="text-sm opacity-70">{member.contact} · {t("household.since", { date: date(member.joinedAt) })}{member.expiresAt ? ` · ${t("household.until", { date: date(member.expiresAt) })}` : ""}</span>
               </div>
               <div className="flex items-center gap-2">
@@ -145,8 +145,8 @@ export function HouseholdPage() {
                       <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                       <SelectContent>{INVITE_ROLES.map((r) => <SelectItem key={r} value={r}>{t(`household.roles.${r}`)}</SelectItem>)}</SelectContent>
                     </Select>
-                    <Button size="sm" variant="neutral" onClick={() => void run(() => transferOwnership(member.userId).then(() => updateHousehold({})), t("household.transferred"))}>{t("household.makeOwner")}</Button>
-                    <Button size="sm" variant="neutral" onClick={() => void run(() => removeMember(member.userId), t("household.removed"))}>{t("household.remove")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => void run(() => transferOwnership(member.userId).then(() => updateHousehold({})), t("household.transferred"))}>{t("household.makeOwner")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => void run(() => removeMember(member.userId), t("household.removed"))}>{t("household.remove")}</Button>
                   </>
                 ) : (
                   <Badge>{t(`household.roles.${member.role}`)}</Badge>
@@ -192,7 +192,7 @@ export function HouseholdPage() {
             {invitations.map((invitation) => (
               <div key={invitation.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span>{t(`household.roles.${invitation.role}`)}{invitation.contact ? ` · ${invitation.contact}` : ""} · {t("household.expires", { date: date(invitation.expiresAt) })}</span>
-                <Button size="sm" variant="neutral" onClick={() => void run(() => revokeInvitation(invitation.id), t("household.revoked"))}>{t("household.revoke")}</Button>
+                <Button size="sm" variant="outline" onClick={() => void run(() => revokeInvitation(invitation.id), t("household.revoked"))}>{t("household.revoke")}</Button>
               </div>
             ))}
           </CardContent>
@@ -222,18 +222,18 @@ export function HouseholdPage() {
         <CardContent className="flex flex-col gap-3">
           {memberships.map((m) => (
             <div key={m.householdId} className="flex items-center justify-between gap-2">
-              <span>{m.householdName} <Badge variant="neutral">{t(`household.roles.${m.role}`)}</Badge></span>
-              {m.current ? <Badge>{t("household.current")}</Badge> : <Button size="sm" variant="neutral" onClick={() => void rebuild(() => switchHousehold(m.householdId), t("household.switched", { name: m.householdName }))}>{t("household.switch")}</Button>}
+              <span>{m.householdName} <Badge variant="secondary">{t(`household.roles.${m.role}`)}</Badge></span>
+              {m.current ? <Badge>{t("household.current")}</Badge> : <Button size="sm" variant="outline" onClick={() => void rebuild(() => switchHousehold(m.householdId), t("household.switched", { name: m.householdName }))}>{t("household.switch")}</Button>}
             </div>
           ))}
           <form onSubmit={(e) => { e.preventDefault(); const token = joinToken.trim().split("/").pop() ?? ""; if (token) void rebuild(() => acceptInvitation(token), t("household.joined")) }} className="flex flex-wrap items-end gap-2">
             <Field id="joinToken" label={t("household.joinWithLink")}>
               <Input id="joinToken" dir="ltr" value={joinToken} onChange={(e) => setJoinToken(e.target.value)} placeholder={`${location.origin}/join/…`} />
             </Field>
-            <Button type="submit" variant="neutral">{t("household.join")}</Button>
+            <Button type="submit" variant="outline">{t("household.join")}</Button>
           </form>
           {session?.role !== "OWNER" && (
-            <Button variant="neutral" className="self-start" onClick={() => void rebuild(leaveHousehold, t("household.left"))}>{t("household.leave")}</Button>
+            <Button variant="outline" className="self-start" onClick={() => void rebuild(leaveHousehold, t("household.left"))}>{t("household.leave")}</Button>
           )}
         </CardContent>
       </Card>
@@ -245,7 +245,7 @@ export function HouseholdPage() {
             <CardDescription>{t("household.deleteBody")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="neutral" onClick={() => setConfirmDelete(true)}>{t("household.delete")}</Button>
+            <Button variant="outline" onClick={() => setConfirmDelete(true)}>{t("household.delete")}</Button>
           </CardContent>
         </Card>
       )}
@@ -261,7 +261,7 @@ export function HouseholdPage() {
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
             </Field>
             <DialogFooter>
-              <Button type="button" variant="neutral" onClick={() => setConfirmDelete(false)}>{t("settings.cancel")}</Button>
+              <Button type="button" variant="outline" onClick={() => setConfirmDelete(false)}>{t("settings.cancel")}</Button>
               <Button type="submit">{t("household.delete")}</Button>
             </DialogFooter>
           </form>

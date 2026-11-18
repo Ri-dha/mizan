@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+
+import { RecoveryCodeCard } from "@/features/vault/VaultScreens"
 import { Link } from "react-router"
 import { toast } from "sonner"
 
@@ -226,17 +228,19 @@ export function SettingsPage() {
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-            <Button variant="neutral" onClick={lock} disabled={lockState !== "unlocked"}>{t("lock.title")}</Button>
-            <Button variant="neutral" onClick={() => void removePin()}>{t("lock.remove")}</Button>
+            <Button variant="outline" onClick={lock} disabled={lockState !== "unlocked"}>{t("lock.title")}</Button>
+            <Button variant="outline" onClick={() => void removePin()}>{t("lock.remove")}</Button>
           </div>
         </CardContent>
       </Card>
+
+      <RecoveryCodeCard />
 
       <Card>
         <CardHeader><CardTitle>{t("settings.household")}</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-3">
           <p className="text-sm opacity-70">{t("settings.householdBody", { name: session?.householdName ?? "", role: t(`household.roles.${session?.role ?? "OWNER"}`) })}</p>
-          <Button variant="neutral" className="self-start" asChild><Link to="/household">{t("household.manage")}</Link></Button>
+          <Button variant="outline" className="self-start" asChild><Link to="/household">{t("household.manage")}</Link></Button>
         </CardContent>
       </Card>
 
@@ -290,19 +294,19 @@ export function SettingsPage() {
               </div>
               <p className="text-xs opacity-70">{backup.lastBackupAt ? t("backup.last", { at: new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(backup.lastBackupAt)) }) : t("backup.never")}</p>
               <div className="flex flex-wrap gap-2">
-                <Button variant="neutral" onClick={() => void backupNow()}>{t("backup.now")}</Button>
-                <Button variant="neutral" onClick={() => setPassphraseDialog("set")}>{t("backup.changePassphrase")}</Button>
-                <Button variant="neutral" onClick={() => void clearBackupPassphrase()}>{t("backup.forget")}</Button>
+                <Button variant="outline" onClick={() => void backupNow()}>{t("backup.now")}</Button>
+                <Button variant="outline" onClick={() => setPassphraseDialog("set")}>{t("backup.changePassphrase")}</Button>
+                <Button variant="outline" onClick={() => void clearBackupPassphrase()}>{t("backup.forget")}</Button>
               </div>
             </>
           )}
           {backups.length > 0 && (
             <div className="flex flex-col gap-1 text-sm">
-              <p className="font-heading">{t("backup.list")}</p>
+              <p className="font-semibold">{t("backup.list")}</p>
               {backups.map((b) => (
                 <div key={b.id} className="flex items-center justify-between gap-2">
                   <span>{b.uploadedAt ? new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(b.uploadedAt)) : t("backup.pendingUpload")} · {Math.round(b.byteSize / 1024)} KB</span>
-                  <Button size="sm" variant="neutral" onClick={() => setPassphraseDialog({ restore: b })}>{t("backup.restore")}</Button>
+                  <Button size="sm" variant="outline" onClick={() => setPassphraseDialog({ restore: b })}>{t("backup.restore")}</Button>
                 </div>
               ))}
             </div>
@@ -338,7 +342,7 @@ export function SettingsPage() {
                 <Label htmlFor="push">{t("notifications.onThisDevice")}</Label>
               </>
             )}
-            {push === "on" && <Button size="sm" variant="neutral" onClick={() => void sendTestPush().then((n) => toast(t("notifications.testSent", { count: n }))).catch((e) => toast(describeError(e)))}>{t("notifications.sendTest")}</Button>}
+            {push === "on" && <Button size="sm" variant="outline" onClick={() => void sendTestPush().then((n) => toast(t("notifications.testSent", { count: n }))).catch((e) => toast(describeError(e)))}>{t("notifications.sendTest")}</Button>}
           </div>
           {isIosBrowser() && <p className="text-xs opacity-70">{t("notifications.iosHint")}</p>}
           <div className="flex items-center gap-2">
@@ -363,10 +367,10 @@ export function SettingsPage() {
         <CardContent className="flex flex-col gap-3">
           <p className="text-sm opacity-70">{t("data.body")}</p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="neutral" onClick={() => void exportData()}>{t("data.export")}</Button>
-            <Button variant="neutral" onClick={() => fileInput.current?.click()}>{t("data.import")}</Button>
+            <Button variant="outline" onClick={() => void exportData()}>{t("data.export")}</Button>
+            <Button variant="outline" onClick={() => fileInput.current?.click()}>{t("data.import")}</Button>
             <input ref={fileInput} type="file" accept="application/json,.json" hidden onChange={(e) => void pickImport(e.target.files?.[0])} />
-            <Button variant="neutral" onClick={() => csvInput.current?.click()}>{t("csv.button")}</Button>
+            <Button variant="outline" onClick={() => csvInput.current?.click()}>{t("csv.button")}</Button>
             <input ref={csvInput} type="file" accept="text/csv,.csv" hidden onChange={(e) => { setCsvFile(e.target.files?.[0] ?? null); e.target.value = "" }} />
           </div>
                   <div className="flex flex-col gap-2">
@@ -374,8 +378,8 @@ export function SettingsPage() {
             {(["transactions", "metals", "assets"] as const).map((kind) => (
               <div key={kind} className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="w-32">{t(`exports.${kind}`)}</span>
-                <Button size="sm" variant="neutral" onClick={() => void exportTable(kind, "csv")}>CSV</Button>
-                <Button size="sm" variant="neutral" onClick={() => void exportTable(kind, "xlsx")}>Excel</Button>
+                <Button size="sm" variant="outline" onClick={() => void exportTable(kind, "csv")}>CSV</Button>
+                <Button size="sm" variant="outline" onClick={() => void exportTable(kind, "xlsx")}>Excel</Button>
               </div>
             ))}
           </div>
@@ -386,20 +390,20 @@ export function SettingsPage() {
         <CardHeader><CardTitle>{t("settings.account")}</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-3">
           {session?.deletionRequestedAt && (
-            <p className="rounded-base border-2 border-border p-3 text-sm">
+            <p className="rounded-lg border p-3 text-sm">
               {t("account.deletionPending", { date: new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "medium" }).format(new Date(new Date(session.deletionRequestedAt).getTime() + 30 * 86_400_000)) })}
             </p>
           )}
           <div className="flex flex-wrap gap-2">
-            <Button variant="neutral" asChild><Link to="/sync">{t("sync.title")}</Link></Button>
-            <Button variant="neutral" asChild><Link to="/help">{t("help.title")}</Link></Button>
-            <Button variant="neutral" onClick={() => { forgetAllTours(); toast(t("tours.replayed")) }}>{t("tours.replay")}</Button>
-            <InstallButton variant="neutral" />
-            <Button variant="neutral" onClick={() => void signOut()}>{t("auth.logout")}</Button>
+            <Button variant="outline" asChild><Link to="/sync">{t("sync.title")}</Link></Button>
+            <Button variant="outline" asChild><Link to="/help">{t("help.title")}</Link></Button>
+            <Button variant="outline" onClick={() => { forgetAllTours(); toast(t("tours.replayed")) }}>{t("tours.replay")}</Button>
+            <InstallButton variant="outline" />
+            <Button variant="outline" onClick={() => void signOut()}>{t("auth.logout")}</Button>
             {session?.deletionRequestedAt ? (
-              <Button variant="neutral" onClick={() => void cancelAccountDeletion().then(() => toast(t("account.deletionCancelled")))}>{t("account.cancelDeletion")}</Button>
+              <Button variant="outline" onClick={() => void cancelAccountDeletion().then(() => toast(t("account.deletionCancelled")))}>{t("account.cancelDeletion")}</Button>
             ) : (
-              <Button variant="neutral" onClick={() => setConfirmDelete(true)}>{t("account.delete")}</Button>
+              <Button variant="outline" onClick={() => setConfirmDelete(true)}>{t("account.delete")}</Button>
             )}
           </div>
         </CardContent>
@@ -416,7 +420,7 @@ export function SettingsPage() {
             {preview && preview.skipped.length > 0 && <li className="opacity-70">{t("data.skipped", { tables: preview.skipped.join(", ") })}</li>}
           </ul>
           <DialogFooter>
-            <Button variant="neutral" onClick={() => setPreview(null)}>{t("common.cancel")}</Button>
+            <Button variant="outline" onClick={() => setPreview(null)}>{t("common.cancel")}</Button>
             <Button onClick={() => void confirmImport()}>{t("data.confirmImport")}</Button>
           </DialogFooter>
         </DialogContent>
@@ -429,7 +433,7 @@ export function SettingsPage() {
             <DialogDescription>{t("account.deleteBody")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="neutral" onClick={() => void exportData()}>{t("data.export")}</Button>
+            <Button variant="outline" onClick={() => void exportData()}>{t("data.export")}</Button>
             <Button onClick={() => void deleteAccount()}>{t("account.confirmDelete")}</Button>
           </DialogFooter>
         </DialogContent>

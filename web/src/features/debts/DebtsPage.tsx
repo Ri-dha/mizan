@@ -40,9 +40,9 @@ export function DebtsPage() {
     const balance = balanceOf(debt, payments)
     const payoff = debtPayoff(balance, debt.annualRateBasisPoints, debt.monthlyPayment)
     return (
-      <div key={debt.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-base border-2 border-border p-3" onClick={() => setDetail(debt)}>
+      <div key={debt.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3" onClick={() => setDetail(debt)}>
         <div className="flex min-w-0 flex-col">
-          <span className="truncate font-heading">{debt.name}{debt.counterparty ? ` · ${debt.counterparty}` : ""}</span>
+          <span className="truncate font-semibold">{debt.name}{debt.counterparty ? ` · ${debt.counterparty}` : ""}</span>
           <span className="truncate text-sm opacity-70">
             {debt.status === "SETTLED"
               ? t("debts.settled")
@@ -52,8 +52,8 @@ export function DebtsPage() {
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {debt.annualRateBasisPoints === 0 && <Badge variant="neutral">{t("debts.interestFree")}</Badge>}
-          <span className="tabular-nums font-heading">{money(balance, debt.currency)}</span>
+          {debt.annualRateBasisPoints === 0 && <Badge variant="secondary">{t("debts.interestFree")}</Badge>}
+          <span className="tabular-nums font-semibold">{money(balance, debt.currency)}</span>
         </div>
       </div>
     )
@@ -102,11 +102,11 @@ export function DebtsPage() {
               {(["snowball", "avalanche"] as const).map((name) => {
                 const outcome = strategies[name]
                 return (
-                  <div key={name} className="rounded-base border-2 border-border p-3 text-sm">
-                    <p className="font-heading">{t(`debts.strategies.${name}`)}</p>
+                  <div key={name} className="rounded-lg border p-3 text-sm">
+                    <p className="font-semibold">{t(`debts.strategies.${name}`)}</p>
                     <p className="opacity-70">{t(`debts.strategyHints.${name}`)}</p>
                     <p className="mt-1">{outcome.order.map(nameOf).join(" → ")}</p>
-                    <p className="mt-1 font-heading">{outcome.neverClears ? t("debts.neverClears") : t("debts.strategyOutcome", { months: outcome.months, interest: money(outcome.totalInterest, base) })}</p>
+                    <p className="mt-1 font-semibold">{outcome.neverClears ? t("debts.neverClears") : t("debts.strategyOutcome", { months: outcome.months, interest: money(outcome.totalInterest, base) })}</p>
                   </div>
                 )
               })}

@@ -110,7 +110,7 @@ export function AccountSheet({ open, account, onClose, onDelete }: Props) {
           </div>
           {account && adjustments.length > 0 && (
             <div className="flex flex-col gap-1 text-sm">
-              <p className="font-heading">{t("accounts.adjustments")}</p>
+              <p className="font-semibold">{t("accounts.adjustments")}</p>
               {adjustments.map((a) => (
                 <p key={a.id} className="opacity-80">
                   {t("accounts.adjustmentLine", { date: a.adjustedOn, from: formatMoney(a.previousBalance, account.currency, i18n.language), to: formatMoney(a.newBalance, account.currency, i18n.language) })}
@@ -121,7 +121,7 @@ export function AccountSheet({ open, account, onClose, onDelete }: Props) {
           )}
           <SheetFooter className="flex-row justify-between px-0">
             {account && (
-              <Button type="button" variant="neutral" onClick={() => onDelete(account)}>{t("accounts.delete")}</Button>
+              <Button type="button" variant="outline" onClick={() => onDelete(account)}>{t("accounts.delete")}</Button>
             )}
             <Button type="submit">{t("accounts.save")}</Button>
           </SheetFooter>

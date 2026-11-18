@@ -94,7 +94,7 @@ export function AssetsPage() {
           <CardTitle>{t("assets.totalTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-1">
-          <p className="text-3xl font-heading tabular-nums">{money(totalBase)}</p>
+          <p className="text-3xl font-semibold tabular-nums">{money(totalBase)}</p>
           <p className="text-sm opacity-70">{t("assets.totalBody", { count: held.length })}</p>
         </CardContent>
       </Card>
@@ -119,10 +119,10 @@ export function AssetsPage() {
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-xl font-heading tabular-nums">{money(value.value, asset.currency)}</span>
+                    <span className="text-xl font-semibold tabular-nums">{money(value.value, asset.currency)}</span>
                     <span className="flex gap-1">
-                      {asset.liquidity === "ILLIQUID" && <Badge variant="neutral">{t("assets.illiquidBadge")}</Badge>}
-                      {asset.visibility === "PRIVATE" && <Badge variant="neutral">{t("accounts.private")}</Badge>}
+                      {asset.liquidity === "ILLIQUID" && <Badge variant="secondary">{t("assets.illiquidBadge")}</Badge>}
+                      {asset.visibility === "PRIVATE" && <Badge variant="secondary">{t("accounts.private")}</Badge>}
                       {stale && <Badge>{t("assets.staleBadge")}</Badge>}
                     </span>
                   </div>
@@ -132,7 +132,7 @@ export function AssetsPage() {
                     {t(value.baselineSource === "VALUATION" ? "assets.valueFromValuation" : "assets.valueFromPurchase", { date: date(value.baselineDate) })}
                     {asset.depreciationMethod !== "NONE" && ` · ${t("assets.depreciatedLine", { months: value.monthsSinceBaseline, rate: asset.annualRateBasisPoints / 100 })}`}
                   </p>
-                  <p className={`text-sm tabular-nums ${change < 0 ? "text-chart-2" : ""}`}>
+                  <p className={`text-sm tabular-nums ${change < 0 ? "text-destructive" : ""}`}>
                     {t("assets.sincePurchase", { amount: (change > 0 ? "+" : "") + money(change, asset.currency) })}
                   </p>
                   {(runningCosts[asset.id] ?? 0) > 0 && (
@@ -140,13 +140,13 @@ export function AssetsPage() {
                   )}
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" data-tour={asset.id === held[0]?.id ? "assets-value" : undefined} onClick={() => openAction("value", asset)}>{t("assets.addValuation")}</Button>
-                    <Button size="sm" variant="neutral" onClick={() => openAction("sell", asset)}>{t("assets.sell")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => openAction("sell", asset)}>{t("assets.sell")}</Button>
                   </div>
                   {history.slice(0, 3).map((v) => (
                     <div key={v.id} className="flex items-center justify-between gap-2 text-sm">
                       <span>{date(v.valuedOn)}{v.note ? ` · ${v.note}` : ""}</span>
                       <span className="flex items-center gap-2 tabular-nums">{money(v.value, asset.currency)}
-                        <Button size="sm" variant="neutral" onClick={() => void removeValuation(v.id)}>{t("bills.undo")}</Button>
+                        <Button size="sm" variant="outline" onClick={() => void removeValuation(v.id)}>{t("bills.undo")}</Button>
                       </span>
                     </div>
                   ))}
@@ -159,19 +159,19 @@ export function AssetsPage() {
 
       {sold.length > 0 && (
         <section className="flex flex-col gap-2">
-          <Button variant="neutral" className="self-start" onClick={() => setShowSold((s) => !s)}>{t("assets.soldToggle", { count: sold.length })}</Button>
+          <Button variant="outline" className="self-start" onClick={() => setShowSold((s) => !s)}>{t("assets.soldToggle", { count: sold.length })}</Button>
           {showSold && sold.map((asset) => {
             const gain = realisedGain(asset) ?? 0
             return (
               <Card key={asset.id}>
                 <CardContent className="flex items-center justify-between gap-2 py-4">
                   <div className="flex flex-col">
-                    <span className="font-heading">{asset.name}</span>
+                    <span className="font-semibold">{asset.name}</span>
                     <span className="text-sm opacity-70">{t("assets.soldLine", { date: asset.soldOn ? date(asset.soldOn) : "", price: money(asset.salePrice ?? 0, asset.currency) })}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`tabular-nums ${gain < 0 ? "text-chart-2" : ""}`}>{(gain > 0 ? "+" : "") + money(gain, asset.currency)}</span>
-                    <Button size="sm" variant="neutral" onClick={() => void unsellAsset(asset.id)}>{t("bills.undo")}</Button>
+                    <span className={`tabular-nums ${gain < 0 ? "text-destructive" : ""}`}>{(gain > 0 ? "+" : "") + money(gain, asset.currency)}</span>
+                    <Button size="sm" variant="outline" onClick={() => void unsellAsset(asset.id)}>{t("bills.undo")}</Button>
                   </div>
                 </CardContent>
               </Card>

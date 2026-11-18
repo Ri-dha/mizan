@@ -91,7 +91,7 @@ export function DebtSheet({ open, debt, onClose }: { open: boolean; debt: Debt |
         <form onSubmit={submit} className="flex flex-col gap-4 px-4">
           <div className="grid grid-cols-2 gap-2">
             {(["OWING", "OWED"] as const).map((d) => (
-              <Button key={d} type="button" size="sm" variant={direction === d ? "default" : "neutral"} onClick={() => setDirection(d)}>{t(`debts.directions.${d}`)}</Button>
+              <Button key={d} type="button" size="sm" variant={direction === d ? "default" : "outline"} onClick={() => setDirection(d)}>{t(`debts.directions.${d}`)}</Button>
             ))}
           </div>
           <Field id="name" label={t("income.name")}>
@@ -146,7 +146,7 @@ export function DebtSheet({ open, debt, onClose }: { open: boolean; debt: Debt |
             <Label htmlFor="private">{t("accounts.private")}</Label>
           </div>
           <SheetFooter className="flex-row justify-between px-0">
-            {debt && <Button type="button" variant="neutral" onClick={() => void softDelete("debt", debt.id).then(onClose)}>{t("accounts.delete")}</Button>}
+            {debt && <Button type="button" variant="outline" onClick={() => void softDelete("debt", debt.id).then(onClose)}>{t("accounts.delete")}</Button>}
             <Button type="submit">{t("accounts.save")}</Button>
           </SheetFooter>
         </form>

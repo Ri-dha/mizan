@@ -40,13 +40,13 @@ export function SyncPage() {
         <CardContent className="flex flex-col gap-3">
           {conflicts.length === 0 && <p className="opacity-70">{t("sync.noConflicts")}</p>}
           {conflicts.map((conflict) => (
-            <div key={conflict.id} className="flex items-start justify-between gap-3 rounded-base border-2 border-border p-3">
+            <div key={conflict.id} className="flex items-start justify-between gap-3 rounded-lg border p-3">
               <div className="text-sm">
-                <p className="font-heading">{conflict.table} · {conflict.field}</p>
+                <p className="font-semibold">{conflict.table} · {conflict.field}</p>
                 <p>{t("sync.yours")}: <code>{JSON.stringify(conflict.clientValue)}</code></p>
                 <p>{t("sync.kept")}: <code>{JSON.stringify(conflict.serverValue)}</code></p>
               </div>
-              <Button size="sm" variant="neutral" onClick={() => void db.conflicts.update(conflict.id, { dismissed: true })}>
+              <Button size="sm" variant="outline" onClick={() => void db.conflicts.update(conflict.id, { dismissed: true })}>
                 {t("sync.dismiss")}
               </Button>
             </div>

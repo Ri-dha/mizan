@@ -82,18 +82,18 @@ export function TransactionsPage() {
           <CardHeader className="py-3"><CardTitle className="text-base">{day(date)}</CardTitle></CardHeader>
           <CardContent className="flex flex-col gap-2">
             {items.map((row) => (
-              <div key={row.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-base border-2 border-border p-3" onClick={() => setEditing(row)}>
+              <div key={row.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3" onClick={() => setEditing(row)}>
                 <div className="flex min-w-0 flex-col">
-                  <span className="truncate font-heading">{row.payee || row.category || t(`transactions.types.${row.type}`)}</span>
+                  <span className="truncate font-semibold">{row.payee || row.category || t(`transactions.types.${row.type}`)}</span>
                   <span className="truncate text-sm opacity-70">
                     {[bucketName(row.bucketId), row.category, row.note].filter(Boolean).join(" · ")}
                   </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  {row.type !== "EXPENSE" && <Badge variant="neutral">{t(`transactions.types.${row.type}`)}</Badge>}
-                  {row.attachmentId && <Badge variant="neutral">📎</Badge>}
-                  {row.splitGroupId && <Badge variant="neutral">{t("transactions.splitBadge")}</Badge>}
-                  <span className="tabular-nums font-heading">{row.type === "INCOME" ? "+" : ""}{money(row.baseAmount)}</span>
+                  {row.type !== "EXPENSE" && <Badge variant="secondary">{t(`transactions.types.${row.type}`)}</Badge>}
+                  {row.attachmentId && <Badge variant="secondary">📎</Badge>}
+                  {row.splitGroupId && <Badge variant="secondary">{t("transactions.splitBadge")}</Badge>}
+                  <span className="tabular-nums font-semibold">{row.type === "INCOME" ? "+" : ""}{money(row.baseAmount)}</span>
                 </div>
               </div>
             ))}
@@ -103,7 +103,7 @@ export function TransactionsPage() {
       </div>
 
       {matching.length > rows.length && (
-        <Button variant="neutral" className="self-center" onClick={() => setLimit(limit + PAGE_SIZE)}>
+        <Button variant="outline" className="self-center" onClick={() => setLimit(limit + PAGE_SIZE)}>
           {t("transactions.loadMore", { shown: rows.length, total: matching.length })}
         </Button>
       )}
@@ -113,9 +113,9 @@ export function TransactionsPage() {
           <CardHeader className="py-3"><CardTitle className="text-base">{t("transactions.recentlyDeleted")}</CardTitle></CardHeader>
           <CardContent className="flex flex-col gap-2">
             {deleted.map((row) => (
-              <div key={row.id} className="flex items-center justify-between gap-3 rounded-base border-2 border-dashed border-border p-3 opacity-80">
+              <div key={row.id} className="flex items-center justify-between gap-3 rounded-lg border border-dashed p-3 opacity-80">
                 <span className="truncate">{row.payee || row.category || t(`transactions.types.${row.type}`)} · {money(row.baseAmount)}</span>
-                <Button size="sm" variant="neutral" onClick={() => void restoreTransaction(row.id)}><RotateCcw /> {t("accounts.restore")}</Button>
+                <Button size="sm" variant="outline" onClick={() => void restoreTransaction(row.id)}><RotateCcw /> {t("accounts.restore")}</Button>
               </div>
             ))}
           </CardContent>

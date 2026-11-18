@@ -122,7 +122,7 @@ export function GoalSheet({ open, goal, onClose }: { open: boolean; goal: Goal |
             <Label htmlFor="private">{t("accounts.private")}</Label>
           </div>
           <SheetFooter className="flex-row justify-between px-0">
-            {goal && <Button type="button" variant="neutral" onClick={() => void writeFields<Goal>("goal", goal.id, { status: "ARCHIVED" }).then(onClose)}>{t("goals.archive")}</Button>}
+            {goal && <Button type="button" variant="outline" onClick={() => void writeFields<Goal>("goal", goal.id, { status: "ARCHIVED" }).then(onClose)}>{t("goals.archive")}</Button>}
             <Button type="submit">{t("accounts.save")}</Button>
           </SheetFooter>
         </form>

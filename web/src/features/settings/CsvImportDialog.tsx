@@ -134,12 +134,12 @@ export function CsvImportDialog({ file, onClose }: { file: File | null; onClose:
                 </Select>
               </Field>
             </div>
-            <div className="overflow-x-auto rounded-base border-2 border-border">
+            <div className="overflow-x-auto rounded-lg border">
               <table className="w-full text-xs">
                 <thead><tr className="opacity-70"><th className="p-1 text-start">{t("transactions.date")}</th><th className="p-1 text-start">{t("transactions.types.EXPENSE")}/{t("transactions.types.INCOME")}</th><th className="p-1 text-end">{t("transactions.amount")}</th><th className="p-1 text-start">{t("transactions.payee")}</th><th className="p-1 text-start">{t("csv.status")}</th></tr></thead>
                 <tbody>
                   {rows.slice(0, PREVIEW_ROWS).map((r) => (
-                    <tr key={r.index} className={r.error ? "text-chart-2" : r.duplicate ? "opacity-60" : ""}>
+                    <tr key={r.index} className={r.error ? "text-destructive" : r.duplicate ? "opacity-60" : ""}>
                       <td className="p-1">{r.occurredOn || "?"}</td><td className="p-1">{t(`transactions.types.${r.type}`)}</td><td className="p-1 text-end tabular-nums">{r.amount}</td><td className="p-1">{r.payee ?? ""}</td>
                       <td className="p-1">{r.error ? t(`csv.errors.${r.error}`) : r.duplicate ? t("csv.duplicate") : t("csv.ok")}</td>
                     </tr>
@@ -155,7 +155,7 @@ export function CsvImportDialog({ file, onClose }: { file: File | null; onClose:
               </Field>
             )}
             <DialogFooter>
-              <Button variant="neutral" type="button" onClick={close}>{t("settings.cancel")}</Button>
+              <Button variant="outline" type="button" onClick={close}>{t("settings.cancel")}</Button>
               <Button type="button" disabled={!ready || importable.length === 0 || busy} onClick={() => void commit()}>{t("csv.import", { count: importable.length })}</Button>
             </DialogFooter>
           </div>

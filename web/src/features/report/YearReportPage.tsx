@@ -39,10 +39,10 @@ export function YearReportPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl">{t("report.yearTitle", { year })}</h1>
         <div className="flex items-center gap-2 print:hidden">
-          <Button variant="neutral" size="sm" onClick={() => setYear(year - 1)}>{year - 1}</Button>
-          <Button variant="neutral" size="sm" onClick={() => setYear(year + 1)}>{year + 1}</Button>
-          <Button variant="neutral" size="sm" onClick={() => window.print()}><Printer /> {t("report.savePdf")}</Button>
-          <Button variant="neutral" size="sm" asChild><Link to="/report">{t("report.title")}</Link></Button>
+          <Button variant="outline" size="sm" onClick={() => setYear(year - 1)}>{year - 1}</Button>
+          <Button variant="outline" size="sm" onClick={() => setYear(year + 1)}>{year + 1}</Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()}><Printer /> {t("report.savePdf")}</Button>
+          <Button variant="outline" size="sm" asChild><Link to="/report">{t("report.title")}</Link></Button>
         </div>
       </div>
 
@@ -70,9 +70,9 @@ export function YearReportPage() {
                 <ResponsiveContainer>
                   <BarChart data={chart} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                     <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" opacity={0.3} />
-                    <XAxis dataKey="name" stroke="var(--foreground)" fontSize={12} />
-                    <YAxis stroke="var(--foreground)" fontSize={12} tickFormatter={(v: number) => new Intl.NumberFormat("en", { notation: "compact" }).format(v)} width={56} />
-                    <Tooltip formatter={(v, name) => [money(Number(v)), bucketName(String(name))]} contentStyle={{ background: "var(--secondary-background)", border: "2px solid var(--border)", borderRadius: 5, color: "var(--foreground)" }} />
+                    <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={12} />
+                    <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v: number) => new Intl.NumberFormat("en", { notation: "compact" }).format(v)} width={56} />
+                    <Tooltip formatter={(v, name) => [money(Number(v)), bucketName(String(name))]} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 5, color: "var(--foreground)" }} />
                     <Legend formatter={(id) => bucketName(String(id))} />
                     {bucketIds.map((id, i) => <Bar key={id} dataKey={id} stackId="spent" fill={PALETTE[i % PALETTE.length]} stroke="var(--border)" />)}
                   </BarChart>
@@ -85,15 +85,15 @@ export function YearReportPage() {
             <CardHeader><CardTitle>{t("report.months")}</CardTitle></CardHeader>
             <CardContent className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="text-start opacity-70"><th className="py-1 text-start">{t("report.month")}</th><th className="text-end">{t("income.received")}</th><th className="text-end">{t("plan.spent")}</th><th className="text-end">{t("report.saved")}</th><th className="text-end">{t("report.rate")}</th></tr></thead>
+                <thead><tr className="text-start opacity-70"><th className="whitespace-nowrap px-2 py-1 text-start">{t("report.month")}</th><th className="whitespace-nowrap px-2 text-end">{t("income.received")}</th><th className="whitespace-nowrap px-2 text-end">{t("plan.spent")}</th><th className="whitespace-nowrap px-2 text-end">{t("report.saved")}</th><th className="whitespace-nowrap px-2 text-end">{t("report.rate")}</th></tr></thead>
                 <tbody>
                   {summary.months.map((m) => (
-                    <tr key={m.key} className={m.key === thisMonth ? "font-heading" : ""}>
-                      <td className="py-1">{formatMonthKey(m.key, i18n.language)}</td>
-                      <td className="text-end tabular-nums">{money(m.received)}</td>
-                      <td className="text-end tabular-nums">{money(m.spent)}</td>
-                      <td className={`text-end tabular-nums ${m.saved < 0 ? "text-chart-2" : ""}`}>{money(m.saved)}</td>
-                      <td className="text-end tabular-nums">{m.savingRate === null ? "—" : `${m.savingRate}%`}</td>
+                    <tr key={m.key} className={m.key === thisMonth ? "font-semibold" : ""}>
+                      <td className="whitespace-nowrap px-2 py-1">{formatMonthKey(m.key, i18n.language)}</td>
+                      <td className="whitespace-nowrap px-2 text-end tabular-nums">{money(m.received)}</td>
+                      <td className="whitespace-nowrap px-2 text-end tabular-nums">{money(m.spent)}</td>
+                      <td className={`whitespace-nowrap px-2 text-end tabular-nums ${m.saved < 0 ? "text-destructive" : ""}`}>{money(m.saved)}</td>
+                      <td className="whitespace-nowrap px-2 text-end tabular-nums">{m.savingRate === null ? "—" : `${m.savingRate}%`}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -118,9 +118,9 @@ export function YearReportPage() {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-base border-2 border-border p-3">
+    <div className="rounded-lg border p-3">
       <p className="text-xs opacity-70">{label}</p>
-      <p className="font-heading tabular-nums">{value}</p>
+      <p className="font-semibold tabular-nums">{value}</p>
       {hint && <p className="text-xs opacity-70 tabular-nums">{hint}</p>}
     </div>
   )

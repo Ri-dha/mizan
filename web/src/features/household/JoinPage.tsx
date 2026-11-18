@@ -42,7 +42,7 @@ export function JoinPage() {
   return (
     <AuthLayout title={t("household.joinTitle")}>
       <div className="flex flex-col gap-4">
-        {error && <p className="text-chart-2">{error}</p>}
+        {error && <p className="text-destructive">{error}</p>}
         {preview && (
           <>
             <p>{t("household.joinBody", { household: preview.householdName, by: preview.invitedBy, role: t(`household.roles.${preview.role}`) })}</p>
@@ -53,7 +53,7 @@ export function JoinPage() {
               <div className="flex flex-col gap-2">
                 <p className="text-sm">{t("household.joinSignIn")}</p>
                 <Button asChild onClick={() => rememberPendingInvite(token)}><Link to="/login">{t("auth.login")}</Link></Button>
-                <Button asChild variant="neutral" onClick={() => rememberPendingInvite(token)}><Link to="/register">{t("auth.register")}</Link></Button>
+                <Button asChild variant="outline" onClick={() => rememberPendingInvite(token)}><Link to="/register">{t("auth.register")}</Link></Button>
               </div>
             )}
           </>

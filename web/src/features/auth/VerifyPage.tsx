@@ -62,8 +62,8 @@ export function VerifyPage() {
           </Alert>
         )}
         <div className="flex gap-2">
-          <Button variant="neutral" onClick={resend}>{t("auth.resend")}</Button>
-          <Button variant="neutral" onClick={() => void navigate("/")}>{t("auth.skipForNow")}</Button>
+          <Button variant="outline" onClick={resend}>{t("auth.resend")}</Button>
+          <Button variant="outline" onClick={() => void navigate("/")}>{t("auth.skipForNow")}</Button>
         </div>
       </CardContent>
     </Card>

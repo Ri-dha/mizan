@@ -41,8 +41,8 @@ export function ReportPage() {
         <div className="flex items-center gap-2">
           <MonthPicker value={monthKey} onChange={setMonthKey} />
           <span className="flex gap-2 print:hidden">
-            <Button variant="neutral" size="sm" onClick={() => window.print()}><Printer /> {t("report.savePdf")}</Button>
-            <Button variant="neutral" size="sm" asChild><Link to="/report/year">{t("report.year")}</Link></Button>
+            <Button variant="outline" size="sm" onClick={() => window.print()}><Printer /> {t("report.savePdf")}</Button>
+            <Button variant="outline" size="sm" asChild><Link to="/report/year">{t("report.year")}</Link></Button>
           </span>
         </div>
       </div>
@@ -70,11 +70,11 @@ export function ReportPage() {
             return (
               <div key={figure.id} className="flex flex-col gap-1">
                 <div className="flex justify-between text-sm">
-                  <span className="flex items-center gap-2"><span className="size-3 rounded-base border-2 border-border" style={{ background: bucket.colour }} />{bucket.name}</span>
+                  <span className="flex items-center gap-2"><span className="size-3 rounded-lg border" style={{ background: bucket.colour }} />{bucket.name}</span>
                   <span className="tabular-nums">{money(actual)} / {money(figure.allocated)}</span>
                 </div>
-                <div className="h-3 w-full overflow-hidden rounded-base border-2 border-border bg-secondary-background">
-                  <div className={`h-full ${actual > figure.allocated ? "bg-chart-2" : "bg-main"}`} style={{ width: `${ratio}%` }} />
+                <div className="h-3 w-full overflow-hidden rounded-lg border bg-card">
+                  <div className={`h-full ${actual > figure.allocated ? "bg-destructive" : "bg-primary"}`} style={{ width: `${ratio}%` }} />
                 </div>
               </div>
             )

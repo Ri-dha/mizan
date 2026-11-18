@@ -35,14 +35,14 @@ export function AccountsPage() {
         <Card key={account.id} className="cursor-pointer" onClick={() => setEditing(account)}>
           <CardContent className="flex items-center justify-between gap-4 py-4">
             <div className="flex flex-col">
-              <span className="font-heading">{account.name}</span>
+              <span className="font-semibold">{account.name}</span>
               <span className="text-sm opacity-70">
                 {t(`accounts.kinds.${account.kind}`)}{account.institution ? ` · ${account.institution}` : ""}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {account.visibility === "PRIVATE" && <Badge variant="neutral">{t("accounts.private")}</Badge>}
-              <span className="text-xl font-heading tabular-nums">{formatMoney(account.balance, account.currency, i18n.language)}</span>
+              {account.visibility === "PRIVATE" && <Badge variant="secondary">{t("accounts.private")}</Badge>}
+              <span className="text-xl font-semibold tabular-nums">{formatMoney(account.balance, account.currency, i18n.language)}</span>
             </div>
           </CardContent>
         </Card>

@@ -156,7 +156,7 @@ export function AssetSheet({ open, asset, onClose, onDelete }: Props) {
             <Label htmlFor="private">{t("accounts.private")}</Label>
           </div>
           <SheetFooter className="flex-row justify-between px-0">
-            {asset && <Button type="button" variant="neutral" onClick={() => onDelete(asset)}>{t("accounts.delete")}</Button>}
+            {asset && <Button type="button" variant="outline" onClick={() => onDelete(asset)}>{t("accounts.delete")}</Button>}
             <Button type="submit">{t("accounts.save")}</Button>
           </SheetFooter>
         </form>

@@ -70,8 +70,8 @@ export function GoalsPage() {
               {goal.status === "COMPLETED" && <Badge>{t("goals.completed")}</Badge>}
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              <div className="h-4 w-full overflow-hidden rounded-base border-2 border-border bg-secondary-background">
-                <div className="h-full bg-main" style={{ width: `${projection.percent}%` }} />
+              <div className="h-4 w-full overflow-hidden rounded-lg border bg-card">
+                <div className="h-full bg-primary" style={{ width: `${projection.percent}%` }} />
               </div>
               <p className="text-sm">
                 {goal.status === "COMPLETED" && goal.completedOn
@@ -84,13 +84,13 @@ export function GoalsPage() {
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => setDepositing({ goal, direction: "DEPOSIT" })}>{t("goals.deposit")}</Button>
-                <Button size="sm" variant="neutral" onClick={() => setDepositing({ goal, direction: "WITHDRAWAL" })}>{t("goals.withdraw")}</Button>
+                <Button size="sm" variant="outline" onClick={() => setDepositing({ goal, direction: "WITHDRAWAL" })}>{t("goals.withdraw")}</Button>
               </div>
               {ledger.map((d) => (
                 <div key={d.id} className="flex items-center justify-between gap-2 text-sm">
                   <span>{date(d.depositedOn)} · {t(`goals.directions.${d.direction}`)}</span>
                   <span className="flex items-center gap-2 tabular-nums">{money(d.amount, goal.currency)}
-                    <Button size="sm" variant="neutral" onClick={() => void undoDeposit(d)}>{t("bills.undo")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => void undoDeposit(d)}>{t("bills.undo")}</Button>
                   </span>
                 </div>
               ))}

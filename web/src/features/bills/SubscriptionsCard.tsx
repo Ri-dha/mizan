@@ -33,16 +33,16 @@ export function SubscriptionsCard({ currency, onEdit }: { currency: string; onEd
       {summary.lines.length > 0 && (
         <CardContent className="flex flex-col gap-2">
           {summary.lines.map((line) => (
-            <div key={line.expense.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-base border-2 border-border p-3" onClick={() => onEdit(line.expense)}>
+            <div key={line.expense.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3" onClick={() => onEdit(line.expense)}>
               <div className="flex min-w-0 flex-col">
-                <span className="truncate font-heading">{line.expense.name}</span>
+                <span className="truncate font-semibold">{line.expense.name}</span>
                 <span className="truncate text-sm opacity-70">
                   {money(line.expense.amount, line.expense.currency)} · {t(`bills.frequencies.${line.expense.frequency}`)}
                   {line.expense.currency !== currency && ` · ${t("subscriptions.perMonthBase", { amount: money(line.monthlyBase) })}`}
                 </span>
               </div>
               <div className="flex shrink-0 flex-col items-end text-sm">
-                <span className="tabular-nums font-heading">{t("subscriptions.perMonth", { amount: money(line.monthlyBase) })}</span>
+                <span className="tabular-nums font-semibold">{t("subscriptions.perMonth", { amount: money(line.monthlyBase) })}</span>
                 <span className="tabular-nums opacity-70">{t("subscriptions.perYear", { amount: money(line.yearlyBase) })}</span>
               </div>
             </div>

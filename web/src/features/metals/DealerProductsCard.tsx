@@ -47,21 +47,21 @@ export function DealerProductsCard({ currency }: { currency: string }) {
           <CardTitle>{t("metals.dealerProducts")}</CardTitle>
           <CardDescription>{t("metals.dealerProductsBody", { source: catalogue.source, at: new Intl.DateTimeFormat(ar ? "ar-IQ" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(catalogue.asOf)) })}</CardDescription>
         </div>
-        <Button size="sm" variant="neutral" onClick={() => setOpen((o) => !o)}>{open ? t("metals.hide") : t("metals.show")}</Button>
+        <Button size="sm" variant="outline" onClick={() => setOpen((o) => !o)}>{open ? t("metals.hide") : t("metals.show")}</Button>
       </CardHeader>
       {open && (
         <CardContent className="flex flex-col gap-4">
           {catalogue.groups.map((group) => (
             <div key={group.key}>
-              <p className="mb-1 font-heading">{ar ? group.title_ar : group.title_en}</p>
+              <p className="mb-1 font-semibold">{ar ? group.title_ar : group.title_en}</p>
               <table className="w-full text-sm">
-                <thead><tr className="opacity-70"><th className="py-1 text-start">{t("metals.product")}</th><th className="py-1 text-end">{t("metals.dealerPays")}</th><th className="py-1 text-end">{t("metals.dealerCharges")}</th></tr></thead>
+                <thead><tr className="opacity-70"><th className="whitespace-nowrap px-2 py-1 text-start">{t("metals.product")}</th><th className="whitespace-nowrap px-2 py-1 text-end">{t("metals.dealerPays")}</th><th className="whitespace-nowrap px-2 py-1 text-end">{t("metals.dealerCharges")}</th></tr></thead>
                 <tbody>
                   {group.items.map((item) => (
-                    <tr key={item.id} className="border-t border-border/40">
-                      <td className="py-1">{ar ? item.name_ar : item.name_en}</td>
-                      <td className="py-1 text-end tabular-nums">{money(item.bid_iqd)}</td>
-                      <td className="py-1 text-end tabular-nums">{money(item.ask_iqd)}</td>
+                    <tr key={item.id} className="border-t/40">
+                      <td className="whitespace-nowrap px-2 py-1">{ar ? item.name_ar : item.name_en}</td>
+                      <td className="whitespace-nowrap px-2 py-1 text-end tabular-nums">{money(item.bid_iqd)}</td>
+                      <td className="whitespace-nowrap px-2 py-1 text-end tabular-nums">{money(item.ask_iqd)}</td>
                     </tr>
                   ))}
                 </tbody>

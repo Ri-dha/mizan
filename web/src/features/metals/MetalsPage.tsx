@@ -7,6 +7,8 @@ import { priceTable } from "@/db/metals"
 import { usePreferences } from "@/app/preferences"
 import { useTranslation } from "react-i18next"
 
+import { SourceCredit } from "@/components/SourceCredit"
+
 import { useSession } from "@/api/auth"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -73,7 +75,7 @@ export function MetalsPage() {
         <h1 className="text-3xl">{t("metals.title")}</h1>
         <div className="flex gap-2">
           <HelpButton tour="metals" />
-          <Button variant="neutral" size="icon" aria-label={t("metals.settings")} onClick={() => setSettings(true)}><Settings2 /></Button>
+          <Button variant="outline" size="icon" aria-label={t("metals.settings")} onClick={() => setSettings(true)}><Settings2 /></Button>
           <Button data-tour="metals-add" onClick={() => setEditing("new")}><Plus /> {t("metals.addLot")}</Button>
         </div>
       </div>
@@ -83,18 +85,18 @@ export function MetalsPage() {
           <CardTitle>{t("metals.portfolio")}</CardTitle>
           <CardDescription>
             {t("metals.costBasis")}: {money(totals.cost)} · {t("metals.valueNow")}: {money(totals.value)}
-            {view.setting?.valuationBasis === "BUYBACK" && <> · <Badge variant="neutral">{t("metals.buybackBadge")}</Badge></>}
+            {view.setting?.valuationBasis === "BUYBACK" && <> · <Badge variant="secondary">{t("metals.buybackBadge")}</Badge></>}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline gap-3">
-            <span className={`text-3xl font-heading tabular-nums ${totals.gain < 0 ? "text-chart-2" : ""}`}>{signed(totals.gain)}</span>
+            <span className={`text-3xl font-semibold tabular-nums ${totals.gain < 0 ? "text-destructive" : ""}`}>{signed(totals.gain)}</span>
             <span className="text-sm opacity-70">{t("metals.excludingMaking", { amount: signed(totals.gainX) })}</span>
           </div>
           {view.lines.length === 0 && <p className="opacity-70">{t("metals.noLots")}</p>}
           {view.lines.map((line) => (
-            <div key={`${line.metal}-${line.purityLabel}`} className="grid grid-cols-2 gap-1 rounded-base border-2 border-border p-3 sm:grid-cols-5">
-              <span className="col-span-2 font-heading sm:col-span-1">{t(`metals.metal.${line.metal}`)} {line.purityLabel}</span>
+            <div key={`${line.metal}-${line.purityLabel}`} className="grid grid-cols-2 gap-1 rounded-lg border p-3 sm:grid-cols-5">
+              <span className="col-span-2 font-semibold sm:col-span-1">{t(`metals.metal.${line.metal}`)} {line.purityLabel}</span>
               <Fig label={t("metals.weight")} value={grams(line.weightMg, i18n.language)} />
               <Fig label={t("metals.costBasis")} value={money(line.costBasis)} />
               <Fig label={t("metals.valueNow")} value={money(line.valueNow)} />
@@ -103,7 +105,7 @@ export function MetalsPage() {
           ))}
           <div className="flex flex-wrap gap-2" data-tour="metals-sell">
             {(["GOLD", "SILVER"] as const).map((metal) => (
-              <Button key={metal} variant="neutral" size="sm" disabled={!openLots.some((v) => v.lot.metal === metal)} onClick={() => setSelling(metal)}>
+              <Button key={metal} variant="outline" size="sm" disabled={!openLots.some((v) => v.lot.metal === metal)} onClick={() => setSelling(metal)}>
                 {t("metals.sell", { metal: t(`metals.metal.${metal}`) })}
               </Button>
             ))}
@@ -120,27 +122,27 @@ export function MetalsPage() {
               {view.prices.spot.GOLD.source.stale && <> · <Badge>{t("metals.stale")}</Badge></>}
             </CardDescription>
           </div>
-          <Button size="sm" variant="neutral" disabled={refreshing || !navigator.onLine} onClick={() => void refreshPrices()}><RefreshCw className={refreshing ? "animate-spin" : ""} /> {t("metals.refresh")}</Button>
+          <Button size="sm" variant="outline" disabled={refreshing || !navigator.onLine} onClick={() => void refreshPrices()}><RefreshCw className={refreshing ? "animate-spin" : ""} /> {t("metals.refresh")}</Button>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="opacity-70">
-                <th className="py-1 text-start">{t("metals.purity")}</th>
-                <th className="py-1 text-end">{base}/g</th>
-                <th className="py-1 text-end">USD/g</th>
-                <th className="py-1 text-end">{base}/{t("metals.units.MITHQAL")}</th>
-                <th className="py-1 text-end">USD/{t("metals.units.MITHQAL")}</th>
+                <th className="whitespace-nowrap px-2 py-1 text-start">{t("metals.purity")}</th>
+                <th className="whitespace-nowrap px-2 py-1 text-end">{base}/g</th>
+                <th className="whitespace-nowrap px-2 py-1 text-end">USD/g</th>
+                <th className="whitespace-nowrap px-2 py-1 text-end">{base}/{t("metals.units.MITHQAL")}</th>
+                <th className="whitespace-nowrap px-2 py-1 text-end">USD/{t("metals.units.MITHQAL")}</th>
               </tr>
             </thead>
             <tbody>
               {table.map((row) => (
-                <tr key={`${row.metal}-${row.purityLabel}`} className="border-t border-border/40">
-                  <td className="py-1 font-heading">{t(`metals.metal.${row.metal}`)} {row.purityLabel}</td>
-                  <td className="py-1 text-end tabular-nums">{money(Math.round(row.perGramMicros / 1e6))}</td>
-                  <td className="py-1 text-end tabular-nums" dir="ltr">{usd(row.perGramUsdMicros)}</td>
-                  <td className="py-1 text-end tabular-nums">{money(Math.round(row.perMithqalMicros / 1e6))}</td>
-                  <td className="py-1 text-end tabular-nums" dir="ltr">{usd(row.perMithqalUsdMicros)}</td>
+                <tr key={`${row.metal}-${row.purityLabel}`} className="border-t/40">
+                  <td className="whitespace-nowrap px-2 py-1 font-semibold">{t(`metals.metal.${row.metal}`)} {row.purityLabel}</td>
+                  <td className="whitespace-nowrap px-2 py-1 text-end tabular-nums">{money(Math.round(row.perGramMicros / 1e6))}</td>
+                  <td className="whitespace-nowrap px-2 py-1 text-end tabular-nums" dir="ltr">{usd(row.perGramUsdMicros)}</td>
+                  <td className="whitespace-nowrap px-2 py-1 text-end tabular-nums">{money(Math.round(row.perMithqalMicros / 1e6))}</td>
+                  <td className="whitespace-nowrap px-2 py-1 text-end tabular-nums" dir="ltr">{usd(row.perMithqalUsdMicros)}</td>
                 </tr>
               ))}
             </tbody>
@@ -157,9 +159,9 @@ export function MetalsPage() {
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>{t("metals.prices")}</CardTitle>
           <div className="flex gap-2">
-            <Button size="sm" variant="neutral" onClick={() => setExplaining(true)}>{t("metals.howCalculated")}</Button>
-            <Button size="sm" variant="neutral" onClick={() => setOverriding(true)}>{t("metals.enterPrice")}</Button>
-            <Button size="sm" variant="neutral" onClick={() => setZakat(true)}>{t("zakat.open")}</Button>
+            <Button size="sm" variant="outline" onClick={() => setExplaining(true)}>{t("metals.howCalculated")}</Button>
+            <Button size="sm" variant="outline" onClick={() => setOverriding(true)}>{t("metals.enterPrice")}</Button>
+            <Button size="sm" variant="outline" onClick={() => setZakat(true)}>{t("zakat.open")}</Button>
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">
@@ -174,9 +176,9 @@ export function MetalsPage() {
         <CardContent className="flex flex-col gap-2">
           {openLots.length === 0 && <p className="opacity-70">{t("metals.noLots")}</p>}
           {openLots.map((v) => (
-            <div key={v.lot.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-base border-2 border-border p-3" onClick={() => setEditing(v.lot)}>
+            <div key={v.lot.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3" onClick={() => setEditing(v.lot)}>
               <div className="flex min-w-0 flex-col">
-                <span className="truncate font-heading">
+                <span className="truncate font-semibold">
                   {t(`metals.metal.${v.lot.metal}`)} {v.lot.purityLabel} · {grams(v.remainingMg, i18n.language)} · {t(`metals.forms.${v.lot.form}`)}
                 </span>
                 <span className="truncate text-sm opacity-70">
@@ -184,8 +186,8 @@ export function MetalsPage() {
                 </span>
               </div>
               <div className="flex shrink-0 flex-col items-end">
-                <span className="tabular-nums font-heading">{money(v.valueNow)}</span>
-                <span className={`text-sm tabular-nums ${v.gain < 0 ? "text-chart-2" : ""}`}>{signed(v.gain)}{v.gainPercent !== null ? ` (${v.gainPercent}%)` : ""}</span>
+                <span className="tabular-nums font-semibold">{money(v.valueNow)}</span>
+                <span className={`text-sm tabular-nums ${v.gain < 0 ? "text-destructive" : ""}`}>{signed(v.gain)}{v.gainPercent !== null ? ` (${v.gainPercent}%)` : ""}</span>
               </div>
             </div>
           ))}
@@ -199,14 +201,14 @@ export function MetalsPage() {
             {view.disposals.map((d) => {
               const r = realisedGain(d, view.disposalLots)
               return (
-                <div key={d.id} className="flex items-center justify-between gap-3 rounded-base border-2 border-border p-3">
+                <div key={d.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
                   <div className="flex min-w-0 flex-col">
-                    <span className="truncate font-heading">{d.soldOn} · {t(`metals.metal.${d.metal}`)} {grams(d.weightMg, i18n.language)}</span>
+                    <span className="truncate font-semibold">{d.soldOn} · {t(`metals.metal.${d.metal}`)} {grams(d.weightMg, i18n.language)}</span>
                     <span className="text-sm opacity-70">{t(`metals.methods.${d.method}`)} · {t("metals.excludingMaking", { amount: signed(r.gainExcludingMaking) })}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`tabular-nums font-heading ${r.gain < 0 ? "text-chart-2" : ""}`}>{signed(r.gain)}</span>
-                    <Button size="sm" variant="neutral" onClick={() => void undoSale(d, view.disposalLots)}>{t("bills.undo")}</Button>
+                    <span className={`tabular-nums font-semibold ${r.gain < 0 ? "text-destructive" : ""}`}>{signed(r.gain)}</span>
+                    <Button size="sm" variant="outline" onClick={() => void undoSale(d, view.disposalLots)}>{t("bills.undo")}</Button>
                   </div>
                 </div>
               )
@@ -229,7 +231,7 @@ function Fig({ label, value, strong }: { label: string; value: string; strong?: 
   return (
     <div className="flex flex-col">
       <span className="text-xs opacity-70">{label}</span>
-      <span className={`tabular-nums ${strong ? "font-heading" : ""}`}>{value}</span>
+      <span className={`tabular-nums ${strong ? "font-semibold" : ""}`}>{value}</span>
     </div>
   )
 }
@@ -239,11 +241,12 @@ function PriceLine({ label, value, source }: { label: string; value: string; sou
   const when = source.at ? new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "medium", timeStyle: source.kind === "feed" || source.kind === "local" ? "short" : undefined }).format(new Date(source.at)) : ""
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <span>{label}: <span className="font-heading tabular-nums">{value}</span></span>
+      <span>{label}: <span className="font-semibold tabular-nums">{value}</span></span>
       <span className="flex items-center gap-1">
-        <Badge variant="neutral">{source.kind === "override" ? t("metals.sources.override") : source.kind === "feed" || source.kind === "local" ? source.label : t("metals.sources.none")}</Badge>
+        <Badge variant="secondary">{source.kind === "override" ? t("metals.sources.override") : source.kind === "feed" || source.kind === "local" ? source.label : t("metals.sources.none")}</Badge>
         {source.stale && <Badge>{t("metals.stale")}</Badge>}
         <span className="text-xs opacity-70">{when}</span>
+        {source.kind === "feed" && <SourceCredit source={source.label} />}
       </span>
     </div>
   )

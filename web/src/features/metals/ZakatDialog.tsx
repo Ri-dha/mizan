@@ -78,12 +78,12 @@ export function ZakatDialog({ open, valued, perGram24k, currency, onClose }: Pro
             </Field>
           </div>
           {([["GOLD", gold], ["SILVER", silver]] as const).map(([metal, row]) => (
-            <div key={metal} className="rounded-base border-2 border-border p-3 text-sm">
-              <p className="font-heading">{t(`metals.metal.${metal}`)}</p>
+            <div key={metal} className="rounded-lg border p-3 text-sm">
+              <p className="font-semibold">{t(`metals.metal.${metal}`)}</p>
               <p>{t("zakat.pureWeight", { weight: grams(row.pureMg) })}</p>
               <p>{t("zakat.value", { value: money(row.value), date: date(asOf) })}</p>
               <p>{row.reaches ? t("zakat.reaches") : t("zakat.below")}</p>
-              {row.reaches && <p className="font-heading">{t("zakat.base", { amount: money(row.base) })}</p>}
+              {row.reaches && <p className="font-semibold">{t("zakat.base", { amount: money(row.base) })}</p>}
             </div>
           ))}
           <Alert><AlertDescription>{t("zakat.footer")}</AlertDescription></Alert>

@@ -18,11 +18,23 @@ function prefersDark() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches
 }
 
-export function applyStoredTheme() {
+const THEME_COLOR = { light: "#ffffff", dark: "#0a0a0a" } as const
+let followingDevice = false
+
+function apply() {
   const theme = stored()
-  document.documentElement.classList.toggle("dark", theme === "dark" || (theme === "system" && prefersDark()))
+  const dark = theme === "dark" || (theme === "system" && prefersDark())
+  document.documentElement.classList.toggle("dark", dark)
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? THEME_COLOR.dark : THEME_COLOR.light)
+}
+
+/** `public/theme-boot.js` sets the class before first paint; this keeps it in step with the device. */
+export function applyStoredTheme() {
+  apply()
+  if (followingDevice) return
+  followingDevice = true
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-    if (stored() === "system") applyStoredTheme()
+    if (stored() === "system") apply()
   })
 }
 
@@ -32,7 +44,7 @@ export function setTheme(theme: Theme) {
   } catch {
     // Storage may be unavailable; the choice then lasts for this visit only.
   }
-  applyStoredTheme()
+  apply()
   listeners.forEach((listener) => listener())
 }
 

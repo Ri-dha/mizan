@@ -94,7 +94,7 @@ export function ReceiptSheet({ draft, onClose }: { draft: ReceiptDraft | null; o
             <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={120} />
           </Field>
           <SheetFooter className="flex-row justify-between px-0">
-            {draft?.existing && <Button type="button" variant="neutral" onClick={() => void remove()}>{t("accounts.delete")}</Button>}
+            {draft?.existing && <Button type="button" variant="outline" onClick={() => void remove()}>{t("accounts.delete")}</Button>}
             <Button type="submit">{t("accounts.save")}</Button>
           </SheetFooter>
         </form>

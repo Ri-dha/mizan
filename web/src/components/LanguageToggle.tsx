@@ -6,7 +6,7 @@ export function LanguageToggle() {
   const { i18n } = useTranslation()
   const next = i18n.language.startsWith("ar") ? "en" : "ar"
   return (
-    <Button variant="neutral" size="sm" onClick={() => void i18n.changeLanguage(next)}>
+    <Button variant="outline" size="sm" onClick={() => void i18n.changeLanguage(next)}>
       {next === "ar" ? "العربية" : "English"}
     </Button>
   )

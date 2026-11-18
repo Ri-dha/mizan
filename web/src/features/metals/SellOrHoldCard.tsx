@@ -55,15 +55,15 @@ export function SellOrHoldCard({ view, currency }: { view: MetalsView; currency:
         </div>
         <div className="flex gap-1">
           {(["GOLD", "SILVER"] as const).map((m) => (
-            <Button key={m} size="sm" variant={metal === m ? "default" : "neutral"} onClick={() => setMetal(m)}>{t(`metals.metal.${m}`)}</Button>
+            <Button key={m} size="sm" variant={metal === m ? "default" : "outline"} onClick={() => setMetal(m)}>{t(`metals.metal.${m}`)}</Button>
           ))}
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {open.length === 0 ? <p className="opacity-70">{t("metals.noLots")}</p> : bidPerGram === null ? <p className="opacity-70">{t("metals.noBid")}</p> : (
           <div className="flex flex-wrap items-baseline gap-3">
-            <Badge variant={verdict.gain >= 0 ? "default" : "neutral"}>{verdict.gain >= 0 ? t("metals.verdictGain") : t("metals.verdictLoss")}</Badge>
-            <span className={`text-2xl font-heading tabular-nums ${verdict.gain < 0 ? "text-chart-2" : ""}`}>{(verdict.gain > 0 ? "+" : "") + money(verdict.gain)}{verdict.gainPercent !== null ? ` (${verdict.gainPercent}%)` : ""}</span>
+            <Badge variant={verdict.gain >= 0 ? "default" : "secondary"}>{verdict.gain >= 0 ? t("metals.verdictGain") : t("metals.verdictLoss")}</Badge>
+            <span className={`text-2xl font-semibold tabular-nums ${verdict.gain < 0 ? "text-destructive" : ""}`}>{(verdict.gain > 0 ? "+" : "") + money(verdict.gain)}{verdict.gainPercent !== null ? ` (${verdict.gainPercent}%)` : ""}</span>
             <span className="text-sm opacity-70">{t("metals.verdictLine", { proceeds: money(verdict.proceeds), cost: money(verdict.cost), source: bidQuote?.source ?? "" })}</span>
           </div>
         )}
@@ -75,11 +75,11 @@ export function SellOrHoldCard({ view, currency }: { view: MetalsView; currency:
             <ResponsiveContainer>
               <LineChart data={series.map((p) => ({ ...p, label: dateLabel(p.day) }))} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                 <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" opacity={0.3} />
-                <XAxis dataKey="label" stroke="var(--foreground)" fontSize={12} minTickGap={24} />
-                <YAxis stroke="var(--foreground)" fontSize={12} tickFormatter={(v: number) => new Intl.NumberFormat("en", { notation: "compact" }).format(v)} width={56} />
-                <Tooltip formatter={(v, name) => [money(Number(v)), t(`metals.seriesNames.${String(name)}`)]} contentStyle={{ background: "var(--secondary-background)", border: "2px solid var(--border)", borderRadius: 5, color: "var(--foreground)" }} />
+                <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={12} minTickGap={24} />
+                <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v: number) => new Intl.NumberFormat("en", { notation: "compact" }).format(v)} width={56} />
+                <Tooltip formatter={(v, name) => [money(Number(v)), t(`metals.seriesNames.${String(name)}`)]} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 5, color: "var(--foreground)" }} />
                 <Line type="stepAfter" dataKey="cost" name="cost" stroke="var(--foreground)" strokeWidth={2} dot={false} strokeDasharray="6 3" />
-                <Line type="monotone" dataKey="valueAsk" name="valueAsk" stroke="var(--main)" strokeWidth={3} dot={false} connectNulls />
+                <Line type="monotone" dataKey="valueAsk" name="valueAsk" stroke="var(--primary)" strokeWidth={3} dot={false} connectNulls />
                 <Line type="monotone" dataKey="valueBid" name="valueBid" stroke="var(--chart-2)" strokeWidth={3} dot={false} connectNulls />
               </LineChart>
             </ResponsiveContainer>

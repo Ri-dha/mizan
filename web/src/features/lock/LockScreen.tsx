@@ -47,7 +47,7 @@ export function LockScreen() {
             {wrong && <p className="text-sm">{t("lock.wrongPin")}</p>}
             <Button type="submit" disabled={pin.length < 4}>{t("lock.unlock")}</Button>
             {biometric && (
-              <Button type="button" variant="neutral" onClick={() => void unlockWithBiometrics().then((ok) => setWrong(!ok))}>
+              <Button type="button" variant="outline" onClick={() => void unlockWithBiometrics().then((ok) => setWrong(!ok))}>
                 <Fingerprint /> {t("lock.biometric")}
               </Button>
             )}

@@ -13,7 +13,7 @@ export function HelpButton({ tour }: { tour: keyof typeof TOURS }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="neutral" size="icon" aria-label={t("help.title")}><CircleHelp /></Button>
+        <Button variant="outline" size="icon" aria-label={t("help.title")}><CircleHelp /></Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onSelect={() => startTour(tour)}>{t("tours.showMeAround")}</DropdownMenuItem>

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { isIos, promptInstall, useInstallState } from "@/pwa/register"
 
 interface Props {
-  variant?: "default" | "neutral"
+  variant?: "default" | "outline"
   size?: "default" | "sm"
   className?: string
 }

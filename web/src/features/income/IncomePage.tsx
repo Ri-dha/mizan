@@ -67,9 +67,9 @@ export function IncomePage() {
         <CardContent className="flex flex-col gap-2">
           {view.occurrences.length === 0 && irregular.length === 0 && <p className="opacity-70">{t("income.nothingPlanned")}</p>}
           {view.occurrences.map((occurrence) => (
-            <div key={`${occurrence.source.id}-${occurrence.date}`} className="flex items-center justify-between gap-3 rounded-base border-2 border-border p-3">
+            <div key={`${occurrence.source.id}-${occurrence.date}`} className="flex items-center justify-between gap-3 rounded-lg border p-3">
               <div className="flex flex-col">
-                <span className="font-heading">{occurrence.source.name}</span>
+                <span className="font-semibold">{occurrence.source.name}</span>
                 <span className="text-sm opacity-70">
                   {occurrence.receipt
                     ? t("income.receivedOn", { date: date(occurrence.receipt.receivedOn) })
@@ -77,11 +77,11 @@ export function IncomePage() {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="tabular-nums font-heading">{money(occurrence.receipt?.baseAmount ?? occurrence.amount)}</span>
+                <span className="tabular-nums font-semibold">{money(occurrence.receipt?.baseAmount ?? occurrence.amount)}</span>
                 {occurrence.receipt ? (
-                  <Badge variant="neutral" className="cursor-pointer" onClick={() => editReceipt(occurrence.receipt!)}>{t("income.received")}</Badge>
+                  <Badge variant="secondary" className="cursor-pointer" onClick={() => editReceipt(occurrence.receipt!)}>{t("income.received")}</Badge>
                 ) : (
-                  <Button size="sm" variant={occurrence.date < today ? "default" : "neutral"} onClick={() => markReceived(occurrence.source, occurrence.date)}>
+                  <Button size="sm" variant={occurrence.date < today ? "default" : "outline"} onClick={() => markReceived(occurrence.source, occurrence.date)}>
                     {occurrence.date < today ? t("income.overdue") : t("income.markReceived")}
                   </Button>
                 )}
@@ -89,15 +89,15 @@ export function IncomePage() {
             </div>
           ))}
           {irregular.map((r) => (
-            <div key={r.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-base border-2 border-border p-3" onClick={() => editReceipt(r)}>
+            <div key={r.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3" onClick={() => editReceipt(r)}>
               <div className="flex flex-col">
-                <span className="font-heading">{r.note || t("income.irregular")}</span>
+                <span className="font-semibold">{r.note || t("income.irregular")}</span>
                 <span className="text-sm opacity-70">{t("income.receivedOn", { date: date(r.receivedOn) })}</span>
               </div>
-              <span className="tabular-nums font-heading">{money(r.baseAmount)}</span>
+              <span className="tabular-nums font-semibold">{money(r.baseAmount)}</span>
             </div>
           ))}
-          <Button variant="neutral" className="self-start" onClick={() => setReceipt({ existing: null, incomeSourceId: null, monthKey, receivedOn: today, amount: 0, currency: base, fxRateMicros: 1_000_000 })}>
+          <Button variant="outline" className="self-start" onClick={() => setReceipt({ existing: null, incomeSourceId: null, monthKey, receivedOn: today, amount: 0, currency: base, fxRateMicros: 1_000_000 })}>
             <Plus /> {t("income.addIrregular")}
           </Button>
         </CardContent>
@@ -116,9 +116,9 @@ export function IncomePage() {
           {view.sources.map((source) => {
             const ended = source.activeTo !== null && source.activeTo < today
             return (
-              <div key={source.id} className={`flex items-center justify-between gap-3 rounded-base border-2 border-border p-3 ${ended ? "opacity-60" : ""}`}>
+              <div key={source.id} className={`flex items-center justify-between gap-3 rounded-lg border p-3 ${ended ? "opacity-60" : ""}`}>
                 <div className="flex min-w-0 flex-col">
-                  <span className="truncate font-heading">{source.name}</span>
+                  <span className="truncate font-semibold">{source.name}</span>
                   <span className="truncate text-sm opacity-70">
                     {t(`income.frequencies.${source.frequency}`)}
                     {source.frequency === "MONTHLY" ? ` · ${t("income.payDayShort", { day: source.payDay })}` : ""}
@@ -126,10 +126,10 @@ export function IncomePage() {
                   </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="tabular-nums font-heading">{money(currentAmount(source, view.amountHistory, today), source.currency)}</span>
-                  <Button size="sm" variant="neutral" aria-label={t("income.edit")} onClick={() => setEditingSource(source)}><Pencil /> {t("income.edit")}</Button>
+                  <span className="tabular-nums font-semibold">{money(currentAmount(source, view.amountHistory, today), source.currency)}</span>
+                  <Button size="sm" variant="outline" aria-label={t("income.edit")} onClick={() => setEditingSource(source)}><Pencil /> {t("income.edit")}</Button>
                   {!source.activeTo && source.frequency !== "ONE_OFF" && (
-                    <Button size="sm" variant="neutral" onClick={() => void updateIncomeSource(source.id, { activeTo: today })}>{t("income.end")}</Button>
+                    <Button size="sm" variant="outline" onClick={() => void updateIncomeSource(source.id, { activeTo: today })}>{t("income.end")}</Button>
                   )}
                 </div>
               </div>

@@ -202,7 +202,7 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
         <form onSubmit={submit} className="flex flex-col gap-4 px-4">
           <div className="grid grid-cols-3 gap-2">
             {TYPES.map((choice) => (
-              <Button key={choice} type="button" variant={type === choice ? "default" : "neutral"} size="sm" onClick={() => setType(choice)}>
+              <Button key={choice} type="button" variant={type === choice ? "default" : "outline"} size="sm" onClick={() => setType(choice)}>
                 {t(`transactions.types.${choice}`)}
               </Button>
             ))}
@@ -210,7 +210,7 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
 
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <Field id="amount" label={t("transactions.amount")}>
-              <Input id="amount" inputMode="decimal" dir="ltr" autoFocus value={amount} onChange={(e) => setAmount(e.target.value)} required className="h-14 text-2xl font-heading" />
+              <Input id="amount" inputMode="decimal" dir="ltr" autoFocus value={amount} onChange={(e) => setAmount(e.target.value)} required className="h-14 text-2xl font-semibold" />
             </Field>
             <Field id="currency" label={t("accounts.currency")}>
               <Select value={currency} onValueChange={setCurrency}>
@@ -240,12 +240,12 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
                     <SelectContent>{buckets.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                   </Select>
                   <Input inputMode="decimal" dir="ltr" placeholder="0" value={part.amount} onChange={(e) => setParts(parts.map((p, j) => (j === i ? { ...p, amount: e.target.value } : p)))} />
-                  <Button type="button" variant="neutral" size="icon" onClick={() => setParts(parts.filter((_, j) => j !== i))}><X /></Button>
+                  <Button type="button" variant="outline" size="icon" onClick={() => setParts(parts.filter((_, j) => j !== i))}><X /></Button>
                 </div>
               ))}
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <Button type="button" variant="neutral" size="sm" onClick={() => setParts([...parts, { bucketId: "", amount: splitRemainder > 0 ? fromMinorUnits(splitRemainder, currency) : "" }])}>{t("transactions.addPart")}</Button>
-                <span className={splitRemainder === 0 ? "opacity-70" : "text-chart-2"}>{t("transactions.splitRemainder", { amount: fromMinorUnits(splitRemainder, currency) })}</span>
+                <Button type="button" variant="outline" size="sm" onClick={() => setParts([...parts, { bucketId: "", amount: splitRemainder > 0 ? fromMinorUnits(splitRemainder, currency) : "" }])}>{t("transactions.addPart")}</Button>
+                <span className={splitRemainder === 0 ? "opacity-70" : "text-destructive"}>{t("transactions.splitRemainder", { amount: fromMinorUnits(splitRemainder, currency) })}</span>
               </div>
             </div>
           ) : type !== "INCOME" && (
@@ -258,11 +258,11 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
                     type="button"
                     onClick={() => setBucketId(bucket.id)}
                     className={cn(
-                      "flex items-center gap-2 rounded-base border-2 border-border px-3 py-1.5 text-sm font-heading",
-                      bucketId === bucket.id ? "bg-main text-main-foreground shadow-shadow" : "bg-secondary-background",
+                      "flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold",
+                      bucketId === bucket.id ? "bg-primary text-primary-foreground shadow-sm" : "bg-card",
                     )}
                   >
-                    <span className="size-3 rounded-base border border-border" style={{ background: bucket.colour }} />
+                    <span className="size-3 rounded-lg border" style={{ background: bucket.colour }} />
                     {bucket.name}
                   </button>
                 ))}
@@ -316,14 +316,14 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
             <input ref={fileInput} type="file" accept="image/*" capture="environment" hidden onChange={(e) => void pickPhoto(e.target.files?.[0])} />
             {preview ? (
               <div className="relative w-fit">
-                <img src={preview} alt="" className="max-h-40 rounded-base border-2 border-border" />
-                <Button type="button" variant="neutral" size="sm" className="mt-2" disabled={reading} onClick={() => void readPhoto()}>{reading ? t("ocr.reading") : t("ocr.read_button")}</Button>
-                <Button type="button" size="icon" variant="neutral" className="absolute -end-2 -top-2 size-7" onClick={() => { if (attachmentId) void removeAttachment(attachmentId); setAttachmentId(null) }}>
+                <img src={preview} alt="" className="max-h-40 rounded-lg border" />
+                <Button type="button" variant="outline" size="sm" className="mt-2" disabled={reading} onClick={() => void readPhoto()}>{reading ? t("ocr.reading") : t("ocr.read_button")}</Button>
+                <Button type="button" size="icon" variant="outline" className="absolute -end-2 -top-2 size-7" onClick={() => { if (attachmentId) void removeAttachment(attachmentId); setAttachmentId(null) }}>
                   <X />
                 </Button>
               </div>
             ) : (
-              <Button type="button" variant="neutral" className="w-fit" onClick={() => fileInput.current?.click()}>
+              <Button type="button" variant="outline" className="w-fit" onClick={() => fileInput.current?.click()}>
                 <Camera /> {t("transactions.addReceipt")}
               </Button>
             )}
@@ -335,7 +335,7 @@ export function QuickAddSheet({ open, transaction, onClose }: Props) {
           </div>
 
           <SheetFooter className="flex-row justify-between px-0">
-            {transaction && <Button type="button" variant="neutral" onClick={() => void remove()}>{t("accounts.delete")}</Button>}
+            {transaction && <Button type="button" variant="outline" onClick={() => void remove()}>{t("accounts.delete")}</Button>}
             <Button type="submit" disabled={!amount || (type !== "INCOME" && !split && !bucketId && buckets.length > 0) || (split && (parts.length < 2 || splitRemainder !== 0))}>{t("accounts.save")}</Button>
           </SheetFooter>
         </form>

@@ -10,9 +10,9 @@ export function AuthLayout({ title, children }: { title: string; children: React
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 p-4">
       <div className="flex w-full max-w-md items-center justify-between">
-        <span className="text-3xl font-heading">{t("app.name")}</span>
+        <span className="text-3xl font-semibold">{t("app.name")}</span>
         <div className="flex items-center gap-2">
-          <InstallButton variant="neutral" size="sm" />
+          <InstallButton variant="outline" size="sm" />
           <LanguageToggle />
         </div>
       </div>

@@ -3,97 +3,132 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ADR ui-1: shadcn's neutral theme with Mizan blue as primary. Chart colours keep their meaning:
+   1 Mizan blue, 2 loss red, 3 amber, 4 gain green, 5 violet. */
 :root {
-  --border-radius: 5px;
-  --box-shadow-x: 4px;
-  --box-shadow-y: 4px;
-  --reverse-box-shadow-x: -4px;
-  --reverse-box-shadow-y: -4px;
-
-  --heading-font-weight: 700;
-  --base-font-weight: 500;
-
-  --background: oklch(93.46% 0.0304 254.32);
-  --secondary-background: oklch(100% 0 0);
-  --foreground: oklch(0% 0 0);
-  --main-foreground: oklch(0% 0 0);
-
-  --main: oklch(67.47% 0.1725 259.61);
-  --border: oklch(0% 0 0);
-  --ring: oklch(0% 0 0);
-  --overlay: oklch(0% 0 0 / 0.8);
-
-  --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
-
-  --chart-1: oklch(67.47% 0.1726 259.49);
-  --chart-2: oklch(67.28% 0.2147 24.22);
-  --chart-3: oklch(86.03% 0.176 92.36);
-  --chart-4: oklch(79.76% 0.2044 153.08);
-  --chart-5: oklch(66.34% 0.1806 277.2);
-  --chart-active-dot: #000;
-}
-
-/* The hard shadow mirrors in right-to-left layouts so the "pressed" direction stays consistent. */
-[dir="rtl"] {
-  --box-shadow-x: -4px;
-  --reverse-box-shadow-x: 4px;
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.52 0.17 262);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.52 0 0);
+  --accent: oklch(0.96 0.015 262);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.55 0.15 150);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.62 0.15 262);
+  --chart-1: oklch(0.6 0.17 262);
+  --chart-2: oklch(0.6 0.21 25);
+  --chart-3: oklch(0.78 0.16 80);
+  --chart-4: oklch(0.65 0.17 150);
+  --chart-5: oklch(0.6 0.18 295);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.52 0.17 262);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.96 0.015 262);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.62 0.15 262);
 }
 
 .dark {
-  --background: oklch(29.12% 0.0633 270.86);
-  --secondary-background: oklch(23.93% 0 0);
-  --foreground: oklch(92.49% 0 0);
-  --main-foreground: oklch(0% 0 0);
-
-  --border: oklch(0% 0 0);
-  --ring: oklch(100% 0 0);
-
-  --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
-
-  --chart-active-dot: #fff;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.72 0.14 262);
+  --primary-foreground: oklch(0.18 0.03 262);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.29 0.03 262);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.72 0.16 150);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.62 0.12 262);
+  --chart-1: oklch(0.7 0.15 262);
+  --chart-2: oklch(0.7 0.19 25);
+  --chart-3: oklch(0.82 0.15 80);
+  --chart-4: oklch(0.74 0.16 150);
+  --chart-5: oklch(0.7 0.16 295);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.72 0.14 262);
+  --sidebar-primary-foreground: oklch(0.18 0.03 262);
+  --sidebar-accent: oklch(0.29 0.03 262);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.62 0.12 262);
 }
 
 @theme inline {
-  --color-main: var(--main);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
-  --color-secondary-background: var(--secondary-background);
   --color-foreground: var(--foreground);
-  --color-main-foreground: var(--main-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
   --color-border: var(--border);
-  --color-overlay: var(--overlay);
+  --color-input: var(--input);
   --color-ring: var(--ring);
-
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-
-  --spacing-boxShadowX: var(--box-shadow-x);
-  --spacing-boxShadowY: var(--box-shadow-y);
-  --spacing-reverseBoxShadowX: var(--reverse-box-shadow-x);
-  --spacing-reverseBoxShadowY: var(--reverse-box-shadow-y);
-
-  --radius-base: var(--border-radius);
-
-  --shadow-shadow: var(--shadow);
-
-  --font-weight-base: var(--base-font-weight);
-  --font-weight-heading: var(--heading-font-weight);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
-  body {
-    @apply bg-background text-foreground font-base;
+  * {
+    @apply border-border outline-ring/50;
   }
-
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    @apply font-heading;
+    @apply font-semibold tracking-tight;
   }
 }
 
@@ -111,9 +146,9 @@ body.privacy-blur #root {
 .manual ol { @apply list-decimal; }
 .manual li { @apply my-1; }
 .manual table { @apply my-3 w-full border-collapse text-sm; }
-.manual th, .manual td { @apply border-2 border-border px-2 py-1 text-start; }
-.manual code { @apply rounded-base bg-secondary-background px-1; }
-.manual blockquote { @apply my-3 border-s-4 border-border ps-3 opacity-80; }
+.manual th, .manual td { @apply border px-2 py-1 text-start; }
+.manual code { @apply rounded-sm bg-muted px-1; }
+.manual blockquote { @apply my-3 border-s-4 ps-3 text-muted-foreground; }
 
 /* FR-RPT-02: "Save as PDF" is the browser's print; the chrome goes, the cards stay. */
 @media print {

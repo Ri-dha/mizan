@@ -48,9 +48,9 @@ export function DebtDetailSheet({ debt, payments, startDay, onClose, onEdit }: P
       <SheetContent className="overflow-y-auto">
         <SheetHeader><SheetTitle>{debt.name}</SheetTitle></SheetHeader>
         <div className="flex flex-col gap-4 px-4">
-          <div className="rounded-base border-2 border-border p-3">
+          <div className="rounded-lg border p-3">
             <p className="text-sm opacity-70">{t("debts.balance")}</p>
-            <p className="text-2xl font-heading tabular-nums">{money(balance)}</p>
+            <p className="text-2xl font-semibold tabular-nums">{money(balance)}</p>
             <p className="text-sm">
               {debt.status === "SETTLED"
                 ? t("debts.settled")
@@ -61,8 +61,8 @@ export function DebtDetailSheet({ debt, payments, startDay, onClose, onEdit }: P
           </div>
 
           {debt.status === "ACTIVE" && (
-            <form onSubmit={submit} className="flex flex-col gap-3 rounded-base border-2 border-border p-3">
-              <p className="font-heading">{t("debts.recordPayment")}</p>
+            <form onSubmit={submit} className="flex flex-col gap-3 rounded-lg border p-3">
+              <p className="font-semibold">{t("debts.recordPayment")}</p>
               <div className="grid grid-cols-2 gap-2">
                 <Field id="amount" label={t("income.amount")}>
                   <Input id="amount" inputMode="decimal" dir="ltr" placeholder={fromMinorUnits(debt.monthlyPayment, debt.currency)} value={amount} onChange={(e) => setAmount(e.target.value)} />
@@ -76,8 +76,8 @@ export function DebtDetailSheet({ debt, payments, startDay, onClose, onEdit }: P
           )}
 
           {debt.status === "ACTIVE" && !payoff.neverClears && (
-            <div className="flex flex-col gap-2 rounded-base border-2 border-border p-3">
-              <p className="font-heading">{t("debts.whatIf")}</p>
+            <div className="flex flex-col gap-2 rounded-lg border p-3">
+              <p className="font-semibold">{t("debts.whatIf")}</p>
               <Field id="extra" label={t("debts.extraPerMonth")}>
                 <Input id="extra" inputMode="decimal" dir="ltr" value={extra} onChange={(e) => setExtra(e.target.value)} />
               </Field>
@@ -88,19 +88,19 @@ export function DebtDetailSheet({ debt, payments, startDay, onClose, onEdit }: P
           )}
 
           <div className="flex flex-col gap-2">
-            <p className="font-heading">{t("debts.ledger")}</p>
+            <p className="font-semibold">{t("debts.ledger")}</p>
             {ledger.length === 0 && <p className="text-sm opacity-70">{t("debts.noPayments")}</p>}
             {ledger.map((p) => (
-              <div key={p.id} className="flex items-center justify-between gap-2 rounded-base border-2 border-border p-2 text-sm">
+              <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg border p-2 text-sm">
                 <span>{date(p.paidOn)} · {t("debts.principalPart", { amount: money(p.principalComponent) })}{p.interestComponent ? ` · ${t("debts.interestPart", { amount: money(p.interestComponent) })}` : ""}</span>
-                <span className="flex items-center gap-2 tabular-nums font-heading">{money(p.amount)}
-                  <Button size="sm" variant="neutral" onClick={() => void undoPayment(p)}>{t("bills.undo")}</Button>
+                <span className="flex items-center gap-2 tabular-nums font-semibold">{money(p.amount)}
+                  <Button size="sm" variant="outline" onClick={() => void undoPayment(p)}>{t("bills.undo")}</Button>
                 </span>
               </div>
             ))}
           </div>
 
-          <Button variant="neutral" onClick={() => onEdit(debt)}>{t("debts.edit")}</Button>
+          <Button variant="outline" onClick={() => onEdit(debt)}>{t("debts.edit")}</Button>
         </div>
       </SheetContent>
     </Sheet>

@@ -184,7 +184,7 @@ export function RecurringExpenseSheet({ open, expense, buckets, onClose }: Props
             <Label htmlFor="private">{t("accounts.private")}</Label>
           </div>
           <SheetFooter className="flex-row justify-between px-0">
-            {expense && <Button type="button" variant="neutral" onClick={() => void endExpense()}>{t("bills.end")}</Button>}
+            {expense && <Button type="button" variant="outline" onClick={() => void endExpense()}>{t("bills.end")}</Button>}
             <Button type="submit">{t("accounts.save")}</Button>
           </SheetFooter>
         </form>

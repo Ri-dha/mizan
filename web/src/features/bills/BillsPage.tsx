@@ -69,22 +69,22 @@ export function BillsPage() {
         <CardContent className="flex flex-col gap-2">
           {view.bills.length === 0 && <p className="opacity-70">{t("bills.nothingDue")}</p>}
           {view.bills.map((bill) => (
-            <div key={`${bill.expense.id}-${bill.dueDate}`} className="flex items-center justify-between gap-3 rounded-base border-2 border-border p-3">
+            <div key={`${bill.expense.id}-${bill.dueDate}`} className="flex items-center justify-between gap-3 rounded-lg border p-3">
               <div className="flex min-w-0 flex-col">
-                <span className="truncate font-heading">{bill.expense.name}</span>
+                <span className="truncate font-semibold">{bill.expense.name}</span>
                 <span className="truncate text-sm opacity-70">
                   {bill.occurrence ? t("bills.paidOn", { date: date(bill.occurrence.paidOn) }) : t("bills.dueOn", { date: date(bill.dueDate) })}
                   {bucketName(bill.expense.bucketId) ? ` · ${bucketName(bill.expense.bucketId)}` : ""}
                 </span>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="tabular-nums font-heading">
+                <span className="tabular-nums font-semibold">
                   {bill.expense.isEstimate && !bill.occurrence ? "≈ " : ""}{money(bill.occurrence?.actualAmount ?? bill.expectedAmount)}
                 </span>
                 {bill.occurrence ? (
-                  <Button size="sm" variant="neutral" onClick={() => void undoBillPaid(bill.occurrence!)}>{t("bills.undo")}</Button>
+                  <Button size="sm" variant="outline" onClick={() => void undoBillPaid(bill.occurrence!)}>{t("bills.undo")}</Button>
                 ) : (
-                  <Button size="sm" variant={bill.dueDate < today ? "default" : "neutral"} onClick={() => startPaying(bill)}>
+                  <Button size="sm" variant={bill.dueDate < today ? "default" : "outline"} onClick={() => startPaying(bill)}>
                     {bill.dueDate < today ? t("bills.overdue") : t("bills.markPaid")}
                   </Button>
                 )}
@@ -102,14 +102,14 @@ export function BillsPage() {
         <CardContent className="flex flex-col gap-2">
           {view.bills.length === 0 && <p className="opacity-70">{t("bills.none")}</p>}
           {[...new Map(view.bills.map((b) => [b.expense.id, b.expense])).values()].map((expense) => (
-            <div key={expense.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-base border-2 border-border p-3" onClick={() => setEditing(expense)}>
+            <div key={expense.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3" onClick={() => setEditing(expense)}>
               <div className="flex min-w-0 flex-col">
-                <span className="truncate font-heading">{expense.name}</span>
+                <span className="truncate font-semibold">{expense.name}</span>
                 <span className="truncate text-sm opacity-70">{t(`bills.frequencies.${expense.frequency}`)}{bucketName(expense.bucketId) ? ` · ${bucketName(expense.bucketId)}` : ""}</span>
               </div>
               <div className="flex items-center gap-2">
-                {expense.isEstimate && <Badge variant="neutral">{t("bills.estimate")}</Badge>}
-                <span className="tabular-nums font-heading">{money(expense.amount, expense.currency)}</span>
+                {expense.isEstimate && <Badge variant="secondary">{t("bills.estimate")}</Badge>}
+                <span className="tabular-nums font-semibold">{money(expense.amount, expense.currency)}</span>
               </div>
             </div>
           ))}
@@ -149,8 +149,8 @@ function RecurringExpenseListOutsideMonth({ monthBills, onEdit }: { monthBills: 
     <>
       <p className="mt-2 text-sm opacity-70">{t("bills.notThisMonth")}</p>
       {others.map((expense) => (
-        <div key={expense.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-base border-2 border-dashed border-border p-3" onClick={() => onEdit(expense)}>
-          <span className="truncate font-heading">{expense.name}</span>
+        <div key={expense.id} className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-dashed p-3" onClick={() => onEdit(expense)}>
+          <span className="truncate font-semibold">{expense.name}</span>
           <span className="text-sm opacity-70">{t(`bills.frequencies.${expense.frequency}`)}</span>
         </div>
       ))}

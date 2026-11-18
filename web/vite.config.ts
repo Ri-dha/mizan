@@ -57,8 +57,8 @@ export default defineConfig({
         dir: "ltr",
         start_url: "/",
         display: "standalone",
-        background_color: "#eef2fa",
-        theme_color: "#88aaee",
+        background_color: "#ffffff",
+        theme_color: "#ffffff",
         icons: [
           { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },

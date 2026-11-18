@@ -76,10 +76,10 @@ export function PlanPage() {
           {view.figures.buckets.map((figure) => {
             const bucket = view.buckets.find((b) => b.id === figure.id)!
             return (
-              <div key={figure.id} className="grid grid-cols-4 gap-x-3 gap-y-2 rounded-base border-2 border-border p-3 md:grid-cols-[1.6fr_repeat(4,1fr)]">
+              <div key={figure.id} className="grid grid-cols-4 gap-x-3 gap-y-2 rounded-lg border p-3 md:grid-cols-[1.6fr_repeat(4,1fr)]">
                 <div className="col-span-4 flex min-w-0 items-center gap-2 md:col-span-1">
-                  <span className="size-4 shrink-0 rounded-base border-2 border-border" style={{ background: bucket.colour }} />
-                  <span className="truncate font-heading">{bucket.name}</span>
+                  <span className="size-4 shrink-0 rounded-lg border" style={{ background: bucket.colour }} />
+                  <span className="truncate font-semibold">{bucket.name}</span>
                   <span className="shrink-0 text-sm opacity-70">{basisPointsToPercent(bucket.shareBasisPoints)}%</span>
                 </div>
                 <Figure label={t("plan.allocated")} value={money(figure.allocated)} hint={figure.carriedIn > 0 ? t("plan.carriedIn", { amount: money(figure.carriedIn) }) : money(figure.plannedAllocated)} />
@@ -96,7 +96,7 @@ export function PlanPage() {
             <Alert><AlertDescription>{t("plan.fixedExceeds", { amount: money(view.figures.fixedTotal - view.income.planned) })}</AlertDescription></Alert>
           )}
           {view.buckets.length > 1 && (
-            <Button variant="neutral" className="self-start" data-tour="plan-move" onClick={() => setMoving(true)}><ArrowLeftRight /> {t("plan.move")}</Button>
+            <Button variant="outline" className="self-start" data-tour="plan-move" onClick={() => setMoving(true)}><ArrowLeftRight /> {t("plan.move")}</Button>
           )}
           {view.moves.map((move) => (
             <div key={move.id} className="flex items-center justify-between gap-2 text-sm">
@@ -105,7 +105,7 @@ export function PlanPage() {
                 {move.reason ? <span className="opacity-70"> · {move.reason}</span> : null}
               </span>
               <span className="flex items-center gap-2 tabular-nums">{money(move.amount)}
-                <Button size="sm" variant="neutral" onClick={() => void undoMove(move)}>{t("bills.undo")}</Button>
+                <Button size="sm" variant="outline" onClick={() => void undoMove(move)}>{t("bills.undo")}</Button>
               </span>
             </div>
           ))}
@@ -121,14 +121,14 @@ export function PlanPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {editing.map((bucket, index) => (
-            <div key={bucket.id ?? index} className="flex flex-col gap-2 rounded-base border-2 border-border p-2">
+            <div key={bucket.id ?? index} className="flex flex-col gap-2 rounded-lg border p-2">
             <div className="grid grid-cols-[auto_1fr_6rem_auto] items-center gap-2">
               <input
                 type="color"
                 aria-label={t("plan.colour")}
                 value={bucket.colour}
                 onChange={(e) => update(index, { colour: e.target.value })}
-                className="size-10 cursor-pointer rounded-base border-2 border-border bg-transparent p-0.5"
+                className="size-10 cursor-pointer rounded-lg border bg-transparent p-0.5"
               />
               <Input aria-label={t("plan.name")} value={bucket.name} onChange={(e) => update(index, { name: e.target.value })} maxLength={80} />
               <div className="flex items-center gap-1" dir="ltr">
@@ -141,7 +141,7 @@ export function PlanPage() {
                 />
                 <span>%</span>
               </div>
-              <Button variant="neutral" size="icon" aria-label={t("plan.remove")} onClick={() => setDraft(editing.filter((_, i) => i !== index))}>
+              <Button variant="outline" size="icon" aria-label={t("plan.remove")} onClick={() => setDraft(editing.filter((_, i) => i !== index))}>
                 <Trash2 />
               </Button>
             </div>
@@ -163,11 +163,11 @@ export function PlanPage() {
           ))}
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="neutral" onClick={() => setDraft([...editing, { name: "", colour: PALETTE[editing.length % PALETTE.length], shareBasisPoints: 0, fixedAmount: null, carryOver: false }])}>
+            <Button variant="outline" onClick={() => setDraft([...editing, { name: "", colour: PALETTE[editing.length % PALETTE.length], shareBasisPoints: 0, fixedAmount: null, carryOver: false }])}>
               <Plus /> {t("plan.addBucket")}
             </Button>
             {gapShares !== 0 && (
-              <Button variant="neutral" onClick={() => { const scaled = rebalance(editing.map((x) => (x.fixedAmount === null ? x.shareBasisPoints : 0))); setDraft(editing.map((b, i) => ({ ...b, shareBasisPoints: b.fixedAmount === null ? scaled[i] : 0 }))) }}>
+              <Button variant="outline" onClick={() => { const scaled = rebalance(editing.map((x) => (x.fixedAmount === null ? x.shareBasisPoints : 0))); setDraft(editing.map((b, i) => ({ ...b, shareBasisPoints: b.fixedAmount === null ? scaled[i] : 0 }))) }}>
                 {t("plan.rebalance")}
               </Button>
             )}
@@ -196,7 +196,7 @@ function Figure({ label, value, hint, strong }: { label: string; value: string; 
   return (
     <div className="flex flex-col">
       <span className="text-xs opacity-70">{label}</span>
-      <span className={`tabular-nums ${strong ? "font-heading" : ""}`}>{value}</span>
+      <span className={`tabular-nums ${strong ? "font-semibold" : ""}`}>{value}</span>
       {hint && <span className="text-xs opacity-60 tabular-nums">{hint}</span>}
     </div>
   )

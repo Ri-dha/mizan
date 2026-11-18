@@ -19,8 +19,8 @@ export function RouteError() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button asChild><Link to="/">{t("errors.goHome")}</Link></Button>
-          <Button asChild variant="neutral"><a href="/docs/en/">{t("errors.openManual")}</a></Button>
-          {!notFound && <Button variant="neutral" onClick={() => location.reload()}>{t("common.reload")}</Button>}
+          <Button asChild variant="outline"><a href="/docs/en/">{t("errors.openManual")}</a></Button>
+          {!notFound && <Button variant="outline" onClick={() => location.reload()}>{t("common.reload")}</Button>}
         </CardContent>
       </Card>
     </main>

@@ -123,11 +123,11 @@ export function SellSheet({ metal, view, onClose }: { metal: Metal | null; view:
               ))}
             </div>
           )}
-          <div className="rounded-base border-2 border-border p-3 text-sm">
+          <div className="rounded-lg border p-3 text-sm">
             {previewError ? <p>{previewError}</p> : preview && (
               <>
                 <p>{t("metals.costLeaving", { amount: money(preview.costBasis) })}</p>
-                <p className="font-heading">{t("metals.realised", { amount: (preview.realisedGain > 0 ? "+" : "") + money(preview.realisedGain) })}</p>
+                <p className="font-semibold">{t("metals.realised", { amount: (preview.realisedGain > 0 ? "+" : "") + money(preview.realisedGain) })}</p>
                 <p className="opacity-70">{t("metals.excludingMaking", { amount: (preview.realisedGainExcludingMaking > 0 ? "+" : "") + money(preview.realisedGainExcludingMaking) })}</p>
               </>
             )}
