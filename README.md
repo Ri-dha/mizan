@@ -14,7 +14,7 @@ Requirements live in the BRD; the build order is in [PLAN.md](PLAN.md).
 | Framework | Spring Boot 4.1 (Spring MVC, Spring Security, Spring Data JPA, Actuator), Jackson 3 |
 | Database | PostgreSQL 16 with row-level security per household and per private record; Flyway owns the schema; `JdbcClient` for the ledger maths |
 | Object storage | MinIO through the AWS S3 SDK, presigned upload and download URLs; receipts are encrypted on the device before upload |
-| Auth | JWT access tokens (jjwt), rotating refresh tokens in an httpOnly cookie, Argon2id password hashes (BouncyCastle), Bucket4j rate limits |
+| Auth | JWT access tokens (jjwt), rotating refresh tokens in an httpOnly cookie, Argon2id hashes of a device-derived auth key, never the password (BouncyCastle); records end-to-end encrypted on the device (WebCrypto), Bucket4j rate limits |
 | Sync | Client-generated UUIDs, hybrid logical clocks, per-field last-write-wins, an outbox on the device and a change log on the server |
 | Notifications | Web Push with VAPID on the JDK crypto stack |
 | Market data | Baghdad Bullion House (default), gold-api.com, open.er-api.com, metals.dev and GoldAPI when keyed; a configurable JSON dealer feed |
@@ -27,7 +27,7 @@ Requirements live in the BRD; the build order is in [PLAN.md](PLAN.md).
 
 | Concern | Choice |
 |---|---|
-| UI | React 19, TypeScript 5.9, Vite 8, Tailwind v4, neobrutalism.dev components (shadcn registry), Recharts |
+| UI | React 19, TypeScript 5.9, Vite 8, Tailwind v4, shadcn/ui components (Radix), light and dark from the device, Recharts |
 | PWA | vite-plugin-pwa with Workbox (`injectManifest`), install prompt, push handlers, offline manual |
 | Local data | Dexie 4 on IndexedDB; every write is stamped and queued for sync; WebCrypto PIN lock with a wrapped data key and WebAuthn PRF |
 | Routing and state | react-router 8, `useSyncExternalStore` stores, `dexie-react-hooks` live queries |
@@ -41,7 +41,7 @@ Requirements live in the BRD; the build order is in [PLAN.md](PLAN.md).
 
 | Concern | Choice |
 |---|---|
-| `shared/test-vectors/` | JSON cases both the Java and TypeScript domain code must satisfy (money split, month figures, payoff, valuation, depreciation, net worth, strategies) |
+| `shared/test-vectors/` | JSON cases every client's domain code must satisfy (money split, month figures, payoff, valuation, depreciation, net worth, strategies) |
 | Deployment | Docker Compose: PostgreSQL 16, MinIO, the API, Caddy (PWA, TLS, `/api` proxy), nightly `pg_dump` to MinIO |
 | Logs and metrics | Elasticsearch, Kibana and Logstash 9.3 with a prebuilt dashboard; Metricbeat optional |
 | CI | GitHub Actions: Maven tests on Java 25, `npm audit`, typecheck, tests and build on Node 24 |
@@ -161,32 +161,35 @@ refresh as well. The parallel rate has no public feed and stays a configured val
 Locally the API serves fixed stub prices (see `application-dev.yml`). To use real providers set
 any of `MIZAN_METALS_DEV_API_KEY`, `MIZAN_GOLD_API_KEY`, `MIZAN_OPEN_EXCHANGE_RATES_APP_ID`,
 or `MIZAN_EXCHANGE_RATE_API_URL=https://open.er-api.com` (keyless). Providers are tried in that
-order every hour; the parallel-market dollar rate comes from `MIZAN_PARALLEL_RATE_IQD_MICROS`
-(1470 IQD/USD = `1470000000`) or from a price the user enters in the app.
+order every hour. The Baghdad market dollar (and the Central Bank rate) comes from IQWealth when
+`MIZAN_IQWEALTH_API_KEY` is set: polled on a schedule within its free 100-requests-a-day quota,
+personal and non-commercial use only, credited in the app. Without it, the market dollar comes
+from `MIZAN_PARALLEL_RATE_IQD_MICROS` (1470 IQD/USD = `1470000000`) or a price the user enters.
 
 ### API endpoints (v1)
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/auth/register` | none | Create an account with an email or phone; returns tokens and creates the household |
-| POST | `/api/v1/auth/login` | none | Sign in; five wrong passwords lock the account for 15 minutes |
+| POST | `/api/v1/auth/register` | none | Create an account with an email or phone, an auth key derived on the device and the wrapped account keys; returns tokens and creates the household |
+| POST | `/api/v1/auth/login` | none | Sign in with the auth key (accounts from before encryption send `legacyPassword` once and are upgraded); five failures lock the account for 15 minutes |
 | POST | `/api/v1/auth/refresh` | cookie or body | Rotate the refresh token; replaying an old one revokes every session |
 | POST | `/api/v1/auth/logout` | cookie or body | Revoke the refresh token |
 | POST | `/api/v1/auth/verify` | bearer | Confirm the email or phone with the delivered code |
 | POST | `/api/v1/auth/verify/resend` | bearer | Send a fresh code (60 s cooldown) |
 | POST | `/api/v1/auth/password-reset/request` | none | Send a reset code; always 204 |
-| POST | `/api/v1/auth/password-reset/confirm` | none | Set a new password; ends all sessions |
+| POST | `/api/v1/auth/password-reset/confirm` | none | Set a new auth key; ends all sessions. The keys then need the recovery code |
 | GET | `/api/v1/me` | bearer | The signed-in account and its household |
 | GET | `/api/v1/households/current` | bearer | The caller's household |
 | PATCH | `/api/v1/households/current` | bearer, `PLAN_EDIT` | Rename or change the month start day |
 | POST | `/api/v1/sync/devices` | bearer | Register the calling device |
-| POST | `/api/v1/sync/push` | bearer, `RECORD_WRITE` | Push local changes; per-field last-write-wins |
-| GET | `/api/v1/sync/pull?deviceId&since&limit` | bearer | Pull the change feed after a sequence number |
+| POST | `/api/v1/sync/push` | bearer, `RECORD_WRITE` | Push sealed changes; plain values are refused; per-field last-write-wins |
+| GET | `/api/v1/sync/pull?deviceId&since&limit` | bearer | Pull the change feed after a sequence number; `encrypted: false` marks rows from before encryption |
 | GET | `/api/v1/sync/conflicts?deviceId` | bearer | Edits from this device that lost to newer values |
 | POST | `/api/v1/attachments/{id}/upload-url` | bearer, `RECORD_WRITE` | Presigned PUT for the encrypted bytes of a synced attachment row |
 | GET | `/api/v1/attachments/{id}/download-url` | bearer | Presigned GET for the same |
 | GET | `/api/v1/market/quotes` | bearer | Latest XAU, XAG and USD→IQD quotes with source, time and stale flag |
-| GET | `/api/v1/market/history?instrument&from&to` | bearer | Daily price history for charts and snapshots |
+| GET | `/api/v1/market/history?instrument&from&to&interval` | bearer | Open, high, low and close per day, week (from Saturday) or month |
+| GET | `/api/v1/market/changes?instrument&from&before&limit` | bearer | Every change of a price, newest first, with the price it replaced |
 | GET | `/api/v1/households` | bearer | Every household the caller belongs to and which is current |
 | POST | `/api/v1/households/{id}/switch` | bearer | Make another household current; refresh the session afterwards |
 | GET | `/api/v1/households/current/members` | bearer, `HOUSEHOLD_VIEW` | Active members with roles |
@@ -197,20 +200,31 @@ order every hour; the parallel-market dollar rate comes from `MIZAN_PARALLEL_RAT
 | POST | `/api/v1/households/current/invitations` | bearer, `MEMBERS_MANAGE` | Create an invitation; returns the token once |
 | GET | `/api/v1/households/current/invitations` | bearer, `MEMBERS_MANAGE` | Open invitations |
 | DELETE | `/api/v1/households/current/invitations/{id}` | bearer, `MEMBERS_MANAGE` | Revoke |
-| POST/DELETE | `/api/v1/households/current/deletion-request` | bearer, `HOUSEHOLD_DELETE` | Request (with password) or cancel household deletion; purged after 7 days |
+| POST/DELETE | `/api/v1/households/current/deletion-request` | bearer, `HOUSEHOLD_DELETE` | Request (with the auth key) or cancel household deletion; purged after 7 days |
 | GET | `/api/v1/invitations/{token}` | public | Preview an invitation |
 | POST | `/api/v1/invitations/{token}/accept` | bearer | Join the household behind the link |
 | POST | `/api/v1/market/refresh` | bearer | Fetch fresh prices from the feeds now (cooldown 30 s) and return the quotes |
 | GET | `/api/v1/market/catalogue` | bearer | The dealer's bars and coins with bid and ask, as last fetched |
 | GET | `/api/v1/market/quotes` (instruments `XAU_LOCAL`, `XAG_LOCAL`) | bearer | The local market's quote per gram of pure metal, when a dealer feed is configured |
-| GET | `/api/v1/reports/annual?year` | bearer, `REPORTS_VIEW` | Income, spending, saving rate and closing net worth per month over shared records |
 | GET | `/api/v1/notifications/vapid-key` | bearer | The server's VAPID public key for subscribing a browser |
 | GET/POST/DELETE | `/api/v1/notifications/subscriptions` | bearer | This account's push subscriptions; register or remove one |
 | POST | `/api/v1/notifications/test` | bearer | Send a test notification to every subscribed device |
-| GET | `/api/v1/networth/current` | bearer | Net worth computed on the server from the synced ledgers, with the rate set used |
-| GET | `/api/v1/months` | bearer | Which months are closed |
-| POST | `/api/v1/months/{monthKey}/close` | bearer, `PLAN_EDIT` | Close a month: immutable snapshot |
-| POST | `/api/v1/months/{monthKey}/reopen` | bearer, `PLAN_EDIT` | Reopen a closed month (audited) |
+| PUT | `/api/v1/notifications/schedule` | bearer | Replace this device's reminder schedule: kinds and times only, no names or amounts |
+| GET/PUT/PATCH | `/api/v1/keys/me` | bearer | The caller's wrapped account keys and grants; store them once; re-wrap after a reset or a new recovery code |
+| GET | `/api/v1/keys/household/members` | bearer, `HOUSEHOLD_VIEW` | Members' public keys and which key versions they hold |
+| POST | `/api/v1/keys/household/grants` | bearer, `HOUSEHOLD_VIEW` | Hand household or report keys, wrapped to members' public keys |
+| GET | `/api/v1/vault/status` | bearer | Whether plain rows from before encryption remain |
+| POST | `/api/v1/vault/migration/complete` | bearer, `RECORD_WRITE` | Delete the plain copies of rows the caller has re-sent sealed |
+| GET | `/api/v1/announcements` | bearer | Announcements showing now |
+| GET/POST | `/api/v1/admin/session` | bearer, operator | Whether changes are allowed; re-enter the password to allow them for 10 minutes |
+| GET | `/api/v1/admin/overview` | bearer, operator | Counts, sizes, feed health and the IQWealth quota |
+| GET/PUT/DELETE | `/api/v1/admin/settings[/{key}]` | bearer, operator | Run-time settings with defaults; secrets masked |
+| POST | `/api/v1/admin/feeds/poll` | bearer, operator | Fetch the dollar (one IQWealth request) or every other feed now |
+| POST/DELETE | `/api/v1/admin/prices/corrections`, `/api/v1/admin/prices/changes/{id}` | bearer, operator | Correct a price or remove a wrong change, with a reason |
+| GET/POST | `/api/v1/admin/accounts`, `…/{userId}/suspend\|restore\|revoke-sessions\|cancel-deletion` | bearer, operator | Find accounts and change their state; never their records |
+| GET/POST/DELETE | `/api/v1/admin/announcements[/{id}]` | bearer, operator | Publish or retract a bilingual announcement |
+| GET | `/api/v1/admin/audit` | bearer, operator | Search the audit log |
+| GET/POST/DELETE | `/api/v1/admin/operators[/{userId}]` | bearer, operator | Who runs the service; the last operator stays |
 | POST | `/api/v1/me/deletion-request` | bearer | Request account deletion; purged after 30 days |
 | DELETE | `/api/v1/me/deletion-request` | bearer | Withdraw the request |
 
@@ -233,6 +247,7 @@ clients without a cookie jar. Errors are RFC 7807 `application/problem+json`; br
 | `/goals` | Savings goals with deposits, withdrawals, progress and projection |
 | `/metals` | Gold and silver: holdings by purity, purchases with cost per gram vs now, sales with realised gain, prices in use, "how is this calculated", enter today's price, valuation settings |
 | `/networth` | Net worth with composition, USD line, trend chart of closed months, close and reopen months with their snapshots |
+| `/prices` | Price history of the dollar (market and Central Bank), gold and silver: chart by range and every change |
 | `/report` | Monthly report: planned vs actual per bucket, top categories, month-over-month, saving rate, save as PDF |
 | `/report/year` | The year at a glance: income, spending and saving per month, spending per bucket chart, top categories, trailing saving rate, net worth change |
 | `/more` | Links to the less frequent screens |
@@ -275,13 +290,16 @@ cd web && npm test && npm run typecheck
 
 - `api/src/main/java/iq/mizan/<module>` — one package per module (`auth`, `household`, `sync`, `asset`, …) with
   `controller`, `dto`, `entity`, `mapper`, `repository`, `service`. `common` holds security, tenancy,
-  audit, errors and storage. `domain` is pure money math with no Spring.
+  audit, errors and storage. `vault` holds the key directory and migration. The server keeps no
+  money maths: it cannot read the values (ADR e2e-1).
 - `api/src/main/resources/db/migration` — Flyway migrations. Every syncable table is created with
   `call make_syncable('<table>')`, which adds the change-feed trigger and the row-level security policy.
 - `web/src/features/<feature>` — screens. `db/` is the local store and the only place that writes to
-  syncable tables. `sync/` is the change-log engine. `lock/` is the PIN and biometric lock.
-- `shared/test-vectors/` — one JSON file per business rule, loaded by both test suites.
+  syncable tables. `sync/` is the change-log engine and the work devices do after a sync. `vault/` derives keys
+  and seals every field. `lock/` is the PIN and biometric lock.
+- `shared/test-vectors/` — one JSON file per business rule, the contract every client's tests load.
 - `docs/manual/<lang>/` — the user manual, bundled into the app at `/help` and built into `dist/docs`.
 - `web/src/tours/` — guided tour definitions and the single Joyride mount; screens mark targets with `data-tour`.
 
-See [CLAUDE.md](CLAUDE.md) for the coding conventions.
+Project knowledge: [AGENTS.md](AGENTS.md) (how to work here), [ARCHITECTURE.md](ARCHITECTURE.md),
+and `docs/` (ADRs, tasks, status, learnings, handovers, runbook, manual).

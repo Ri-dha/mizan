@@ -41,14 +41,20 @@ missed on the next sync; the per-field clocks decide, not the restore time.
   Everyone signs in again. Rotate only with that expectation.
 - **Postgres and MinIO passwords**: change in `.env`, then `docker compose down` and `up`. The
   Postgres volume keeps the old password until you `ALTER ROLE` inside the container.
+- **Settings key** (`MIZAN_SETTINGS_KEY`, 32 random bytes, base64: `openssl rand -base64 32`):
+  encrypts the secrets operators save in the dashboard. Keep it out of the database and its
+  backups. Losing or changing it makes saved secrets unreadable: re-enter them in the dashboard.
 
 ## Price feeds
 
-Providers are tried in order: metals.dev, goldapi.io, open.er-api.com, openexchangerates.org,
-then the configured parallel rate, then the stub (dev only). Each real provider is registered
-only when its key is set, so swapping providers is a `.env` change and a restart. If every
-provider fails, the last quote stays and turns `stale` after 24 hours; the app labels it and
-users can enter today's price themselves, which wins over the feed.
+Providers are tried in order: IQWealth for both dollar rates (from its last scheduled poll),
+Baghdad Bullion House for local gold and silver, metals.dev and goldapi.io when keyed,
+gold-api.com, open.er-api.com and openexchangerates.org, then the manual market dollar, then the
+stub (dev only). A provider without a key is skipped. Keys, on/off switches, the manual dollar,
+staleness and the Refresh cooldown can be changed in the admin dashboard without a restart (ADR
+admin-1); the environment values are the defaults. If every provider fails, the last quote
+stays and turns `stale` after 24 hours; the app labels it and users can enter today's price
+themselves, which wins over the feed. Every change of a price is kept (ADR prices-2).
 
 ## Local dealer price feed
 
@@ -116,14 +122,16 @@ more heap with `ES_JAVA_OPTS` in `.env` when the host has room; 512 MB is the fl
 
 | Job | Default | What it does |
 |---|---|---|
-| Notifications | 08:00 Asia/Baghdad | Evaluates reminders per subscribed member and sends them once |
+| Reminder dispatch | every 5 minutes | Sends the reminders devices scheduled (kinds and times only), once each |
+| Metal price alerts | 09:00 Asia/Baghdad | Public gold and silver moves beyond each member's threshold |
+| Market poll | every 30 min, 07:00–22:00 Asia/Baghdad | Refreshes every feed; records a price change only when it moves |
+| IQWealth dollar | every 20 min 08:00–22:00, and 23:00, 02:00, 05:00 | One request each, never past the reserve |
 | Attachment object purge | 03:15 | Removes storage objects (receipts, backups) whose rows left the recycle bin |
 | Household deletion purge | 04:15 | Deletes households seven days after the owner confirmed |
 
 | Job | When (server time) | What it does |
 |---|---|---|
-| Market refresh | on start, then hourly | Fetches XAU, XAG and dollar rates; records one history point per day |
-| Month close | 00:15 daily | Snapshots the household month that ended, unless already closed by hand |
+| Market refresh | off unless `MIZAN_MARKET_AUTO_REFRESH` | Timed refresh of every feed |
 | Recycle-bin purge | 03:30 daily | Hard-deletes rows soft-deleted more than 30 days ago |
 | Account purge | 03:45 daily | Deletes accounts and households whose deletion request is older than 30 days |
 
@@ -154,6 +162,24 @@ bind a household or the system flag or it will see an empty database.
 
 ## Support without impersonation
 
-Support never signs in as a user. Ask the person to export their data from Settings and share the
-file; import it into a scratch household to reproduce. Audit entries (`audit_entry`) record every
-sign-in, sync write, month close and deletion request with actor and time.
+Support never signs in as a user, and since ADR e2e-1 nobody at the service can read a household's
+records. Ask the person to export their data from Settings and share the file; import it into a
+scratch household to reproduce. Audit entries (`audit_entry`) record every sign-in, sync write
+(field names only), deletion request and operator action with actor and time.
+
+## Operators and the admin dashboard
+
+- **First operator**: register the account in the app, set `MIZAN_BOOTSTRAP_OPERATOR` to its
+  email or phone and restart. Later operators are granted on the dashboard's Operators tab; the
+  last operator cannot be removed.
+- **Using it**: operators see **Admin** in the menu (`/admin`). Reading needs only the role. Every
+  change asks for the password again and then allows changes for 10 minutes
+  (`mizan.admin.elevation`).
+- **What it can do**: feed health and today's IQWealth quota, "fetch now"; the settings listed in
+  `SettingKey`; correct or remove a price; find an account, suspend or restore it, sign it out
+  everywhere, cancel its deletion request; announcements in English and Arabic; the audit log;
+  operators.
+- **What it cannot do**: see balances, transactions, names or notes; recover someone's recovery
+  code. A suspended person keeps their encrypted data and gets it back when restored.
+- **Settings** reach every instance within 15 seconds. Removing an operator's value returns the
+  environment default. Without `MIZAN_SETTINGS_KEY`, secrets can only come from the environment.

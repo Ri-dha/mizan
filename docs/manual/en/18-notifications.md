@@ -19,7 +19,7 @@ On iPhone and iPad, notifications only work once Mizan is installed to the home 
 | Month end | Tomorrow starts a new month and this one is not closed yet |
 | Price move | Gold or silver you hold moved more than the threshold since yesterday (2% by default) |
 
-Reminders are worked out once a day on the server, in your language, using only the records you can see: a private bill reminds its owner alone. Each reminder is sent once; running late or reopening the app does not repeat it.
+Reminders are worked out on your device, which tells the service only what kind of reminder is due and when. The service cannot read your records, so the message is general, for example "A bill is due soon". Open Mizan to see which one. A private bill reminds its owner alone. Each reminder is sent once. Your device refreshes the list whenever it syncs, so reminders for the coming days need the app to have been opened recently. Price moves are worked out on the service from public prices, and are sent only if this device has gold or silver recorded.
 
 ## Quiet mode
 
