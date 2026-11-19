@@ -105,6 +105,11 @@ cd api && ./mvnw -q compile && java -cp target/classes iq.mizan.notification.pus
 at `mizan.notifications.daily-cron` in `mizan.notifications.time-zone` (Asia/Baghdad). Set
 `MIZAN_NOTIFICATIONS_TRANSPORT=log` to print instead of sending.
 
+Phones are reached through Expo's push service (ADR push-1), which relays to APNs and FCM with
+the credentials held in the app's EAS project, so the server needs no Apple or Google key. If
+the EAS project enforces push security, put an access token in `.env` as
+`MIZAN_EXPO_ACCESS_TOKEN`; `MIZAN_EXPO_PUSH_URL` overrides the endpoint (tests point it at a stub).
+
 ## API memory and connections
 
 The API image runs with `JAVA_OPTS` set for one small instance: serial collector, 192 MB heap,

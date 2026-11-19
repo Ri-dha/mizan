@@ -3,6 +3,7 @@ package iq.mizan.notification.push;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import iq.mizan.notification.entity.PushChannel;
 import iq.mizan.notification.entity.PushSubscription;
 
 import org.slf4j.Logger;
@@ -20,6 +21,11 @@ public class LoggingPushSender implements PushSender {
     }
 
     private final List<Delivery> deliveries = new CopyOnWriteArrayList<>();
+
+    @Override
+    public boolean handles(PushChannel channel) {
+        return true;
+    }
 
     @Override
     public Outcome send(PushSubscription subscription, PushMessage message) {

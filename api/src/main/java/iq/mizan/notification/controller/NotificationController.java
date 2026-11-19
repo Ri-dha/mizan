@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import iq.mizan.common.security.CurrentUser;
+import iq.mizan.notification.dto.RegisterPhoneRequest;
 import iq.mizan.notification.dto.ScheduleRequest;
 import iq.mizan.notification.dto.SubscribeRequest;
 import iq.mizan.notification.dto.SubscriptionResponse;
@@ -35,7 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @AllArgsConstructor
-@Tag(name = "Notifications", description = "Web Push subscriptions for reminders")
+@Tag(name = "Notifications", description = "Web Push and phone subscriptions for reminders")
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -52,6 +53,20 @@ public class NotificationController {
     public ResponseEntity<SubscriptionResponse> subscribe(@AuthenticationPrincipal CurrentUser user, @Valid @RequestBody SubscribeRequest request,
                                                           @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent) {
         return ResponseEntity.status(HttpStatus.CREATED).body(notificationService.subscribe(user, request, userAgent));
+    }
+
+    @Operation(summary = "Register this phone's Expo push token (ADR push-1)")
+    @PostMapping("/phones")
+    public ResponseEntity<SubscriptionResponse> registerPhone(@AuthenticationPrincipal CurrentUser user, @Valid @RequestBody RegisterPhoneRequest request,
+                                                              @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(notificationService.registerPhone(user, request, userAgent));
+    }
+
+    @Operation(summary = "Stop reminders to this phone")
+    @DeleteMapping("/phones")
+    public ResponseEntity<Void> unregisterPhone(@AuthenticationPrincipal CurrentUser user, @Valid @RequestBody RegisterPhoneRequest request) {
+        notificationService.unsubscribe(user, request.token());
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "This account's subscribed devices in the current household")

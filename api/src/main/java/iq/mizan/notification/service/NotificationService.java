@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import iq.mizan.common.security.CurrentUser;
 import iq.mizan.notification.NotificationProperties;
+import iq.mizan.notification.dto.RegisterPhoneRequest;
 import iq.mizan.notification.dto.ScheduleRequest;
 import iq.mizan.notification.dto.SubscribeRequest;
 import iq.mizan.notification.dto.SubscriptionResponse;
@@ -48,7 +49,7 @@ public class NotificationService {
     private final PushSubscriptionRepository subscriptions;
     private final NotificationLogRepository sentLog;
     private final NotificationMessages messages;
-    private final PushSender sender;
+    private final List<PushSender> senders;
     private final NotificationProperties properties;
     private final JdbcClient jdbc;
     private final Clock clock;
@@ -62,6 +63,18 @@ public class NotificationService {
                 })
                 .orElseGet(() -> subscriptions.save(PushSubscription.register(
                         user.userId(), user.householdId(), request.endpoint(), request.p256dh(), request.auth(), userAgent)));
+        return toResponse(subscription);
+    }
+
+    /** ADR push-1: a phone's token takes the place of a browser endpoint; the same phone is never listed twice. */
+    @Transactional
+    public SubscriptionResponse registerPhone(CurrentUser user, RegisterPhoneRequest request, String userAgent) {
+        PushSubscription subscription = subscriptions.findByEndpoint(request.token())
+                .map(existing -> {
+                    existing.rebindPhone(user.userId(), user.householdId());
+                    return existing;
+                })
+                .orElseGet(() -> subscriptions.save(PushSubscription.registerPhone(user.userId(), user.householdId(), request.token(), userAgent)));
         return toResponse(subscription);
     }
 
@@ -177,6 +190,11 @@ public class NotificationService {
     }
 
     private PushSender.Outcome deliver(PushSubscription subscription, PushMessage message) {
+        PushSender sender = senders.stream().filter(candidate -> candidate.handles(subscription.getChannel())).findFirst().orElse(null);
+        if (sender == null) {
+            log.warn("No transport for {} push subscriptions", subscription.getChannel());
+            return PushSender.Outcome.FAILED;
+        }
         PushSender.Outcome outcome = sender.send(subscription, message);
         switch (outcome) {
             case SENT -> subscription.recordSuccess();

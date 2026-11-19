@@ -9,6 +9,7 @@ import java.util.Base64;
 import java.util.Date;
 
 import iq.mizan.notification.NotificationProperties;
+import iq.mizan.notification.entity.PushChannel;
 import iq.mizan.notification.entity.PushSubscription;
 
 import io.jsonwebtoken.Jwts;
@@ -61,6 +62,11 @@ public class WebPushSender implements PushSender {
 
     public String publicKey() {
         return publicKey;
+    }
+
+    @Override
+    public boolean handles(PushChannel channel) {
+        return channel == PushChannel.WEB_PUSH;
     }
 
     @Override

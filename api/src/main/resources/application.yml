@@ -138,6 +138,9 @@ mizan:
       subject: ${MIZAN_VAPID_SUBJECT:mailto:admin@mizan.iq}
       public-key: ${MIZAN_VAPID_PUBLIC_KEY:}
       private-key: ${MIZAN_VAPID_PRIVATE_KEY:}
+    expo:
+      url: ${MIZAN_EXPO_PUSH_URL:https://exp.host/--/api/v2/push/send}
+      access-token: ${MIZAN_EXPO_ACCESS_TOKEN:}
 
   household:
     default-currency: IQD

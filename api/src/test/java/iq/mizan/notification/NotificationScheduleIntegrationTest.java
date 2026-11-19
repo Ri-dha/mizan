@@ -7,6 +7,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import iq.mizan.notification.entity.PushChannel;
+import iq.mizan.notification.push.LoggingPushSender;
 import iq.mizan.notification.service.NotificationService;
 import iq.mizan.support.ApiClient;
 import iq.mizan.support.PostgresIntegrationTest;
@@ -32,6 +34,9 @@ class NotificationScheduleIntegrationTest extends PostgresIntegrationTest {
     @Autowired
     private JdbcTemplate jdbc;
 
+    @Autowired
+    private LoggingPushSender pushes;
+
     @Test
     void dueRemindersAreSentOnceAndStaleOnesAreDropped() {
         resetTransactionalData();
@@ -51,5 +56,28 @@ class NotificationScheduleIntegrationTest extends PostgresIntegrationTest {
 
         assertThat(api.put("/api/v1/notifications/schedule", owner, Map.of("metalPriceAlerts", false, "items",
                 List.of(Map.of("kind", "BILL_DUE", "fireAt", now.toString(), "dedupeKey", "Rent 500000 IQD"))))).hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void aPhoneTokenReceivesRemindersAndIsListedOnceHoweverOftenItRegisters() {
+        resetTransactionalData();
+        pushes.clear();
+        String owner = api.register(accounts.ownerEmail(), accounts.ownerPassword(), "Ridha").accessToken();
+        Map<String, Object> phone = Map.of("token", "ExponentPushToken[abc123_XYZ-9]");
+        assertThat(api.post("/api/v1/notifications/phones", owner, phone)).hasStatus(HttpStatus.CREATED);
+        assertThat(api.post("/api/v1/notifications/phones", owner, phone)).hasStatus(HttpStatus.CREATED);
+        assertThat(jdbc.queryForObject("select count(*) from push_subscription where channel = 'EXPO'", Long.class)).isEqualTo(1);
+        assertThat(api.post("/api/v1/notifications/phones", owner, Map.of("token", "not-a-token"))).hasStatus(HttpStatus.BAD_REQUEST);
+
+        api.put("/api/v1/notifications/schedule", owner, Map.of("metalPriceAlerts", false, "items",
+                List.of(Map.of("kind", "BILL_DUE", "fireAt", Instant.now().minus(Duration.ofMinutes(1)).toString(), "dedupeKey", "bill:phone"))));
+        assertThat(notificationService.dispatchDue()).isEqualTo(1);
+        assertThat(pushes.deliveries()).singleElement().satisfies(delivery -> {
+            assertThat(delivery.subscription().getChannel()).isEqualTo(PushChannel.EXPO);
+            assertThat(delivery.message().url()).isEqualTo("/bills");
+        });
+
+        assertThat(api.delete("/api/v1/notifications/phones", owner, phone)).hasStatus(HttpStatus.NO_CONTENT);
+        assertThat(jdbc.queryForObject("select count(*) from push_subscription", Long.class)).isZero();
     }
 }

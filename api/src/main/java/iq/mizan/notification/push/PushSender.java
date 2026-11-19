@@ -1,9 +1,12 @@
 package iq.mizan.notification.push;
 
+import iq.mizan.notification.entity.PushChannel;
 import iq.mizan.notification.entity.PushSubscription;
 
-/** The transport behind notifications; Web Push in production, a recorder in tests. */
+/** A transport behind notifications: Web Push and Expo in production, a recorder in tests. */
 public interface PushSender {
+
+    boolean handles(PushChannel channel);
 
     enum Outcome {
         SENT,
