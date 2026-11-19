@@ -87,6 +87,17 @@ class HouseholdSharingIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void aHomeLayoutFollowsItsOwnerToAnotherDeviceButNoOtherMember() {
+        String member = join(HouseholdRoleName.MEMBER);
+        String memberDevice = device(member);
+        String ownerTablet = device(owner);
+        push(owner, ownerDevice, op("home_layout", UUID.randomUUID(), fields("visibility", "PRIVATE", "widgets", "[]")));
+
+        assertThat(tablesPulled(owner, ownerTablet)).contains("home_layout");
+        assertThat(tablesPulled(member, memberDevice)).doesNotContain("home_layout");
+    }
+
+    @Test
     void theHouseholdFigureTravelsAsSealedContributionsWithoutItemisingPrivateRows() {
         String member = join(HouseholdRoleName.MEMBER);
         UUID contribution = UUID.randomUUID();
@@ -215,6 +226,13 @@ class HouseholdSharingIntegrationTest extends PostgresIntegrationTest {
         otherSession = api.refresh(otherSession.refreshToken());
         other = otherSession.accessToken();
         return other;
+    }
+
+    private List<String> tablesPulled(String token, String deviceId) {
+        List<String> tables = new ArrayList<>();
+        api.body(api.get("/api/v1/sync/pull?deviceId=" + deviceId + "&since=0", token)).get("records")
+                .forEach(record -> tables.add(record.get("table").asString()));
+        return tables;
     }
 
     private String device(String token) {
