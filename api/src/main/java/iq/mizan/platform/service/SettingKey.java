@@ -18,6 +18,8 @@ public enum SettingKey {
     MARKET_MANUAL_DOLLAR_IQD(Kind.INTEGER, "mizan.market.feeds.parallel-rate-iqd-micros", 0, 100_000),
     MARKET_BAGHDAD_BULLION_ENABLED(Kind.BOOLEAN, "mizan.market.feeds.baghdad-bullion.enabled"),
     MARKET_GOLD_API_COM_ENABLED(Kind.BOOLEAN, "mizan.market.feeds.gold-api-com.enabled"),
+    /** Which feed answers gold first; the others follow as fallbacks (ADR prices-3). */
+    MARKET_GOLD_PRIMARY(Kind.CHOICE, "mizan.market.feeds.gold-primary", List.of("iraqsm.com", "baghdadbullionhouse.com")),
     MARKET_STALE_AFTER(Kind.DURATION, "mizan.market.stale-after"),
     MARKET_REFRESH_COOLDOWN(Kind.DURATION, "mizan.market.manual-refresh-cooldown");
 

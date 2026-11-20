@@ -26,7 +26,8 @@ public record MarketProperties(
      * IQWealth's Baghdad market and Central Bank dollar. {@code reserve} requests of the daily quota
      * are never spent by polling; {@code parallelSide} is BUY, SELL or MID.
      */
-    public record IqWealth(String url, String apiKey, String parallelSide, int reserve, String zone, String dayCron, String nightCron) {
+    public record IqWealth(String url, String apiKey, String parallelSide, int reserve, String zone, String dayCron, String nightCron,
+                           String goldCron) {
     }
 
     /** The Baghdad dealer whose bid and ask per gram are the default local source. */

@@ -129,11 +129,13 @@ property tests prove aggregates reconcile.
   `XAG_LOCAL` (dealer ask, IQD per gram of pure metal), `XAU_LOCAL_BID`, `XAG_LOCAL_BID`.
 - Feeds are `PriceFeed` beans tried in `@Order`. IQWealth (iraqsm.com) answers both dollar rates
   first when `MIZAN_IQWEALTH_API_KEY` is set. Its free quota is 100 requests a day for everyone,
-  so `IqWealthPoller` calls it on a Baghdad-time schedule (59 a day, never past a 40-request
+  so `IqWealthPoller` calls it on a Baghdad-time schedule (59 a day for the dollar and 4 for
+  gold through one `IqWealthClient`, never past a 30-request
   reserve, paused until midnight on a 429, off on 401/403), and the feed answers lookups from the
   last poll. The web shows "Data: IQWealth" wherever its rate appears (`SourceCredit`), as the free
   licence requires; a public deployment needs their Business plan. Then Baghdad Bullion House (default local source, also
-  stores the dealer catalogue), configurable JSON dealer feed, metals.dev and GoldAPI when keyed,
+  stores the dealer catalogue), configurable JSON dealer feed, IQWealth gold (moved first for
+  gold when the operator setting `MARKET_GOLD_PRIMARY` is `iraqsm.com`, the default; ADR prices-3), metals.dev and GoldAPI when keyed,
   gold-api.com and open.er-api.com keyless, a stub in dev and test. A feed with a blank key or URL
   declines.
 - Prices are fetched only on request: `POST /api/v1/market/refresh` (30 s cooldown), which the app

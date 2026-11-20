@@ -51,6 +51,10 @@ public class MarketSettings {
         return settings.bool(SettingKey.MARKET_BAGHDAD_BULLION_ENABLED);
     }
 
+    public String goldPrimary() {
+        return settings.text(SettingKey.MARKET_GOLD_PRIMARY);
+    }
+
     public boolean goldApiComEnabled() {
         return settings.bool(SettingKey.MARKET_GOLD_API_COM_ENABLED);
     }

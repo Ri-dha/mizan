@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import iq.mizan.common.tenancy.TenantSession;
+import iq.mizan.market.feed.IqWealthClient;
 import iq.mizan.market.feed.IqWealthFxFeed;
 import iq.mizan.market.service.MarketService;
 import iq.mizan.sync.table.SyncTable;
@@ -25,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminOverviewService {
 
     public record Overview(Map<String, Object> accounts, Map<String, Object> households, Map<String, Object> notifications,
-                           Map<String, Object> storage, List<FeedStatus> feeds, IqWealthFxFeed.Quota iqWealth) {
+                           Map<String, Object> storage, List<FeedStatus> feeds, IqWealthClient.Quota iqWealth) {
     }
 
     public record FeedStatus(String name, java.time.Instant lastSuccessAt, java.time.Instant lastFailureAt, String lastError) {

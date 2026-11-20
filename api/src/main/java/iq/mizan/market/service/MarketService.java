@@ -119,7 +119,7 @@ public class MarketService {
     }
 
     private Optional<Answer> fetchFromFirstAnsweringFeed(Instrument instrument) {
-        for (PriceFeed feed : feeds) {
+        for (PriceFeed feed : GoldFeedOrder.arrange(instrument, feeds, settings.goldPrimary())) {
             if (!feed.supports(instrument)) {
                 continue;
             }

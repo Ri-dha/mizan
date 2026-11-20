@@ -1,72 +1,42 @@
 package iq.mizan.market.feed;
 
-import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Map;
 import java.util.Optional;
 
-import iq.mizan.market.MarketProperties;
 import iq.mizan.market.MarketSettings;
 import iq.mizan.market.entity.Instrument;
-import iq.mizan.market.entity.PriceQuote;
 import iq.mizan.market.repository.PriceQuoteRepository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
 
 /**
  * IQWealth (iraqsm.com) {@code GET /fx}: the Baghdad market dollar and the Central Bank rate.
- * The free key allows 100 requests a day for everyone, so the network is touched only by
- * {@link #poll()} on a schedule; {@link #fetch} answers from the last poll, which keeps a user's
+ * The network is touched only by {@link #poll()} on a schedule, through the shared
+ * {@link IqWealthClient}; {@link #fetch} answers from the last poll, which keeps a user's
  * Refresh from spending the quota.
  */
 @Component
 @Order(2)
 public class IqWealthFxFeed implements PriceFeed {
 
-    public static final String NAME = "iraqsm.com";
-    static final String REMAINING_HEADER = "X-RateLimit-Remaining";
-
-    public enum Outcome { UPDATED, UNCHANGED, NO_KEY, BUDGET_KEPT, PAUSED_UNTIL_MIDNIGHT, KEY_REFUSED }
+    public static final String NAME = IqWealthClient.NAME;
 
     public enum Side { BUY, SELL, MID }
 
     record Rates(Long parallelMicros, Instant parallelAt, Long officialMicros, Instant officialAt) {
     }
 
-    private static final Logger log = LoggerFactory.getLogger(IqWealthFxFeed.class);
-
-    private final RestClient client;
-    private final MarketProperties.IqWealth config;
+    private final IqWealthClient iqWealth;
     private final MarketSettings settings;
-    private final ZoneId zone;
-    private final Clock clock;
-    private final PriceQuoteRepository quotes;
+    private final StoredQuotes stored;
     private volatile Rates rates;
-    private LocalDate budgetDay;
-    private int remaining = Integer.MAX_VALUE;
-    private LocalDate pausedOn;
-    private String refusedKey;
-    private volatile Instant lastPollAt;
-    private volatile Outcome lastOutcome;
 
-    public IqWealthFxFeed(RestClient.Builder builder, MarketProperties properties, MarketSettings settings, Clock clock,
-                         PriceQuoteRepository quotes) {
-        this.config = properties.feeds().iqWealth();
+    public IqWealthFxFeed(IqWealthClient iqWealth, MarketSettings settings, PriceQuoteRepository quotes) {
+        this.iqWealth = iqWealth;
         this.settings = settings;
-        this.client = builder.build();
-        this.zone = ZoneId.of(config.zone());
-        this.clock = clock;
-        this.quotes = quotes;
+        this.stored = new StoredQuotes(quotes, iqWealth);
     }
 
     @Override
@@ -83,103 +53,32 @@ public class IqWealthFxFeed implements PriceFeed {
     public Optional<FetchedPrice> fetch(Instrument instrument) {
         Rates known = rates;
         if (known == null) {
-            return lastStored(instrument);
+            return stored.last(instrument);
         }
         return instrument == Instrument.USDIQD_PARALLEL
                 ? price(known.parallelMicros(), known.parallelAt())
                 : price(known.officialMicros(), known.officialAt());
     }
 
-    /**
-     * Only the instance holding the poll lock fills {@link #rates} (ADR csp-and-job-lock-1); the
-     * others answer with what that instance stored, rather than letting a later feed overwrite it.
-     */
-    private Optional<FetchedPrice> lastStored(Instrument instrument) {
-        if (!Configured.present(settings.iqWealthApiKey())) {
-            return Optional.empty();
-        }
-        return quotes.findById(instrument)
-                .filter(quote -> NAME.equals(quote.getSource()))
-                .map(quote -> new FetchedPrice(quote.getPriceMicros(), quote.getQuotedAt()));
-    }
-
     public boolean hasRates() {
         return rates != null;
     }
 
-    /** One request, unless the key is missing or refused, today's quota is down to the reserve, or the provider said stop. */
-    public synchronized Outcome poll() {
-        String apiKey = settings.iqWealthApiKey();
-        if (!Configured.present(apiKey)) {
-            return Outcome.NO_KEY;
+    /** One request through the shared budget; the outcome says whether the rates changed. */
+    public synchronized IqWealthClient.Outcome poll() {
+        IqWealthClient.Reply reply = iqWealth.get("/fx");
+        if (!reply.answered()) {
+            return iqWealth.recorded(reply.skipped());
         }
-        if (apiKey.equals(refusedKey)) {
-            return Outcome.KEY_REFUSED;
-        }
-        LocalDate today = LocalDate.now(clock.withZone(zone));
-        if (today.equals(pausedOn)) {
-            return Outcome.PAUSED_UNTIL_MIDNIGHT;
-        }
-        if (today.equals(budgetDay) && remaining <= settings.iqWealthReserve()) {
-            return Outcome.BUDGET_KEPT;
-        }
-        try {
-            ResponseEntity<Map> response = client.get().uri(config.url() + "/fx")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                    .retrieve()
-                    .toEntity(Map.class);
-            countRemaining(today, response.getHeaders().getFirst(REMAINING_HEADER));
-            Rates next = parse(response.getBody(), Side.valueOf(settings.iqWealthParallelSide()));
-            boolean changed = !next.equals(rates);
-            rates = next;
-            return polled(changed ? Outcome.UPDATED : Outcome.UNCHANGED);
-        } catch (HttpClientErrorException e) {
-            return polled(refused(e, today, apiKey));
-        }
+        Rates next = parse(reply.body(), Side.valueOf(settings.iqWealthParallelSide()));
+        boolean changed = !next.equals(rates);
+        rates = next;
+        return iqWealth.recorded(changed ? IqWealthClient.Outcome.UPDATED : IqWealthClient.Outcome.UNCHANGED);
     }
 
-    private Outcome polled(Outcome outcome) {
-        lastPollAt = clock.instant();
-        lastOutcome = outcome;
-        return outcome;
-    }
-
-    /** For the operator dashboard: today's quota as the provider last reported it. */
-    public synchronized Quota quota() {
-        LocalDate today = LocalDate.now(clock.withZone(zone));
-        Integer left = today.equals(budgetDay) && remaining != Integer.MAX_VALUE ? remaining : null;
-        return new Quota(Configured.present(settings.iqWealthApiKey()), left, settings.iqWealthReserve(),
-                today.equals(pausedOn), settings.iqWealthApiKey().equals(refusedKey), lastPollAt, lastOutcome);
-    }
-
-    public record Quota(boolean configured, Integer remainingToday, int reserve, boolean pausedUntilMidnight,
-                        boolean keyRefused, Instant lastPollAt, Outcome lastOutcome) {
-    }
-
-    private Outcome refused(HttpClientErrorException e, LocalDate today, String apiKey) {
-        if (e.getStatusCode().isSameCodeAs(HttpStatus.TOO_MANY_REQUESTS)) {
-            pausedOn = today;
-            log.warn("IQWealth daily limit reached; polling resumes after midnight {}", zone);
-            return Outcome.PAUSED_UNTIL_MIDNIGHT;
-        }
-        if (e.getStatusCode().isSameCodeAs(HttpStatus.UNAUTHORIZED) || e.getStatusCode().isSameCodeAs(HttpStatus.FORBIDDEN)) {
-            refusedKey = apiKey;
-            log.error("IQWealth refused the key ({}); the feed is off until the key is replaced", e.getStatusCode());
-            return Outcome.KEY_REFUSED;
-        }
-        throw e;
-    }
-
-    private void countRemaining(LocalDate today, String header) {
-        budgetDay = today;
-        if (header == null) {
-            return;
-        }
-        try {
-            remaining = Integer.parseInt(header.trim());
-        } catch (NumberFormatException e) {
-            log.warn("IQWealth sent an unreadable {} header", REMAINING_HEADER);
-        }
+    /** For the operator dashboard. */
+    public IqWealthClient.Quota quota() {
+        return iqWealth.quota();
     }
 
     /** {"data": {"parallel": {"buy", "sell", "stale", "publishedAt"}, "official": {"cbi"}}, "generatedAt"}; a stale parallel rate is left out. */

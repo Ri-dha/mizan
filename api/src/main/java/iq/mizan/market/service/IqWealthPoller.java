@@ -4,7 +4,9 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import iq.mizan.market.entity.Instrument;
+import iq.mizan.market.feed.IqWealthClient;
 import iq.mizan.market.feed.IqWealthFxFeed;
+import iq.mizan.market.feed.IqWealthGoldFeed;
 
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -17,8 +19,9 @@ import iq.mizan.common.jobs.JobLock;
 import java.time.Duration;
 
 /**
- * Spreads the free IQWealth quota over the day: often while the Baghdad market trades, a few times
- * overnight, once at start-up. Each poll stores the dollar rates for everyone.
+ * Spreads the free IQWealth quota over the day: the dollar often while the Baghdad market trades
+ * and a few times overnight, gold four times a day (it is published daily), each once at start-up.
+ * Each poll stores the prices for everyone.
  */
 @Component
 @AllArgsConstructor
@@ -26,8 +29,10 @@ public class IqWealthPoller {
 
     private static final Logger log = LoggerFactory.getLogger(IqWealthPoller.class);
     private static final Set<Instrument> DOLLAR = EnumSet.of(Instrument.USDIQD_PARALLEL, Instrument.USDIQD_OFFICIAL);
+    private static final Set<Instrument> GOLD = EnumSet.of(Instrument.XAU, Instrument.XAU_LOCAL);
 
     private final IqWealthFxFeed feed;
+    private final IqWealthGoldFeed goldFeed;
     private final MarketService marketService;
     private final JobLock jobLock;
 
@@ -39,6 +44,9 @@ public class IqWealthPoller {
     public void onStartup() {
         if (!feed.hasRates()) {
             scheduledPoll();
+        }
+        if (!goldFeed.hasPrices()) {
+            scheduledGoldPoll();
         }
     }
 
@@ -52,19 +60,43 @@ public class IqWealthPoller {
         scheduledPoll();
     }
 
-    /** Every instance has this schedule; one of them spends the request. */
-    private void scheduledPoll() {
-        jobLock.runExclusively("iqwealth-poll", POLL_AT_MOST, POLL_AT_LEAST, this::pollAndStore);
+    @Scheduled(cron = "${mizan.market.feeds.iq-wealth.gold-cron}", zone = "${mizan.market.feeds.iq-wealth.zone}")
+    public void goldDaily() {
+        scheduledGoldPoll();
     }
 
-    /** Also the operator's "fetch now", which runs even if a scheduled poll just did. */
+    /** Every instance has this schedule; one of them spends the request. */
+    private void scheduledPoll() {
+        jobLock.runExclusively("iqwealth-poll", POLL_AT_MOST, POLL_AT_LEAST, this::pollDollar);
+    }
+
+    private void scheduledGoldPoll() {
+        jobLock.runExclusively("iqwealth-gold-poll", POLL_AT_MOST, POLL_AT_LEAST, this::pollGold);
+    }
+
+    /** The operator's "fetch now": both readings, even if a scheduled poll just ran. */
     public void pollAndStore() {
+        pollDollar();
+        pollGold();
+    }
+
+    private void pollDollar() {
         try {
-            if (feed.poll() == IqWealthFxFeed.Outcome.UPDATED) {
+            if (feed.poll() == IqWealthClient.Outcome.UPDATED) {
                 marketService.refresh(DOLLAR);
             }
         } catch (RuntimeException e) {
-            log.warn("IQWealth poll failed: {}", e.getMessage());
+            log.warn("IQWealth dollar poll failed: {}", e.getMessage());
+        }
+    }
+
+    private void pollGold() {
+        try {
+            if (goldFeed.poll() == IqWealthClient.Outcome.UPDATED) {
+                marketService.refresh(GOLD);
+            }
+        } catch (RuntimeException e) {
+            log.warn("IQWealth gold poll failed: {}", e.getMessage());
         }
     }
 }

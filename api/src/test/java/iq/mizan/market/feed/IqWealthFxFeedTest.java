@@ -48,7 +48,7 @@ class IqWealthFxFeedTest {
     private final PriceQuoteRepository quotes = mock(PriceQuoteRepository.class);
 
     private IqWealthFxFeed feed(String key, String side) {
-        MarketProperties.IqWealth config = new MarketProperties.IqWealth(URL, key, side, RESERVE, "Asia/Baghdad", "-", "-");
+        MarketProperties.IqWealth config = new MarketProperties.IqWealth(URL, key, side, RESERVE, "Asia/Baghdad", "-", "-", "-");
         MarketProperties.Feeds feeds = new MarketProperties.Feeds(null, null, null, null, 0, null, null, null, config);
         MarketSettings settings = new MarketSettings(null) {
             @Override
@@ -66,12 +66,13 @@ class IqWealthFxFeedTest {
                 return RESERVE;
             }
         };
-        return new IqWealthFxFeed(builder, new MarketProperties(false, null, null, 0, 0, null, feeds, null), settings, NOON_BAGHDAD, quotes);
+        IqWealthClient client = new IqWealthClient(builder, new MarketProperties(false, null, null, 0, 0, null, feeds, null), settings, NOON_BAGHDAD);
+        return new IqWealthFxFeed(client, settings, quotes);
     }
 
     private void answer(int remaining) {
         server.expect(requestTo(URL + "/fx")).andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer " + KEY))
-                .andRespond(withSuccess(BODY, MediaType.APPLICATION_JSON).header(IqWealthFxFeed.REMAINING_HEADER, String.valueOf(remaining)));
+                .andRespond(withSuccess(BODY, MediaType.APPLICATION_JSON).header(IqWealthClient.REMAINING_HEADER, String.valueOf(remaining)));
     }
 
     @Test
@@ -80,7 +81,7 @@ class IqWealthFxFeedTest {
         assertThat(feed.fetch(Instrument.USDIQD_PARALLEL)).isEmpty();
 
         answer(99);
-        assertThat(feed.poll()).isEqualTo(IqWealthFxFeed.Outcome.UPDATED);
+        assertThat(feed.poll()).isEqualTo(IqWealthClient.Outcome.UPDATED);
         server.verify();
 
         assertThat(feed.fetch(Instrument.USDIQD_PARALLEL)).get()
@@ -125,8 +126,8 @@ class IqWealthFxFeedTest {
     void pollingStopsAtTheReserveForTheRestOfTheDay() {
         IqWealthFxFeed feed = feed(KEY, "MID");
         answer(RESERVE);
-        assertThat(feed.poll()).isEqualTo(IqWealthFxFeed.Outcome.UPDATED);
-        assertThat(feed.poll()).isEqualTo(IqWealthFxFeed.Outcome.BUDGET_KEPT);
+        assertThat(feed.poll()).isEqualTo(IqWealthClient.Outcome.UPDATED);
+        assertThat(feed.poll()).isEqualTo(IqWealthClient.Outcome.BUDGET_KEPT);
         server.verify();
     }
 
@@ -134,21 +135,21 @@ class IqWealthFxFeedTest {
     void theDailyLimitPausesAndARefusedKeySwitchesTheFeedOff() {
         IqWealthFxFeed limited = feed(KEY, "MID");
         server.expect(ExpectedCount.once(), requestTo(URL + "/fx")).andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
-        assertThat(limited.poll()).isEqualTo(IqWealthFxFeed.Outcome.PAUSED_UNTIL_MIDNIGHT);
-        assertThat(limited.poll()).isEqualTo(IqWealthFxFeed.Outcome.PAUSED_UNTIL_MIDNIGHT);
+        assertThat(limited.poll()).isEqualTo(IqWealthClient.Outcome.PAUSED_UNTIL_MIDNIGHT);
+        assertThat(limited.poll()).isEqualTo(IqWealthClient.Outcome.PAUSED_UNTIL_MIDNIGHT);
         server.verify();
         server.reset();
 
         IqWealthFxFeed refused = feed(KEY, "MID");
         server.expect(ExpectedCount.once(), requestTo(URL + "/fx")).andRespond(withStatus(HttpStatus.UNAUTHORIZED));
-        assertThat(refused.poll()).isEqualTo(IqWealthFxFeed.Outcome.KEY_REFUSED);
-        assertThat(refused.poll()).isEqualTo(IqWealthFxFeed.Outcome.KEY_REFUSED);
+        assertThat(refused.poll()).isEqualTo(IqWealthClient.Outcome.KEY_REFUSED);
+        assertThat(refused.poll()).isEqualTo(IqWealthClient.Outcome.KEY_REFUSED);
         server.verify();
     }
 
     @Test
     void withoutAKeyNothingIsCalled() {
-        assertThat(feed("", "MID").poll()).isEqualTo(IqWealthFxFeed.Outcome.NO_KEY);
+        assertThat(feed("", "MID").poll()).isEqualTo(IqWealthClient.Outcome.NO_KEY);
         server.verify();
     }
 
