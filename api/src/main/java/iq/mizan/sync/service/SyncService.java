@@ -2,11 +2,13 @@ package iq.mizan.sync.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -17,6 +19,7 @@ import iq.mizan.common.security.CurrentUser;
 import iq.mizan.common.security.Permission;
 import iq.mizan.sync.SyncProperties;
 import iq.mizan.sync.dto.ConflictResponse;
+import iq.mizan.sync.dto.RejectedOpResponse;
 import iq.mizan.sync.dto.SyncOp;
 import iq.mizan.sync.dto.SyncPullResponse;
 import iq.mizan.sync.dto.SyncPushRequest;
@@ -33,8 +36,9 @@ import iq.mizan.sync.table.SyncTable;
 import iq.mizan.sync.table.SyncTableRegistry;
 
 import lombok.AllArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -48,13 +52,20 @@ import tools.jackson.databind.json.JsonMapper;
 @AllArgsConstructor
 public class SyncService {
 
+    private static final Logger log = LoggerFactory.getLogger(SyncService.class);
     private static final int CONFLICT_PAGE = 200;
+
+    /** ADR sync-3: faults of one op; anything else (a rotated key, a foreign device) fails the whole push. */
+    private static final Set<ErrorCode> OP_REJECTIONS = EnumSet.of(
+            ErrorCode.SYNC_TABLE_UNKNOWN, ErrorCode.SYNC_FIELD_UNKNOWN, ErrorCode.SYNC_PLAIN_VALUE_REFUSED,
+            ErrorCode.SYNC_TABLE_MISMATCH, ErrorCode.SYNC_RECORD_IMMUTABLE, ErrorCode.SYNC_SHARED_WRITE_REFUSED,
+            ErrorCode.VALIDATION_FAILED);
     private static final String VAULT_PREFIX = "vault:";
 
     private final SyncTableRegistry registry;
     private final SyncRowRepository legacyRows;
     private final VaultRowRepository vault;
-    private final SyncLogRepository log;
+    private final SyncLogRepository syncLog;
     private final SyncConflictRepository conflictRepository;
     private final SyncOpReceiptRepository receiptRepository;
     private final DeviceService deviceService;
@@ -63,7 +74,11 @@ public class SyncService {
     private final SyncProperties properties;
     private final SharedKeyVersions sharedKeys;
 
-    /** Applies a batch atomically; every op is acknowledged exactly once, however often it is sent. */
+    /**
+     * Every op is acknowledged exactly once, however often it is sent. An op refused on its own
+     * merits is reported without its batch (ADR sync-3); every such refusal happens before the op
+     * writes anything, so the rest of the batch commits untouched.
+     */
     @Transactional
     public SyncPushResponse push(CurrentUser user, SyncPushRequest request) {
         if (request.ops().size() > properties.maxPushOps()) {
@@ -74,18 +89,27 @@ public class SyncService {
 
         List<UUID> applied = new ArrayList<>();
         List<ConflictResponse> conflicts = new ArrayList<>();
+        List<RejectedOpResponse> rejected = new ArrayList<>();
         SealCheck seals = new SealCheck(user.householdId());
         for (SyncOp op : request.ops()) {
             if (receiptRepository.existsById(op.opId())) {
                 applied.add(op.opId());
                 continue;
             }
-            conflicts.addAll(apply(user, device, op, seals));
-            receiptRepository.save(SyncOpReceipt.of(op.opId(), device.getId()));
-            applied.add(op.opId());
+            try {
+                conflicts.addAll(apply(user, device, op, seals));
+                receiptRepository.save(SyncOpReceipt.of(op.opId(), device.getId()));
+                applied.add(op.opId());
+            } catch (ApiException e) {
+                if (!OP_REJECTIONS.contains(e.getErrorCode())) {
+                    throw e;
+                }
+                log.warn("Rejected sync op {} on '{}': {}", op.opId(), op.table(), e.getErrorCode());
+                rejected.add(new RejectedOpResponse(op.opId(), e.getErrorCode().name(), e.getMessage()));
+            }
         }
         device.recordPush();
-        return new SyncPushResponse(applied, conflicts);
+        return new SyncPushResponse(applied, conflicts, rejected);
     }
 
     @Transactional
@@ -94,7 +118,7 @@ public class SyncService {
         int limit = requestedLimit == null
                 ? properties.pullPageSize() : Math.min(requestedLimit, properties.pullPageSize());
 
-        List<SyncLogRepository.Entry> entries = log.after(since, limit + 1);
+        List<SyncLogRepository.Entry> entries = syncLog.after(since, limit + 1);
         boolean hasMore = entries.size() > limit;
         if (hasMore) {
             entries = entries.subList(0, limit);
@@ -162,16 +186,13 @@ public class SyncService {
         merged.putAll(outcome.accepted());
         refuseSharedWritesFromRestrictedSessions(user, merged, op);
 
-        try {
-            if (stored == null) {
-                vault.insert(op.rowId(), user.householdId(), user.userId(), op.table(), merged, outcome.clocks());
-            } else if (outcome.changed()) {
-                vault.update(op.rowId(), merged, outcome.clocks());
+        if (stored == null) {
+            if (!vault.insert(op.rowId(), user.householdId(), user.userId(), op.table(), merged, outcome.clocks())) {
+                throw ApiException.of(ErrorCode.VALIDATION_FAILED, "Record %s already exists".formatted(op.rowId()))
+                        .property("opId", op.opId());
             }
-        } catch (DataIntegrityViolationException e) {
-            throw ApiException.of(ErrorCode.VALIDATION_FAILED,
-                    "The record violates a constraint of table '%s'".formatted(op.table()))
-                    .property("opId", op.opId());
+        } else if (outcome.changed()) {
+            vault.update(op.rowId(), merged, outcome.clocks());
         }
 
         return outcome.conflicts().stream()

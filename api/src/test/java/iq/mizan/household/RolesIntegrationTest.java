@@ -77,7 +77,8 @@ class RolesIntegrationTest extends PostgresIntegrationTest {
         }
         MvcTestResult sharedWrite = api.post("/api/v1/sync/push", dependent, Map.of("deviceId", dependentDevice,
                 "ops", List.of(op("goal", UUID.randomUUID(), fields("name", "Family car", "targetAmount", 9_000_000)))));
-        assertThat(sharedWrite).hasStatus(HttpStatus.FORBIDDEN);
+        assertThat(sharedWrite).hasStatus(HttpStatus.OK);
+        assertThat(api.body(sharedWrite).get("rejected").get(0).get("code").asString()).isEqualTo("SYNC_SHARED_WRITE_REFUSED");
     }
 
     @Test

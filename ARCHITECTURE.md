@@ -70,8 +70,10 @@ docs/manual/  one Markdown source → in-app /help and static /docs
   `sync_log` entry per record and a month of push receipts. Synced records are not audited one by one.
 - The server (`api/.../sync`) applies pushes idempotently by op id, merges sealed fields by their
   clocks, writes `sync_log` through a trigger on `vault_record`, and refuses any change to a
-  stored append-only record (net worth snapshots). Records waiting for a key the device has not
-  been granted yet are held in `sealedInbox` until it is.
+  stored append-only record (net worth snapshots). An op refused on its own merits (an unknown
+  field, a plain value, another table's id) is returned in `rejected` while the rest of its batch
+  is applied; the device drops it from the outbox and lists it on the Sync screen (ADR sync-3).
+  Records waiting for a key the device has not been granted yet are held in `sealedInbox` until it is.
 - Money is BIGINT minor units plus a currency. Exchange rates are micros **per minor unit** of the
   source currency (ADR rates-1); `rateToMicros`/`microsToRate` in `web/src/db/income.ts` are the
   only conversion between what people type and what is stored.

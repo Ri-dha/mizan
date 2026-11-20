@@ -129,7 +129,7 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
 
         MvcTestResult hijack = api.post("/api/v1/sync/push", other, Map.of("deviceId", otherDevice,
                 "ops", List.of(new SyncOpBuilder(rowId).field("name", "Mine now", clock(9)).build())));
-        assertThat(hijack).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(rejectedCode(hijack)).isEqualTo("VALIDATION_FAILED");
 
         assertThat(pullSingle(owner, tablet).get("fields").get("name").asString()).isEqualTo(ApiClient.sealed("Wallet"));
         assertThat(api.get("/api/v1/sync/pull?deviceId=" + phone + "&since=0", other)).hasStatus(HttpStatus.NOT_FOUND);
@@ -140,13 +140,11 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
         MvcTestResult unknownTable = api.post("/api/v1/sync/push", owner, Map.of("deviceId", phone, "ops", List.of(Map.of(
                 "opId", UUID.randomUUID(), "table", "ledger", "rowId", UUID.randomUUID(),
                 "fields", Map.of("x", 1), "clocks", Map.of("x", clock(1))))));
-        assertThat(unknownTable).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(api.body(unknownTable).get("code").asString()).isEqualTo("SYNC_TABLE_UNKNOWN");
+        assertThat(rejectedCode(unknownTable)).isEqualTo("SYNC_TABLE_UNKNOWN");
 
         MvcTestResult unknownField = api.post("/api/v1/sync/push", owner, Map.of("deviceId", phone, "ops",
                 List.of(new SyncOpBuilder(UUID.randomUUID()).field("colour", "red", clock(1)).build())));
-        assertThat(unknownField).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(api.body(unknownField).get("code").asString()).isEqualTo("SYNC_FIELD_UNKNOWN");
+        assertThat(rejectedCode(unknownField)).isEqualTo("SYNC_FIELD_UNKNOWN");
     }
 
     /** ADR e2e-1: a client that sends plain values, such as an old cached web app, is refused outright. */
@@ -156,8 +154,7 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
                 "opId", UUID.randomUUID(), "table", TABLE, "rowId", UUID.randomUUID(),
                 "fields", Map.of("name", "Wallet", "balance", 250000), "clocks", Map.of("name", clock(1), "balance", clock(1))))));
 
-        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(api.body(result).get("code").asString()).isEqualTo("SYNC_PLAIN_VALUE_REFUSED");
+        assertThat(rejectedCode(result)).isEqualTo("SYNC_PLAIN_VALUE_REFUSED");
         assertThat(cashAccounts(api.body(api.get("/api/v1/sync/pull?deviceId=" + tablet + "&since=0", owner)))).isEmpty();
     }
 
@@ -166,7 +163,7 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
         MvcTestResult result = api.post("/api/v1/sync/push", owner, Map.of("deviceId", phone, "ops",
                 List.of(new SyncOpBuilder(UUID.randomUUID()).field("visibility", "EVERYONE", clock(1)).build())));
 
-        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(rejectedCode(result)).isEqualTo("VALIDATION_FAILED");
     }
 
     /** A record id is bound to its table; another type cannot overwrite it. */
@@ -179,8 +176,47 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
                 "opId", UUID.randomUUID(), "table", "goal", "rowId", rowId,
                 "fields", Map.of("name", ApiClient.sealed("Goal")), "clocks", Map.of("name", clock(2))))));
 
-        assertThat(result).hasStatus(HttpStatus.CONFLICT);
-        assertThat(api.body(result).get("code").asString()).isEqualTo("SYNC_TABLE_MISMATCH");
+        assertThat(rejectedCode(result)).isEqualTo("SYNC_TABLE_MISMATCH");
+    }
+
+    /** ADR sync-3: a refused op, even one that fails in the database, is rolled back alone. */
+    @Test
+    void aBadOpIsRejectedAloneAndTheRestOfItsBatchIsApplied() {
+        UUID foreignRow = UUID.randomUUID();
+        push(owner, phone, op(foreignRow, Map.of("name", "Wallet"), clock(1)));
+        String other = api.register(accounts.otherEmail(), accounts.otherPassword(), "Neighbour").accessToken();
+        String otherDevice = registerDevice(other, "Other phone");
+
+        UUID before = UUID.randomUUID();
+        UUID after = UUID.randomUUID();
+        Map<String, Object> unknownField = new SyncOpBuilder(UUID.randomUUID()).field("fxRateMicros", 1_000_000, clock(2)).build();
+        Map<String, Object> foreignWrite = new SyncOpBuilder(foreignRow).field("name", "Mine now", clock(3)).build();
+        MvcTestResult result = api.post("/api/v1/sync/push", other, Map.of("deviceId", otherDevice, "ops", List.of(
+                op(before, Map.of("name", "Purse", "kind", "WALLET", "currency", "IQD"), clock(1)),
+                unknownField,
+                foreignWrite,
+                op(after, Map.of("name", "Bank", "kind", "BANK", "currency", "IQD"), clock(4)))));
+
+        assertThat(result).hasStatus(HttpStatus.OK);
+        JsonNode body = api.body(result);
+        assertThat(body.get("applied")).hasSize(2);
+        assertThat(body.get("rejected")).hasSize(2);
+        assertThat(body.get("rejected").get(0).get("opId").asString()).isEqualTo(unknownField.get("opId").toString());
+        assertThat(body.get("rejected").get(0).get("code").asString()).isEqualTo("SYNC_FIELD_UNKNOWN");
+        assertThat(body.get("rejected").get(1).get("code").asString()).isEqualTo("VALIDATION_FAILED");
+
+        List<String> rows = cashAccounts(api.body(api.get("/api/v1/sync/pull?deviceId=" + otherDevice + "&since=0", other)))
+                .stream().map(record -> record.get("rowId").asString()).toList();
+        assertThat(rows).containsExactlyInAnyOrder(before.toString(), after.toString());
+        assertThat(pullSingle(owner, tablet).get("fields").get("name").asString()).isEqualTo(ApiClient.sealed("Wallet"));
+    }
+
+    private String rejectedCode(MvcTestResult result) {
+        assertThat(result).hasStatus(HttpStatus.OK);
+        JsonNode body = api.body(result);
+        assertThat(body.get("applied")).isEmpty();
+        assertThat(body.get("rejected")).hasSize(1);
+        return body.get("rejected").get(0).get("code").asString();
     }
 
     private String registerDevice(String token, String name) {

@@ -69,7 +69,8 @@ class VaultIntegrationTest extends PostgresIntegrationTest {
 
         MvcTestResult rewrite = api.post("/api/v1/sync/push", owner, Map.of("deviceId", ownerDevice,
                 "ops", List.of(op("net_worth_snapshot", snapshot, sealedFields("totalAssets", 1), LATER_CLOCK))));
-        assertThat(rewrite).hasStatus(HttpStatus.CONFLICT);
+        assertThat(rewrite).hasStatus(HttpStatus.OK);
+        assertThat(api.body(rewrite).get("rejected").get(0).get("code").asString()).isEqualTo("SYNC_RECORD_IMMUTABLE");
 
         // ADR sync-2: the same write sent again (identical clocks) is a retry: acknowledged, nothing changes.
         MvcTestResult retry = api.post("/api/v1/sync/push", owner, Map.of("deviceId", ownerDevice,

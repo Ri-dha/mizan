@@ -31,7 +31,8 @@ class OpenApiDocumentTest extends PostgresIntegrationTest {
 
     @Test
     void responseFieldsTheServerAlwaysSendsAreRequired() {
-        assertThat(required("SyncPushResponse")).containsExactlyInAnyOrder("applied", "conflicts");
+        assertThat(required("SyncPushResponse")).containsExactlyInAnyOrder("applied", "conflicts", "rejected");
+        assertThat(required("RejectedOpResponse")).containsExactlyInAnyOrder("opId", "code", "detail");
         assertThat(required("ConflictResponse")).containsExactlyInAnyOrder(
                 "id", "table", "rowId", "field", "clientClock", "serverClock", "detectedAt");
         assertThat(required("DeviceResponse")).containsExactlyInAnyOrder("id", "name", "lastPullSeq", "lastSeenAt");

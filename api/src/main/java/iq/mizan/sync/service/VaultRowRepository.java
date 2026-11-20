@@ -49,13 +49,14 @@ public class VaultRowRepository {
         return fetch(List.of(id)).stream().filter(row -> row.tableName().equals(tableName)).findFirst();
     }
 
-    public void insert(UUID id, UUID householdId, UUID ownerId, String tableName, Map<String, Object> fields, Map<String, String> clocks) {
-        jdbc.sql("insert into vault_record (id, household_id, owner_id, table_name, visibility, deleted_at, fields, field_clocks) "
-                        + "values (?, ?, ?, ?, ?, ?, ?::jsonb, ?::jsonb)")
+    /** False when the id is already taken, possibly by a row this household cannot see; nothing is written then. */
+    public boolean insert(UUID id, UUID householdId, UUID ownerId, String tableName, Map<String, Object> fields, Map<String, String> clocks) {
+        return jdbc.sql("insert into vault_record (id, household_id, owner_id, table_name, visibility, deleted_at, fields, field_clocks) "
+                        + "values (?, ?, ?, ?, ?, ?, ?::jsonb, ?::jsonb) on conflict (id) do nothing")
                 .param(id).param(householdId).param(ownerId).param(tableName)
                 .param(visibilityOf(fields)).param(deletedAtOf(fields))
                 .param(json.writeValueAsString(cipherOnly(fields))).param(json.writeValueAsString(clocks))
-                .update();
+                .update() == 1;
     }
 
     public void update(UUID id, Map<String, Object> fields, Map<String, String> clocks) {
