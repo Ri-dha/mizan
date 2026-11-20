@@ -58,6 +58,17 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    ProblemDetail handleUploadTooLarge(Exception e, HttpServletRequest request) {
+        return base(ErrorCode.UPLOAD_TOO_LARGE, "The upload is too large.", request);
+    }
+
+    @ExceptionHandler({org.springframework.web.bind.MissingServletRequestParameterException.class,
+            org.springframework.web.multipart.support.MissingServletRequestPartException.class})
+    ProblemDetail handleMissingPart(Exception e, HttpServletRequest request) {
+        return base(ErrorCode.VALIDATION_FAILED, "A required field is missing.", request);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     ProblemDetail handleAccessDenied(AccessDeniedException e, HttpServletRequest request) {
         return base(ErrorCode.ACCESS_DENIED,

@@ -9,5 +9,6 @@ public enum AuditEntityType {
     MONTH,
     PLATFORM_SETTING,
     PRICE,
-    ANNOUNCEMENT
+    ANNOUNCEMENT,
+    SUPPORT_REPORT
 }

@@ -178,6 +178,12 @@ from `MIZAN_PARALLEL_RATE_IQD_MICROS` (1470 IQD/USD = `1470000000`) or a price t
 | GET | `/api/v1/vault/status` | bearer | Whether plain rows from before encryption remain |
 | POST | `/api/v1/vault/migration/complete` | bearer, `RECORD_WRITE` | Delete the plain copies of rows the caller has re-sent sealed |
 | GET | `/api/v1/announcements` | bearer | Announcements showing now |
+| POST | `/api/v1/support/reports` | bearer | Send a problem report (multipart: category, subject, body, up to four JPEG/PNG `images`) |
+| GET | `/api/v1/support/reports` | bearer | The caller's reports |
+| GET | `/api/v1/support/reports/{id}` | bearer | A report and its conversation |
+| POST | `/api/v1/support/reports/{id}/messages` | bearer | Reply (multipart: body, images) |
+| GET | `/api/v1/support/reports/{id}/images/{imageId}` | bearer | An attached image |
+| GET/POST/PUT | `/api/v1/admin/support/reports...` | operator | The report queue, replies and status (ADR support-1) |
 | GET/POST | `/api/v1/admin/session` | bearer, operator | Whether changes are allowed; re-enter the password to allow them for 10 minutes |
 | GET | `/api/v1/admin/overview` | bearer, operator | Counts, sizes, feed health and the IQWealth quota |
 | GET/PUT/DELETE | `/api/v1/admin/settings[/{key}]` | bearer, operator | Run-time settings with defaults; secrets masked |

@@ -1,6 +1,11 @@
 spring:
   application:
     name: mizan
+  servlet:
+    multipart:
+      # Four report images of 5 MB each plus the text (ADR support-1).
+      max-file-size: 5MB
+      max-request-size: 21MB
   http:
     client:
       # Outbound price-feed calls are bounded so a slow provider cannot hold the refresh thread.
@@ -103,6 +108,13 @@ mizan:
     password: ${MIZAN_MAIL_PASSWORD:}
     from: ${MIZAN_MAIL_FROM:}
     starttls: ${MIZAN_MAIL_STARTTLS:true}
+
+  # ADR support-1: problem and feedback reports with images.
+  support:
+    max-images: 4
+    max-image-size: 5MB
+    reports-per-day: 5
+    messages-per-day: 30
 
   auth:
     lockout:

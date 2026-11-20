@@ -58,7 +58,8 @@ public enum ErrorCode {
     SETTING_INVALID(HttpStatus.BAD_REQUEST, "Setting Invalid"),
     SETTINGS_KEY_MISSING(HttpStatus.CONFLICT, "Settings Key Missing"),
     LAST_OPERATOR(HttpStatus.CONFLICT, "Last Operator"),
-    SYNC_BATCH_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Sync Batch Too Large");
+    SYNC_BATCH_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Sync Batch Too Large"),
+    UPLOAD_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Upload Too Large");
 
     private final HttpStatus status;
     private final String title;

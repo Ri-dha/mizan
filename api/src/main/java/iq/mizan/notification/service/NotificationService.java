@@ -189,6 +189,19 @@ public class NotificationService {
         return null;
     }
 
+    /** Every device the person enrolled, whichever household it was enrolled in; returns how many got it. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public int notifyUser(UUID userId, java.util.function.Function<String, PushMessage> message) {
+        PushMessage localised = message.apply(localeOf(userId));
+        int sent = 0;
+        for (PushSubscription device : subscriptions.findByUserId(userId)) {
+            if (deliver(device, localised) == PushSender.Outcome.SENT) {
+                sent++;
+            }
+        }
+        return sent;
+    }
+
     private PushSender.Outcome deliver(PushSubscription subscription, PushMessage message) {
         PushSender sender = senders.stream().filter(candidate -> candidate.handles(subscription.getChannel())).findFirst().orElse(null);
         if (sender == null) {

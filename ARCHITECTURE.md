@@ -158,7 +158,8 @@ property tests prove aggregates reconcile.
 `goal`, `asset`, `metal`, `market`, `networth` (sync tables for snapshots, month closes,
 contributions and annual reports), `vault` (key directory, grants, migration), `notification`
 (Web Push with VAPID, dispatch of device-uploaded schedules, public metal-move alerts), `platform`
-(run-time settings, announcements), `admin` (the operator API), `common`
+(run-time settings, announcements), `admin` (the operator API), `helpdesk` (problem reports with
+images, readable by operators, ADR support-1), `common`
 (security, tenancy, audit, errors, storage, web filters). Modules do not import each other's
 entities or repositories.
 

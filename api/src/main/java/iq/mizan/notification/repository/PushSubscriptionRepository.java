@@ -15,6 +15,8 @@ public interface PushSubscriptionRepository extends JpaRepository<PushSubscripti
 
     List<PushSubscription> findByUserIdAndHouseholdId(UUID userId, UUID householdId);
 
+    List<PushSubscription> findByUserId(UUID userId);
+
     @Query("select distinct new iq.mizan.notification.repository.Recipient(s.userId, s.householdId) from PushSubscription s")
     List<Recipient> recipients();
 }

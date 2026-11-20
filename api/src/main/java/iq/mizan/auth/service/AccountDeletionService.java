@@ -13,6 +13,7 @@ import iq.mizan.common.audit.AuditAction;
 import iq.mizan.common.audit.AuditEntityType;
 import iq.mizan.common.audit.AuditRecord;
 import iq.mizan.common.audit.AuditService;
+import iq.mizan.helpdesk.service.SupportReportService;
 
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ public class AccountDeletionService {
     private final SessionRevoker sessionRevoker;
     private final AuditService auditService;
     private final JdbcClient jdbc;
+    private final SupportReportService supportReports;
     private final AuthProperties properties;
     private final Clock clock;
 
@@ -64,6 +66,11 @@ public class AccountDeletionService {
         for (Map<String, Object> row : due) {
             UUID userId = (UUID) row.get("user_id");
             sessionRevoker.revokeAllSessions(userId);
+            try {
+                supportReports.deleteImagesOf(userId);
+            } catch (RuntimeException e) {
+                log.warn("Could not delete the report images of account {}", userId, e);
+            }
             jdbc.sql("delete from household where id = ?").param(row.get("household_id")).update();
             jdbc.sql("delete from app_user where id = ?").param(userId).update();
             auditService.record(AuditRecord.of(AuditAction.ACCOUNT_PURGED, AuditEntityType.USER)

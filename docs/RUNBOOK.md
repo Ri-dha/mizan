@@ -304,6 +304,16 @@ bind a household or the system flag or it will see an empty database.
 - Known gap: the parallel dollar rate and stub prices are configuration, not signed data. Anyone
   with `.env` access can move every valuation.
 
+## Problem reports (ADR support-1)
+
+People send problems, ideas and questions from **More → Report a problem**; operators answer on the
+dashboard's **Reports** tab (replying and status changes ask for the password again). Reports and
+their images are readable by operators, not end-to-end encrypted. Images live in the attachments
+bucket under `support/`, at most four of 5 MB per message, with location and camera data removed.
+Limits are in `mizan.support.*` (five reports and thirty replies per person a day). A reverse proxy
+in front of the API must accept request bodies of at least 21 MB on `/api/v1/support/` and
+`/api/v1/admin/support/`.
+
 ## Support without impersonation
 
 Support never signs in as a user, and since ADR e2e-1 nobody at the service can read a household's

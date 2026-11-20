@@ -45,6 +45,13 @@ public class NotificationMessages {
                 : new PushMessage("TEST", "Mizan", "Notifications work on this device.", "/settings");
     }
 
+    public PushMessage supportReply(String locale, java.util.UUID reportId) {
+        String url = "/support/" + reportId;
+        return arabic(locale)
+                ? new PushMessage("SUPPORT_REPLY", "رد من فريق ميزان", "وصل رد على بلاغك.", url)
+                : new PushMessage("SUPPORT_REPLY", "Mizan support", "There is a reply to your report.", url);
+    }
+
     private static boolean arabic(String locale) {
         return locale != null && locale.startsWith("ar");
     }
