@@ -77,7 +77,7 @@ springdoc:
 
 mizan:
   logging:
-    # The JSON file Logstash tails in local development; rolled by size and day.
+    # The JSON file Filebeat tails in local development; rolled by size and day.
     file: "${MIZAN_LOG_FILE:logs/mizan.json}"
     max-file-size: 50MB
     max-history: 7

@@ -1,7 +1,7 @@
 #!/bin/sh
 # ADR obs-2: every index Mizan writes is deleted after its retention period. Creates the
-# lifecycle policies, the metrics template, and attaches the policies to indexes that predate
-# them. Runs before Logstash starts; safe to run again.
+# lifecycle policies and the index templates, and attaches the policies to indexes that predate
+# them. Runs before Filebeat starts; safe to run again.
 set -eu
 ES="${ELASTICSEARCH_URL:-http://elasticsearch:9200}"
 until curl -sf "$ES/_cluster/health" >/dev/null; do
@@ -18,6 +18,13 @@ policy() {
 policy mizan-logs-retention "${LOG_RETENTION_DAYS:-14}"
 policy containers-logs-retention "${CONTAINER_LOG_RETENTION_DAYS:-7}"
 policy metrics-retention "${METRICS_RETENTION_DAYS:-7}"
+
+# The log index templates (field types, compression, lifecycle). Filebeat ships into these
+# indexes but leaves templates to this script (ADR obs-4).
+for name in mizan-logs containers-logs; do
+  curl -sf -o /dev/null -w "_index_template/$name: %{http_code}\n" -X PUT "$ES/_index_template/$name" \
+    -H "Content-Type: application/json" --data-binary "@/setup/$name-template.json"
+done
 
 # The API's metrics registry creates mizan-metrics-* on its own; this template outranks its default.
 put "_index_template/mizan-metrics" '{"index_patterns":["mizan-metrics-*"],"priority":200,"template":{"settings":{"number_of_shards":1,"number_of_replicas":0,"index.codec":"best_compression","index.lifecycle.name":"metrics-retention"}}}'

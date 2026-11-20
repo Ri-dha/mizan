@@ -35,7 +35,7 @@ The web app's stack is in MizanApp's README.
 | Concern | Choice |
 |---|---|
 | Deployment | Docker Compose: PostgreSQL 16, SeaweedFS, the API, Caddy (PWA, TLS, `/api` proxy), nightly `pg_dump` to SeaweedFS |
-| Logs and metrics | Elasticsearch, Kibana and Logstash 9.3 with a prebuilt dashboard; Metricbeat optional |
+| Logs and metrics | Elasticsearch and Filebeat 9.3; Kibana on demand with a prebuilt dashboard; Metricbeat optional |
 | CI | GitHub Actions: Maven tests on Java 25 |
 
 ## Run it locally
@@ -82,21 +82,22 @@ environments override them with `MIZAN_*` and `DB_*` environment variables.
 ### Logs, statistics and performance (Kibana)
 
 ```bash
-docker compose --profile observability up -d
+docker compose --profile observability --profile kibana up -d
 ```
 
-Elasticsearch, Kibana (http://localhost:5601, bound to localhost only) and Logstash start
-(add `--profile containers` for Metricbeat's per-container CPU and memory), and a one-shot `kibana-setup` container creates the data views and imports the **Mizan
+Elasticsearch and Filebeat start with `observability` (and with `prod`); Kibana
+(http://localhost:5601, bound to localhost only) only with the `kibana` profile, so it runs while
+someone is looking (add `--profile containers` for Metricbeat's per-container CPU and memory). A
+one-shot `kibana-setup` container creates the data views and imports the **Mizan
 overview** dashboard: requests per status, p95 and average latency, slowest paths, log lines by
 level, errors and warnings by logger, most frequent messages, JVM heap, Hikari connections, and
-container CPU and memory. Both profiles (`observability`, `prod`) include it.
+container CPU and memory.
 
 The API writes one JSON object per log line in Logstash shape, with `correlationId`,
 `httpMethod`, `httpPath`, `userId`, `traceId` and `spanId` as top-level fields and one access
 line per request (`logger_name: iq.mizan.http`) carrying `httpStatus` and `durationMs`. In
-Docker, Logstash reads container stdout; on a developer machine it tails `api/logs/mizan.json`,
-which the API writes as well (`api/logs/`, ignored by git). Only output produced after Logstash
-starts is shipped; other containers' lines land in `containers-logs-*` so their fields never
+Docker, Filebeat reads container output; on a developer machine it tails `api/logs/mizan.json`,
+which the API writes as well (`api/logs/`, ignored by git). Log files idle for a day are skipped; other containers' lines land in `containers-logs-*` so their fields never
 collide with the API's. Appenders are in `api/src/main/resources/logback-spring.xml`: the `dev`
 profile logs readably to the console and as JSON to the file, `prod` logs JSON to stdout only,
 `test` plainly to the console.

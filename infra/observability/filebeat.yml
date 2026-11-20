@@ -1,0 +1,59 @@
+# ADR obs-4: ships every container's output and the local API log file into Elasticsearch.
+# The API's lines are JSON and become fields in mizan-logs-*; anything else (Postgres,
+# SeaweedFS, Caddy) stays as the message in containers-logs-*, so their fields never collide.
+filebeat.inputs:
+  - type: filestream
+    id: docker
+    # Identify files by inode, not by a fingerprint of their first kilobyte, so a short log is read at once.
+    file_identity.native: ~
+    prospector.scanner.fingerprint.enabled: false
+    paths: ["/var/lib/docker/containers/*/*-json.log"]
+    parsers:
+      - container:
+          format: docker
+    # The directory also holds stopped containers' history; files idle for a day are skipped.
+    ignore_older: 24h
+    processors:
+      - dissect:
+          tokenizer: "/var/lib/docker/containers/%{container_id}/%{}"
+          field: "log.file.path"
+          target_prefix: ""
+  # The API running on the developer's machine, outside Docker.
+  - type: filestream
+    id: api-local
+    # Identify files by inode, not by a fingerprint of their first kilobyte, so a short log is read at once.
+    file_identity.native: ~
+    prospector.scanner.fingerprint.enabled: false
+    paths: ["/logs/api/*.json"]
+    fields:
+      container_id: api-local
+    fields_under_root: true
+
+processors:
+  - decode_json_fields:
+      fields: ["message"]
+      target: ""
+      overwrite_keys: true
+      add_error_key: false
+  # Filebeat's own warnings can quote the events they are about; indexing them again would loop.
+  - drop_event:
+      when:
+        equals:
+          service.name: filebeat
+  - drop_fields:
+      fields: ["agent", "ecs", "host", "input", "log", "event", "@version", "level_value", "service", "container.id"]
+      ignore_missing: true
+
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTS:http://elasticsearch:9200}"]
+  index: "containers-logs-%{+yyyy.MM.dd}"
+  indices:
+    - index: "mizan-logs-%{+yyyy.MM.dd}"
+      when.equals:
+        application: mizan
+
+# Templates and lifecycle come from elasticsearch-setup (ADR obs-2, obs-4).
+setup.template.enabled: false
+setup.ilm.enabled: false
+logging.level: warning
+logging.metrics.enabled: false

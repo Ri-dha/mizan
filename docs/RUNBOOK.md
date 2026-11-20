@@ -128,8 +128,17 @@ requests set `LOGGING_LEVEL_IQ_MIZAN_HTTP=DEBUG`.
 
 ## Logs and performance in Kibana
 
-The `observability` profile runs a single-node Elasticsearch with security off, Kibana bound to
-localhost and Logstash; `--profile containers` adds Metricbeat for per-container resource use. Reach Kibana over an SSH tunnel:
+The `observability` profile (and `prod`) runs a single-node Elasticsearch with security off and
+Filebeat (ADR obs-4); `--profile containers` adds Metricbeat for per-container resource use.
+Kibana (about 1.2 GB of memory) runs only with its own profile, so start it when you need it and
+stop it after:
+
+```bash
+docker compose --profile prod --profile kibana up -d kibana kibana-setup
+docker compose --profile prod --profile kibana stop kibana
+```
+
+Reach Kibana over an SSH tunnel:
 
 ```bash
 ssh -L 5601:localhost:5601 user@host
@@ -140,7 +149,7 @@ ssh -L 5601:localhost:5601 user@host
 by `correlationId` to follow one request through every line, or by `traceId` when several
 services are involved.
 
-Retention (ADR obs-2): `elasticsearch-setup` runs before Logstash and writes three lifecycle
+Retention (ADR obs-2): `elasticsearch-setup` runs before Filebeat and writes three lifecycle
 policies that delete daily indexes once they reach their age. Days are set in `.env`:
 
 | Indexes | Policy | Default | Variable |
@@ -159,8 +168,10 @@ curl -s 'localhost:9200/mizan-logs-*/_ilm/explain?filter_path=**.phase,**.age'
 
 Every container's own output file is capped by Docker at three files of 10 MB
 (`x-logging` in `docker-compose.yml`), so the host disk has a ceiling even with the profile off.
-Index templates live in `infra/observability/*-template.json`; Logstash installs them on start,
-so delete an index created before a template change for the new mapping to apply. Give Elasticsearch
+Index templates live in `infra/observability/elasticsearch/*-template.json`; `elasticsearch-setup`
+installs them on every start, so delete an index created before a template change for the new
+mapping to apply. Filebeat reads only `*-json.log` (the json-file driver's files, not Docker's
+binary `container-cached.log`) and keeps its read position in the `filebeatdata` volume. Give Elasticsearch
 more heap with `ES_JAVA_OPTS` in `.env` when the host has room; 512 MB is the floor.
 
 ## Object storage (SeaweedFS)

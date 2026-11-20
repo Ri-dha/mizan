@@ -160,8 +160,9 @@ services:
       BACKUP_KEEP_WEEKLY: ${BACKUP_KEEP_WEEKLY:-4}
 
   # --- Observability: `docker compose --profile observability up -d` (also part of prod) ---
-  # Elasticsearch keeps the logs and metrics, Kibana shows them at http://localhost:5601. Single
-  # node, security off: reach it over the Docker network or an SSH tunnel, never expose 9200/5601.
+  # Elasticsearch keeps the logs and metrics; Kibana shows them at http://localhost:5601 when its
+  # own profile is added. Single node, security off: reach it over the Docker network or an SSH
+  # tunnel, never expose 9200/5601.
   elasticsearch:
     logging: *logging
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-9.3.3}
@@ -184,10 +185,11 @@ services:
       timeout: 5s
       retries: 30
 
+  # Only when someone is looking (ADR obs-4): `docker compose --profile prod --profile kibana up -d`.
   kibana:
     logging: *logging
     image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION:-9.3.3}
-    profiles: ["observability", "prod"]
+    profiles: ["kibana"]
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -209,7 +211,7 @@ services:
   kibana-setup:
     logging: *logging
     image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION:-9.3.3}
-    profiles: ["observability", "prod"]
+    profiles: ["kibana"]
     depends_on:
       kibana:
         condition: service_healthy
@@ -219,7 +221,7 @@ services:
       - ./infra/observability/kibana:/setup:ro
     entrypoint: ["/bin/bash", "/setup/setup.sh"]
 
-  # Retention policies and the metrics template; runs once before Logstash and exits.
+  # Retention policies and index templates; runs once before Filebeat and exits.
   elasticsearch-setup:
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-9.3.3}
     logging: *logging
@@ -236,29 +238,25 @@ services:
       - ./infra/observability/elasticsearch:/setup:ro
     entrypoint: ["/bin/sh", "/setup/setup.sh"]
 
-  # Container stdout (JSON from the API) and the local API log file into mizan-logs-*.
-  logstash:
+  # Container output (JSON from the API) and the local API log file into mizan-logs-* and
+  # containers-logs-* (ADR obs-4). A small Go agent where Logstash needed a JVM.
+  filebeat:
     logging: *logging
-    image: docker.elastic.co/logstash/logstash:${ELASTIC_VERSION:-9.3.3}
+    image: docker.elastic.co/beats/filebeat:${ELASTIC_VERSION:-9.3.3}
     profiles: ["observability", "prod"]
+    # Root is needed to read other containers' log files.
     user: root
     depends_on:
       elasticsearch-setup:
         condition: service_completed_successfully
+    command: ["filebeat", "-e", "--strict.perms=false"]
     environment:
-      LS_JAVA_OPTS: ${LS_JAVA_OPTS:--Xms256m -Xmx512m}
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-      XPACK_MONITORING_ENABLED: "false"
-      PIPELINE_ECS_COMPATIBILITY: disabled
-      # Root is needed to read other containers' log files.
-      ALLOW_SUPERUSER: "true"
     volumes:
-      - ./infra/observability/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-      - ./infra/observability/mizan-logs-template.json:/usr/share/logstash/templates/mizan-logs-template.json:ro
-      - ./infra/observability/containers-logs-template.json:/usr/share/logstash/templates/containers-logs-template.json:ro
+      - ./infra/observability/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./api/logs:/logs/api:ro
-      - logstashdata:/usr/share/logstash/data
+      - filebeatdata:/usr/share/filebeat/data
 
   # CPU, memory, network and disk per container into metricbeat-*. Optional: `--profile containers`.
   metricbeat:
@@ -281,7 +279,7 @@ services:
 volumes:
   pgdata:
   esdata:
-  logstashdata:
+  filebeatdata:
   metricbeatdata:
   seaweeddata:
   caddydata:

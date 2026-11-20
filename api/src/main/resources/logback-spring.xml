@@ -5,7 +5,7 @@
   every MDC key (correlationId, httpMethod, httpPath, userId, traceId, spanId) as top-level
   fields; logging.structured.json.* in application.yml still applies to it.
 
-  dev   : readable console + JSON file (logs/mizan.json) that Logstash tails
+  dev   : readable console + JSON file (logs/mizan.json) that Filebeat tails
   prod  : JSON console only; Docker collects stdout
   test  : readable console only
   other : JSON console + JSON file
