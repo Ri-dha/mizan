@@ -20,6 +20,10 @@ rclone mkdir "$STORE"
 # triggers make that most of a dump, so compressing the whole file is about 6x smaller.
 pg_dump --format=custom --compress=0 "$DATABASE_URL" | zstd -19 -q -c | rclone rcat "$STORE/$FILE"
 echo "backup ${FILE} written"
+# ADR obs-5: tell Uptime Kuma a good backup exists; a missing call raises its alert.
+if [ -n "${BACKUP_PUSH_URL:-}" ]; then
+  wget -q -O /dev/null "${BACKUP_PUSH_URL}?status=up&msg=${FILE}" || echo "could not reach the backup monitor"
+fi
 
 # Names sort by time; older .sql.gz dumps from before the custom format are pruned the same way.
 week_of() {

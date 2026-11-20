@@ -12,8 +12,6 @@ create_view() {
     -d "{\"data_view\":{\"id\":\"$1\",\"title\":\"$2\",\"name\":\"$3\",\"timeFieldName\":\"$4\"},\"override\":true}"
 }
 create_view mizan-logs "mizan-logs-*" "Mizan logs" "@timestamp"
-create_view mizan-metrics "mizan-metrics-*" "Mizan metrics" "@timestamp"
-create_view metricbeat "metricbeat-*" "Containers" "@timestamp"
 create_view containers-logs "containers-logs-*" "Container logs" "@timestamp"
 
 curl -s -X POST "$KIBANA/api/saved_objects/_import?overwrite=true" -H "kbn-xsrf: true" \

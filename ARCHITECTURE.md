@@ -172,16 +172,25 @@ The API logs one Logstash-shaped JSON object per line (`logback-spring.xml`: rea
 JSON file in dev, JSON stdout in prod, plain in test) with `correlationId`, `traceId`, `spanId`,
 `userId`, `httpMethod`, `httpPath`, and an access line per request: INFO for errors, client
 errors and requests over 1 s, DEBUG otherwise (ADR obs-3). Filebeat ships API lines to
-`mizan-logs-*` and other containers to `containers-logs-*` (ADR obs-4); Micrometer pushes metrics to
-`mizan-metrics-*`; Kibana, started only on its own profile, has a prebuilt "Mizan overview" dashboard. Every index is deleted
+`mizan-logs-*` and other containers to `containers-logs-*` (ADR obs-4); Kibana, started only on its own profile, has a prebuilt "Mizan overview" dashboard. Every index is deleted
 after a set age through lifecycle policies (ADR obs-2: logs 14 days, container logs and metrics
 7), and Docker caps each container's output at 30 MB.
+
+## Monitoring (ADR obs-5)
+
+VictoriaMetrics reads `/actuator/prometheus` (Micrometer: HTTP, JVM, Hikari, cache, IQWealth quota),
+postgres-exporter, SeaweedFS's metrics port, node-exporter (host disk and memory) and cAdvisor
+(containers) every 30 s and keeps 30 days. vmalert evaluates `infra/monitoring/vmalert/rules.yml`
+(targets down, 5xx rate, slow requests, heap, connection pool, Postgres, disk, host memory, IQWealth
+key or pause) and Alertmanager sends them to Telegram when configured. Grafana shows the metrics,
+the Elasticsearch logs and the alerts; Uptime Kuma checks the site and API are up, certificates
+are valid and the nightly backup reported in. Elasticsearch keeps only logs.
 
 ## Deployment
 
 One host with Docker Compose profiles: default (`postgres`, `seaweedfs`), `full` (plus the API),
 `prod` (plus Caddy with automatic TLS, nightly `pg_dump` to SeaweedFS, observability),
-`observability`, `containers` (Metricbeat). Flyway migrates on API start. Operations are in
+`observability`, `kibana`. Flyway migrates on API start. Operations are in
 `docs/RUNBOOK.md`.
 
 - Object storage is SeaweedFS (ADR storage-1), one `weed server -s3` container, reached only

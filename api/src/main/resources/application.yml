@@ -52,19 +52,15 @@ management:
       application: mizan
     distribution:
       # A few fixed latency bands, not a full histogram: about 70 buckets per path and status
-      # cost memory here and storage in Elasticsearch for detail nobody reads at this scale.
+      # cost memory here and storage in VictoriaMetrics for detail nobody reads at this scale.
       slo:
         http.server.requests: 100ms,500ms,1s,5s
-  elastic:
+  # ADR obs-5: JVM, HTTP, Hikari, cache and IQWealth metrics at /actuator/prometheus, read by
+  # VictoriaMetrics every 30 s; nothing is pushed.
+  prometheus:
     metrics:
       export:
-        # JVM, HTTP, Hikari and cache metrics into mizan-metrics-* for the Kibana performance panels.
-        enabled: "${MIZAN_METRICS_ELASTIC_ENABLED:false}"
-        host: "${MIZAN_ELASTICSEARCH_URL:http://localhost:9200}"
-        index: mizan-metrics
-        index-date-format: yyyy-MM-dd
-        step: 60s
-        auto-create-index: true
+        enabled: true
 
 springdoc:
   swagger-ui:

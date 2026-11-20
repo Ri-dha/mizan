@@ -35,7 +35,8 @@ The web app's stack is in MizanApp's README.
 | Concern | Choice |
 |---|---|
 | Deployment | Docker Compose: PostgreSQL 16, SeaweedFS, the API, Caddy (PWA, TLS, `/api` proxy), nightly `pg_dump` to SeaweedFS |
-| Logs and metrics | Elasticsearch and Filebeat 9.3; Kibana on demand with a prebuilt dashboard; Metricbeat optional |
+| Logs | Elasticsearch and Filebeat 9.3; Kibana on demand with a prebuilt dashboard |
+| Metrics and alerts | VictoriaMetrics, vmalert and Alertmanager (Telegram), Grafana dashboard, Uptime Kuma |
 | CI | GitHub Actions: Maven tests on Java 25 |
 
 ## Run it locally
@@ -68,7 +69,10 @@ scheduled jobs are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 | What | URL | Notes |
 |---|---|---|
 | Kibana | http://localhost:5601 | `docker compose --profile observability up -d`; dashboard "Mizan overview" |
-| Elasticsearch | http://localhost:9200 | Indices `mizan-logs-*` (API), `containers-logs-*` (everything else), `mizan-metrics-*`, `metricbeat-*` |
+| Elasticsearch | http://localhost:9200 | Indices `mizan-logs-*` (API), `containers-logs-*` (everything else) |
+| Grafana | http://localhost:3000 | Metrics dashboard "Mizan metrics", logs, alerts; user `admin`, password `MIZAN_GRAFANA_ADMIN_PASSWORD` |
+| Uptime Kuma | http://localhost:3001 | Up/down checks and the backup check-in; account created on first visit |
+| VictoriaMetrics | http://localhost:8428 | Metrics store; `/vmui` to query |
 | API | http://localhost:8080 | REST under `/api/v1` |
 | Swagger UI | http://localhost:8080/swagger-ui.html | Enabled in the `dev` profile; off elsewhere unless `SWAGGER_UI_ENABLED=true` |
 | OpenAPI document | http://localhost:8080/v3/api-docs | What `npm run api:types` reads |
@@ -87,11 +91,10 @@ docker compose --profile observability --profile kibana up -d
 
 Elasticsearch and Filebeat start with `observability` (and with `prod`); Kibana
 (http://localhost:5601, bound to localhost only) only with the `kibana` profile, so it runs while
-someone is looking (add `--profile containers` for Metricbeat's per-container CPU and memory). A
-one-shot `kibana-setup` container creates the data views and imports the **Mizan
-overview** dashboard: requests per status, p95 and average latency, slowest paths, log lines by
-level, errors and warnings by logger, most frequent messages, JVM heap, Hikari connections, and
-container CPU and memory.
+someone is looking. A one-shot `kibana-setup` container creates the data views and imports the
+**Mizan overview** dashboard: requests per status, p95 and average latency, slowest paths, log
+lines by level, errors and warnings by logger, and most frequent messages. Metrics live in
+VictoriaMetrics and the **Mizan metrics** dashboard in Grafana (ADR obs-5).
 
 The API writes one JSON object per log line in Logstash shape, with `correlationId`,
 `httpMethod`, `httpPath`, `userId`, `traceId` and `spanId` as top-level fields and one access
@@ -101,8 +104,9 @@ which the API writes as well (`api/logs/`, ignored by git). Log files idle for a
 collide with the API's. Appenders are in `api/src/main/resources/logback-spring.xml`: the `dev`
 profile logs readably to the console and as JSON to the file, `prod` logs JSON to stdout only,
 `test` plainly to the console.
-JVM, HTTP, Hikari and cache metrics go to `mizan-metrics-*` when `MIZAN_METRICS_ELASTIC_ENABLED=true`
-(the default inside the `api` container).
+JVM, HTTP, Hikari, cache and IQWealth metrics are served at `/actuator/prometheus` (no login,
+reachable only from this machine and the Docker network) and read by VictoriaMetrics. For an API
+run outside Docker set `MIZAN_API_METRICS_TARGET=host.docker.internal:8080`.
 
 ### Price feeds
 

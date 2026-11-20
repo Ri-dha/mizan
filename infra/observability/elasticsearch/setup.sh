@@ -26,8 +26,8 @@ for name in mizan-logs containers-logs; do
     -H "Content-Type: application/json" --data-binary "@/setup/$name-template.json"
 done
 
-# The API's metrics registry creates mizan-metrics-* on its own; this template outranks its default.
-put "_index_template/mizan-metrics" '{"index_patterns":["mizan-metrics-*"],"priority":200,"template":{"settings":{"number_of_shards":1,"number_of_replicas":0,"index.codec":"best_compression","index.lifecycle.name":"metrics-retention"}}}'
+# Metrics moved to VictoriaMetrics (ADR obs-5); metric indexes written before then still age out.
+curl -s -o /dev/null -X DELETE "$ES/_index_template/mizan-metrics"
 
 attach() {
   curl -s -o /dev/null -w "existing $1: %{http_code}\n" -X PUT "$ES/$1/_settings?allow_no_indices=true&expand_wildcards=open" \

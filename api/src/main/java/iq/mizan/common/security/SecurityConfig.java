@@ -48,6 +48,10 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info")
                         .permitAll()
+                        // ADR obs-5: VictoriaMetrics scrapes this over the Docker network. The API's port
+                        // is published on 127.0.0.1 only and Caddy forwards no /actuator path but health.
+                        .requestMatchers("/actuator/prometheus")
+                        .permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll()
                         .anyRequest().authenticated())

@@ -1,0 +1,79 @@
+# ADR obs-5: what pages someone. Each rule waits before firing so one bad scrape or a restart
+# does not send an alert.
+groups:
+  - name: mizan
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 3m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.job }} is not answering its metrics"
+
+      - alert: ApiErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="api", status=~"5.."}[5m]))
+            / clamp_min(sum(rate(http_server_requests_seconds_count{job="api"}[5m])), 1e-9) > 0.01
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "More than 1% of API requests fail with 5xx ({{ $value | humanizePercentage }})"
+
+      - alert: ApiSlow
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job="api"}[10m]))) > 1
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "95% of API requests take longer than {{ $value | humanizeDuration }}"
+
+      - alert: ApiHeapNearlyFull
+        expr: |
+          sum(jvm_memory_used_bytes{job="api", area="heap"}) / sum(jvm_memory_max_bytes{job="api", area="heap"} > 0) > 0.9
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "API heap is {{ $value | humanizePercentage }} full"
+
+      - alert: DatabasePoolWaiting
+        expr: max(hikaricp_connections_pending{job="api"}) > 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Requests are waiting for a database connection"
+
+      - alert: PostgresDown
+        expr: max(pg_up) == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "The metrics exporter cannot reach Postgres"
+
+      - alert: DiskAlmostFull
+        expr: |
+          min(node_filesystem_avail_bytes{job="host", fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{job="host", fstype!~"tmpfs|overlay"}) < 0.15
+        for: 10m
+        labels: { severity: critical }
+        annotations:
+          summary: "A disk has less than 15% free ({{ $value | humanizePercentage }})"
+
+      - alert: HostMemoryLow
+        expr: min(node_memory_MemAvailable_bytes{job="host"} / node_memory_MemTotal_bytes{job="host"}) < 0.1
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Less than 10% of the host's memory is available"
+
+      - alert: IqWealthKeyRefused
+        expr: max(mizan_iqwealth_key_refused{job="api"}) == 1
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "IQWealth refuses the API key; dollar and gold prices fall back to other feeds"
+
+      - alert: IqWealthPaused
+        expr: max(mizan_iqwealth_paused{job="api"}) == 1
+        for: 1m
+        labels: { severity: warning }
+        annotations:
+          summary: "IQWealth's daily limit was reached; polling resumes after midnight Baghdad time"

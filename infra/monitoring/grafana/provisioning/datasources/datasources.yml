@@ -1,0 +1,27 @@
+# ADR obs-5: metrics from VictoriaMetrics, logs from the same Elasticsearch Kibana reads, and the
+# alerts Alertmanager holds.
+apiVersion: 1
+datasources:
+  - name: VictoriaMetrics
+    uid: victoriametrics
+    type: prometheus
+    access: proxy
+    url: http://victoriametrics:8428
+    isDefault: true
+  - name: Mizan logs
+    uid: mizan-logs
+    type: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    jsonData:
+      index: "mizan-logs-*"
+      timeField: "@timestamp"
+      logMessageField: message
+      logLevelField: level
+  - name: Alertmanager
+    uid: alertmanager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
+    jsonData:
+      implementation: prometheus

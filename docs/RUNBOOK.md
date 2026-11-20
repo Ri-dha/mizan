@@ -129,7 +129,7 @@ requests set `LOGGING_LEVEL_IQ_MIZAN_HTTP=DEBUG`.
 ## Logs and performance in Kibana
 
 The `observability` profile (and `prod`) runs a single-node Elasticsearch with security off and
-Filebeat (ADR obs-4); `--profile containers` adds Metricbeat for per-container resource use.
+Filebeat (ADR obs-4). Metrics are not here any more: see "Metrics, alerts and uptime" (ADR obs-5).
 Kibana (about 1.2 GB of memory) runs only with its own profile, so start it when you need it and
 stop it after:
 
@@ -156,7 +156,7 @@ policies that delete daily indexes once they reach their age. Days are set in `.
 |---|---|---|---|
 | `mizan-logs-*` (the API) | `mizan-logs-retention` | 14 days | `MIZAN_LOG_RETENTION_DAYS` |
 | `containers-logs-*` | `containers-logs-retention` | 7 days | `MIZAN_CONTAINER_LOG_RETENTION_DAYS` |
-| `mizan-metrics-*`, `metricbeat-*` | `metrics-retention` | 7 days | `MIZAN_METRICS_RETENTION_DAYS` |
+| `mizan-metrics-*`, `metricbeat-*` (from before ADR obs-5, ageing out) | `metrics-retention` | 7 days | `MIZAN_METRICS_RETENTION_DAYS` |
 
 Changing a value takes effect on the next `docker compose --profile prod up`; existing indexes
 follow the new age. Indexes use `best_compression` and no replicas. Check what is held with
@@ -173,6 +173,36 @@ installs them on every start, so delete an index created before a template chang
 mapping to apply. Filebeat reads only `*-json.log` (the json-file driver's files, not Docker's
 binary `container-cached.log`) and keeps its read position in the `filebeatdata` volume. Give Elasticsearch
 more heap with `ES_JAVA_OPTS` in `.env` when the host has room; 512 MB is the floor.
+
+## Metrics, alerts and uptime (ADR obs-5)
+
+Part of `observability` and `prod`; every web UI listens on 127.0.0.1, so tunnel in:
+
+```bash
+ssh -L 3000:localhost:3000 -L 3001:localhost:3001 -L 9093:localhost:9093 user@host
+```
+
+- **Grafana** (`:3000`, user `admin`, password `MIZAN_GRAFANA_ADMIN_PASSWORD`; change it in `.env`
+  before the first start, as Grafana keeps the first one). The "Mizan metrics" dashboard, the
+  `Mizan logs` Elasticsearch source for searching logs, and the firing alerts.
+- **Alerts**: rules in `infra/monitoring/vmalert/rules.yml`. To receive them on Telegram, create a
+  bot with @BotFather, send it a message, read the chat id from
+  `https://api.telegram.org/bot<token>/getUpdates`, set `MIZAN_ALERT_TELEGRAM_BOT_TOKEN` and
+  `MIZAN_ALERT_TELEGRAM_CHAT_ID`, and recreate `alertmanager`. Without them alerts only show in
+  Grafana and Alertmanager (`:9093`).
+- **Uptime Kuma** (`:3001`): create the account on the first visit, then add monitors:
+  HTTP `http://api:8080/actuator/health` (keyword `UP`), HTTP `https://<your host>` (with
+  certificate expiry), and a **Push** monitor with a 26-hour interval whose URL goes in
+  `BACKUP_PUSH_URL` (use `http://uptime-kuma:3001/api/push/<token>` so the backup reaches it
+  inside Docker). Add a notification (Telegram, email) under Settings. Kuma runs on the same host,
+  so it cannot report the whole server being down; add a free external check on the public address
+  for that.
+- **VictoriaMetrics** (`:8428/vmui`) keeps `MIZAN_METRICS_RETENTION` (30 days) and holds its
+  caches to `MIZAN_VICTORIAMETRICS_MEMORY` (96 MB).
+- cAdvisor cannot see individual containers under Docker Desktop on a Mac; on a Linux host it can.
+
+Measured in use (2026-11-21): Grafana 226 MB, VictoriaMetrics 141 MB, Uptime Kuma 112 MB,
+Alertmanager 41 MB, vmalert 27 MB, cAdvisor 25 MB, node-exporter and postgres-exporter 10 MB each.
 
 ## Object storage (SeaweedFS)
 
