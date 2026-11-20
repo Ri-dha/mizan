@@ -1,5 +1,5 @@
 # T-monitoring — Metrics, alerts and uptime beside Elasticsearch logs
-- Status: in-review (2026-11-21), branch feat/monitoring (worktree ../.wt-monitoring), uncommitted
+- Status: done (2026-11-21), 947b5de on develop and main
 - Context: ADR obs-5; owner's choice after comparing setups (keep fast full-text log search).
 - Notes: `infra/monitoring/` (scrape config, alert rules, Alertmanager start script, Grafana
   provisioning and dashboard), compose services, API Prometheus registry and `IqWealthMetrics`,
