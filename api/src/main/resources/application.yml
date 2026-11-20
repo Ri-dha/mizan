@@ -219,6 +219,8 @@ mizan:
         zone: Asia/Baghdad
         day-cron: "0 0/15 8-21 * * *"
         night-cron: "0 0 23,2,5 * * *"
+        # ADR prices-4: the dealer buying price derived below IQWealth's gram, in basis points (100 = 1%).
+        gold-bid-margin-bp: "${MIZAN_IQWEALTH_GOLD_BID_MARGIN_BP:100}"
         # IQWealth publishes gold once a day; four reads catch it soon after it changes.
         gold-cron: "0 5 8,12,16,20 * * *"
       # Phase 4: the local market's own quote. Any JSON endpoint; e.g. {"gold21": 547000} with

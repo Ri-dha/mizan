@@ -51,6 +51,10 @@ public class MarketSettings {
         return settings.bool(SettingKey.MARKET_BAGHDAD_BULLION_ENABLED);
     }
 
+    public int iqWealthGoldBidMarginBp() {
+        return (int) settings.integer(SettingKey.MARKET_IQWEALTH_GOLD_BID_MARGIN_BP);
+    }
+
     public String goldPrimary() {
         return settings.text(SettingKey.MARKET_GOLD_PRIMARY);
     }

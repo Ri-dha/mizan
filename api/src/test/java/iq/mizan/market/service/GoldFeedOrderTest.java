@@ -23,12 +23,13 @@ class GoldFeedOrderTest {
     void iqWealthAsMainLeadsForGoldAndTheOthersFollow() {
         assertThat(GoldFeedOrder.arrange(Instrument.XAU_LOCAL, byOrder, IqWealthGoldFeed.NAME)).containsExactly(iqWealthGold, bullionHouse, goldApiCom);
         assertThat(GoldFeedOrder.arrange(Instrument.XAU, byOrder, IqWealthGoldFeed.NAME)).containsExactly(iqWealthGold, bullionHouse, goldApiCom);
+        assertThat(GoldFeedOrder.arrange(Instrument.XAU_LOCAL_BID, byOrder, IqWealthGoldFeed.NAME)).containsExactly(iqWealthGold, bullionHouse, goldApiCom);
     }
 
     @Test
     void otherwiseTheFeedsKeepTheirOrder() {
         assertThat(GoldFeedOrder.arrange(Instrument.XAU_LOCAL, byOrder, "baghdadbullionhouse.com")).containsExactly(bullionHouse, iqWealthGold, goldApiCom);
         assertThat(GoldFeedOrder.arrange(Instrument.XAG, byOrder, IqWealthGoldFeed.NAME)).containsExactly(bullionHouse, iqWealthGold, goldApiCom);
-        assertThat(GoldFeedOrder.arrange(Instrument.XAU_LOCAL_BID, byOrder, IqWealthGoldFeed.NAME)).containsExactly(bullionHouse, iqWealthGold, goldApiCom);
+        assertThat(GoldFeedOrder.arrange(Instrument.XAU_LOCAL_BID, byOrder, "baghdadbullionhouse.com")).containsExactly(bullionHouse, iqWealthGold, goldApiCom);
     }
 }

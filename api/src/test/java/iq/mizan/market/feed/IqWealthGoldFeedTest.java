@@ -26,6 +26,7 @@ class IqWealthGoldFeedTest {
     private static final String URL = "https://iraqsm.example/api/v1";
     private static final String KEY = "iqw_test";
     private static final int RESERVE = 30;
+    private static final int BID_MARGIN_BP = 150;
     private static final Clock NOON_BAGHDAD = Clock.fixed(Instant.parse("2026-11-20T09:00:00Z"), ZoneOffset.UTC);
 
     /** The shape of a real answer (2026-11-20), trimmed. */
@@ -59,6 +60,11 @@ class IqWealthGoldFeedTest {
         public int iqWealthReserve() {
             return RESERVE;
         }
+
+        @Override
+        public int iqWealthGoldBidMarginBp() {
+            return BID_MARGIN_BP;
+        }
     };
     private final IqWealthClient client = new IqWealthClient(builder, new MarketProperties(false, null, null, 0, 0, null,
             new MarketProperties.Feeds(null, null, null, null, 0, null, null, null,
@@ -66,14 +72,14 @@ class IqWealthGoldFeedTest {
 
     @Test
     void takesThePureGramInDinarsAndTheMiddleOfTheOunceAndAnswersFromThePoll() {
-        IqWealthGoldFeed feed = new IqWealthGoldFeed(client, quotes);
+        IqWealthGoldFeed feed = new IqWealthGoldFeed(client, settings, quotes);
         server.expect(requestTo(URL + "/gold")).andRespond(withSuccess(GOLD, MediaType.APPLICATION_JSON).header(IqWealthClient.REMAINING_HEADER, "90"));
 
         assertThat(feed.poll()).isEqualTo(IqWealthClient.Outcome.UPDATED);
         server.verify();
 
         assertThat(feed.supports(Instrument.XAU_LOCAL)).isTrue();
-        assertThat(feed.supports(Instrument.XAU_LOCAL_BID)).isFalse();
+        assertThat(feed.supports(Instrument.XAU_LOCAL_BID)).isTrue();
         assertThat(feed.supports(Instrument.XAG)).isFalse();
         assertThat(feed.fetch(Instrument.XAU_LOCAL)).get().extracting(FetchedPrice::priceMicros).isEqualTo(192_742_000_000L);
         assertThat(feed.fetch(Instrument.XAU)).get().extracting(FetchedPrice::priceMicros).isEqualTo(3_513_500_000L);
@@ -81,9 +87,20 @@ class IqWealthGoldFeedTest {
     }
 
     @Test
+    void derivesTheDealerBuyingPriceBelowTheGramByTheMargin() {
+        IqWealthGoldFeed feed = new IqWealthGoldFeed(client, settings, quotes);
+        server.expect(requestTo(URL + "/gold")).andRespond(withSuccess(GOLD, MediaType.APPLICATION_JSON).header(IqWealthClient.REMAINING_HEADER, "90"));
+        feed.poll();
+
+        assertThat(feed.fetch(Instrument.XAU_LOCAL_BID)).get().extracting(FetchedPrice::priceMicros)
+                .isEqualTo(Math.round(192_742_000_000L * (10_000 - BID_MARGIN_BP) / 10_000.0));
+        assertThat(feed.fetch(Instrument.XAU_LOCAL_BID).orElseThrow().priceMicros()).isLessThan(feed.fetch(Instrument.XAU_LOCAL).orElseThrow().priceMicros());
+    }
+
+    @Test
     void sharesTheDollarsDailyBudget() {
         IqWealthFxFeed dollar = new IqWealthFxFeed(client, settings, quotes);
-        IqWealthGoldFeed gold = new IqWealthGoldFeed(client, quotes);
+        IqWealthGoldFeed gold = new IqWealthGoldFeed(client, settings, quotes);
         server.expect(ExpectedCount.once(), requestTo(URL + "/fx"))
                 .andRespond(withSuccess(FX, MediaType.APPLICATION_JSON).header(IqWealthClient.REMAINING_HEADER, String.valueOf(RESERVE)));
 

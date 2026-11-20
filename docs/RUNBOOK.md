@@ -58,7 +58,8 @@ missed on the next sync; the per-field clocks decide, not the restore time.
 Providers are tried in order: IQWealth for both dollar rates (from its last scheduled poll);
 for gold, IQWealth first by default (the 24-karat gram and the world ounce, polled four times a
 day) and Baghdad Bullion House after it, swapped with the dashboard setting "Main gold price
-source" (ADR prices-3); Baghdad Bullion House for the dealer's buying price and silver; metals.dev and goldapi.io when keyed,
+source" (ADR prices-3), with the dealer's buying price derived below IQWealth's gram by the
+dashboard's buying margin (default 1%, ADR prices-4); Baghdad Bullion House for silver; metals.dev and goldapi.io when keyed,
 gold-api.com, open.er-api.com and openexchangerates.org, then the manual market dollar, then the
 stub (dev only). A provider without a key is skipped. Keys, on/off switches, the manual dollar,
 staleness and the Refresh cooldown can be changed in the admin dashboard without a restart (ADR

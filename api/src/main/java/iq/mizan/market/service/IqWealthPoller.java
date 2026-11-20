@@ -29,7 +29,7 @@ public class IqWealthPoller {
 
     private static final Logger log = LoggerFactory.getLogger(IqWealthPoller.class);
     private static final Set<Instrument> DOLLAR = EnumSet.of(Instrument.USDIQD_PARALLEL, Instrument.USDIQD_OFFICIAL);
-    private static final Set<Instrument> GOLD = EnumSet.of(Instrument.XAU, Instrument.XAU_LOCAL);
+    private static final Set<Instrument> GOLD = EnumSet.of(Instrument.XAU, Instrument.XAU_LOCAL, Instrument.XAU_LOCAL_BID);
 
     private final IqWealthFxFeed feed;
     private final IqWealthGoldFeed goldFeed;

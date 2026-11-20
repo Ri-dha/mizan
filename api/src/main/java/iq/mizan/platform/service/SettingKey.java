@@ -19,6 +19,8 @@ public enum SettingKey {
     MARKET_BAGHDAD_BULLION_ENABLED(Kind.BOOLEAN, "mizan.market.feeds.baghdad-bullion.enabled"),
     MARKET_GOLD_API_COM_ENABLED(Kind.BOOLEAN, "mizan.market.feeds.gold-api-com.enabled"),
     /** Which feed answers gold first; the others follow as fallbacks (ADR prices-3). */
+    /** IQWealth publishes no dealer buying price; it is derived this many basis points below its gram (ADR prices-4). */
+    MARKET_IQWEALTH_GOLD_BID_MARGIN_BP(Kind.INTEGER, "mizan.market.feeds.iq-wealth.gold-bid-margin-bp", 0, 2_000),
     MARKET_GOLD_PRIMARY(Kind.CHOICE, "mizan.market.feeds.gold-primary", List.of("iraqsm.com", "baghdadbullionhouse.com")),
     MARKET_STALE_AFTER(Kind.DURATION, "mizan.market.stale-after"),
     MARKET_REFRESH_COOLDOWN(Kind.DURATION, "mizan.market.manual-refresh-cooldown");

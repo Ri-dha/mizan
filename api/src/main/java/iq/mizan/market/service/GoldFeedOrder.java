@@ -16,7 +16,7 @@ import iq.mizan.market.feed.PriceFeed;
  */
 final class GoldFeedOrder {
 
-    private static final Set<Instrument> GOLD = EnumSet.of(Instrument.XAU, Instrument.XAU_LOCAL);
+    private static final Set<Instrument> GOLD = EnumSet.of(Instrument.XAU, Instrument.XAU_LOCAL, Instrument.XAU_LOCAL_BID);
 
     private GoldFeedOrder() {
     }
