@@ -1,5 +1,5 @@
 # T-filebeat — Ship logs with Filebeat and run Kibana on demand
-- Status: in-review (2026-11-20), branch feat/filebeat (worktree ../.wt-filebeat), uncommitted
+- Status: done (2026-11-20), f0fb423 on develop and main
 - Context: ADR obs-4; item 1 of the remaining resource work, owner's choice.
 - Notes: `filebeat.yml`, compose `filebeat` service and `filebeatdata` volume, templates moved to
   `infra/observability/elasticsearch/` and installed by `setup.sh`, `logstash.conf` removed,
