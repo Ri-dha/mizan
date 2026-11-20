@@ -13,12 +13,10 @@ public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
 
     Optional<AppUser> findByEmailIgnoreCase(String email);
 
-    Optional<AppUser> findByPhone(String phone);
-
     List<AppUser> findByPlatformRoleOrderByDisplayName(PlatformRole role);
 
     long countByPlatformRole(PlatformRole role);
 
-    List<AppUser> findTop20ByEmailStartingWithIgnoreCaseOrPhoneStartingWithOrDisplayNameContainingIgnoreCaseOrderByCreatedAtDesc(
-            String email, String phone, String displayName);
+    List<AppUser> findTop20ByEmailStartingWithIgnoreCaseOrDisplayNameContainingIgnoreCaseOrderByCreatedAtDesc(
+            String email, String displayName);
 }

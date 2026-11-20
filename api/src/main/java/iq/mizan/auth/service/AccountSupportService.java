@@ -46,7 +46,7 @@ public class AccountSupportService {
         if (text.length() < MIN_QUERY) {
             throw ApiException.of(ErrorCode.VALIDATION_FAILED, "Type at least %d characters".formatted(MIN_QUERY));
         }
-        return users.findTop20ByEmailStartingWithIgnoreCaseOrPhoneStartingWithOrDisplayNameContainingIgnoreCaseOrderByCreatedAtDesc(text, text, text)
+        return users.findTop20ByEmailStartingWithIgnoreCaseOrDisplayNameContainingIgnoreCaseOrderByCreatedAtDesc(text, text)
                 .stream().map(AccountSupportService::summary).toList();
     }
 

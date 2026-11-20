@@ -1,6 +1,5 @@
 package iq.mizan.auth.service;
 
-import iq.mizan.auth.AuthProperties;
 import iq.mizan.auth.entity.AppUser;
 import iq.mizan.auth.entity.RefreshToken;
 import iq.mizan.auth.repository.AppUserRepository;
@@ -37,12 +36,11 @@ public class AuthenticationService {
     private final SessionRevoker sessionRevoker;
     private final LoginAttemptRecorder loginAttemptRecorder;
     private final AuditService auditService;
-    private final AuthProperties authProperties;
     private final DummyPasswordHash dummyPasswordHash;
 
     @Transactional
     public TokenPair login(String rawIdentifier, String authKey, String legacyPassword, String userAgent, String ipAddress) {
-        Identifier identifier = Identifier.parse(rawIdentifier, authProperties.defaultCountryCode());
+        Identifier identifier = Identifier.parse(rawIdentifier);
         AppUser user = userLookup.byIdentifier(identifier).orElse(null);
 
         if (user == null) {
@@ -137,7 +135,7 @@ public class AuthenticationService {
     }
 
     private static ApiException invalidCredentials() {
-        return ApiException.of(ErrorCode.INVALID_CREDENTIALS, "Email, phone or password is incorrect");
+        return ApiException.of(ErrorCode.INVALID_CREDENTIALS, "Email or password is incorrect");
     }
 
     private static ApiException invalidRefreshToken() {

@@ -45,7 +45,7 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
     private final RefreshTokenCookie refreshCookie;
 
-    @Operation(summary = "Register with an email or phone number")
+    @Operation(summary = "Register with an email address")
     @SecurityRequirements
     @PostMapping("/register")
     public ResponseEntity<TokenResponse> register(
@@ -91,7 +91,7 @@ public class AuthController {
         return ResponseEntity.noContent().headers(headers).build();
     }
 
-    @Operation(summary = "Confirm the email or phone with the code that was sent")
+    @Operation(summary = "Confirm the email address with the code that was sent")
     @PostMapping("/verify")
     public ResponseEntity<Void> verify(
             @AuthenticationPrincipal CurrentUser user,

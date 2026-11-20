@@ -13,8 +13,8 @@ public enum ErrorCode {
     RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests"),
 
     // Accounts and sessions
-    INVALID_IDENTIFIER(HttpStatus.BAD_REQUEST, "Invalid Email Or Phone"),
-    IDENTIFIER_ALREADY_REGISTERED(HttpStatus.CONFLICT, "Email Or Phone Already Registered"),
+    INVALID_IDENTIFIER(HttpStatus.BAD_REQUEST, "Invalid Email"),
+    IDENTIFIER_ALREADY_REGISTERED(HttpStatus.CONFLICT, "Email Already Registered"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Invalid Credentials"),
     ACCOUNT_NOT_ACTIVE(HttpStatus.FORBIDDEN, "Account Not Active"),
     ACCOUNT_LOCKED(HttpStatus.TOO_MANY_REQUESTS, "Account Locked"),

@@ -95,9 +95,16 @@ mizan:
     # Pepper for HMAC lookups of refresh tokens and verification codes. Dev default only.
     hash-pepper: "${MIZAN_HASH_PEPPER:dev-only-pepper-change-me}"
 
+  # ADR auth-email-1: sign-in codes go out by SMTP when a host is set; without one, dev and test log them.
+  mail:
+    host: ${MIZAN_MAIL_HOST:}
+    port: ${MIZAN_MAIL_PORT:587}
+    username: ${MIZAN_MAIL_USERNAME:}
+    password: ${MIZAN_MAIL_PASSWORD:}
+    from: ${MIZAN_MAIL_FROM:}
+    starttls: ${MIZAN_MAIL_STARTTLS:true}
+
   auth:
-    # Local numbers written as 07xx are normalised to E.164 with this prefix.
-    default-country-code: "+964"
     lockout:
       max-attempts: 5
       duration: 15m

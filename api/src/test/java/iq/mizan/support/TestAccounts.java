@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record TestAccounts(
         String ownerEmail,
         String ownerPassword,
-        String ownerPhone,
         String otherEmail,
         String otherPassword,
         String thirdEmail,

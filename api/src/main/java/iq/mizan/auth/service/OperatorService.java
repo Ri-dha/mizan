@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import iq.mizan.auth.AuthProperties;
 import iq.mizan.auth.entity.AppUser;
 import iq.mizan.auth.entity.PlatformRole;
 import iq.mizan.auth.repository.AppUserRepository;
@@ -43,18 +42,16 @@ public class OperatorService {
     private final AppUserRepository users;
     private final PasswordVerifier passwords;
     private final AuditService auditService;
-    private final AuthProperties authProperties;
     private final Duration elevation;
     private final String bootstrapIdentifier;
     private final Clock clock;
 
-    public OperatorService(AppUserRepository users, PasswordVerifier passwords, AuditService auditService, AuthProperties authProperties,
+    public OperatorService(AppUserRepository users, PasswordVerifier passwords, AuditService auditService,
                            @Value("${mizan.admin.elevation:10m}") Duration elevation,
                            @Value("${mizan.admin.bootstrap-operator:}") String bootstrapIdentifier, Clock clock) {
         this.users = users;
         this.passwords = passwords;
         this.auditService = auditService;
-        this.authProperties = authProperties;
         this.elevation = elevation;
         this.bootstrapIdentifier = bootstrapIdentifier;
         this.clock = clock;
@@ -127,7 +124,7 @@ public class OperatorService {
 
     @Transactional
     public void grant(String identifier, UUID actor) {
-        AppUser user = find(identifier).orElseThrow(() -> ApiException.of(ErrorCode.USER_NOT_FOUND, "No account has that email or phone"));
+        AppUser user = find(identifier).orElseThrow(() -> ApiException.of(ErrorCode.USER_NOT_FOUND, "No account has that email"));
         if (user.isSuspended()) {
             throw ApiException.of(ErrorCode.ACCOUNT_SUSPENDED, "A suspended account cannot be an operator");
         }
@@ -146,8 +143,7 @@ public class OperatorService {
     }
 
     private java.util.Optional<AppUser> find(String rawIdentifier) {
-        Identifier identifier = Identifier.parse(rawIdentifier, authProperties.defaultCountryCode());
-        return identifier.emailOrNull() != null ? users.findByEmailIgnoreCase(identifier.emailOrNull()) : users.findByPhone(identifier.phoneOrNull());
+        return users.findByEmailIgnoreCase(Identifier.parse(rawIdentifier).email());
     }
 
     private AppUser user(UUID userId) {

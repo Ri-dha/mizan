@@ -93,6 +93,16 @@ assets; nothing about a receipt reaches the server. All three Tesseract cores ar
 (plain, SIMD, relaxed SIMD); the browser picks one, and a missing one breaks reading only on
 browsers that pick it. The service worker never caches an HTML answer under `/ocr/`.
 
+## Email (sign-in codes)
+
+Accounts sign in with an email only (ADR auth-email-1). Production needs an SMTP service or the API
+will not start: set `MIZAN_MAIL_HOST`, `MIZAN_MAIL_PORT` (587), `MIZAN_MAIL_USERNAME`,
+`MIZAN_MAIL_PASSWORD` and `MIZAN_MAIL_FROM` (for example `Mizan <no-reply@your-domain>`). Any provider
+works (SES, Postmark, Resend, Brevo). Set up SPF and DKIM for the sending domain, or the codes land in
+spam. `MIZAN_MAIL_STARTTLS=false` is only for a local catcher such as Mailpit on port 1025.
+Failed sends are logged ("Could not send the ... email"), counted in `mizan_mail_failed_total` and
+raise the `MailFailing` alert; the person can ask for the code again.
+
 ## Push notifications
 
 Web Push needs a VAPID key pair that identifies this server to Apple, Google and Mozilla. Without
@@ -304,7 +314,7 @@ scratch household to reproduce. Audit entries (`audit_entry`) record every sign-
 ## Operators and the admin dashboard
 
 - **First operator**: register the account in the app, set `MIZAN_BOOTSTRAP_OPERATOR` to its
-  email or phone and restart. Later operators are granted on the dashboard's Operators tab; the
+  email and restart. Later operators are granted on the dashboard's Operators tab; the
   last operator cannot be removed.
 - **Using it**: operators see **Admin** in the menu (`/admin`). Reading needs only the role. Every
   change asks for the password again and then allows changes for 10 minutes

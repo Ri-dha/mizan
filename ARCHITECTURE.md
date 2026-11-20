@@ -89,7 +89,7 @@ docs/manual/  one Markdown source → in-app /help and static /docs
   `app.reports = on` (`REPORTS_VIEW`) lets advisors read the shared `annual_report` rows only.
 - A user can belong to several households; the current membership decides the JWT's household and
   permissions. Roles map to permissions on `HouseholdRole`; code checks permissions only.
-- Auth: Argon2id over the device-derived auth key (never the password), 15-minute JWT access tokens, rotating refresh tokens in an httpOnly
+- Auth: accounts are email addresses only, codes sent over SMTP after commit (ADR auth-email-1). Argon2id over the device-derived auth key (never the password), 15-minute JWT access tokens, rotating refresh tokens in an httpOnly
   cookie (or request body for non-browser clients), replay of a rotated token revokes all sessions.
 
 ## Operators (ADR admin-1)

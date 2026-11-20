@@ -49,7 +49,8 @@ cd api && ./mvnw spring-boot:run
 
 That starts Postgres and SeaweedFS from `docker-compose.yml` automatically, migrates the schema, and
 serves the API. Verification and password-reset codes are printed to the API log in the dev
-profile (look for `[DEV ONLY]`).
+profile (look for `[DEV ONLY]`) unless `MIZAN_MAIL_HOST` is set, in which case they are emailed
+(ADR auth-email-1).
 
 For the web app, see MizanApp's README; its dev server proxies `/api` to this API.
 
@@ -130,11 +131,11 @@ from `MIZAN_PARALLEL_RATE_IQD_MICROS` (1470 IQD/USD = `1470000000`) or a price t
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/auth/register` | none | Create an account with an email or phone, an auth key derived on the device and the wrapped account keys; returns tokens and creates the household |
+| POST | `/api/v1/auth/register` | none | Create an account with an email address, an auth key derived on the device and the wrapped account keys; returns tokens and creates the household |
 | POST | `/api/v1/auth/login` | none | Sign in with the auth key (accounts from before encryption send `legacyPassword` once and are upgraded); five failures lock the account for 15 minutes |
 | POST | `/api/v1/auth/refresh` | cookie or body | Rotate the refresh token; replaying an old one revokes every session |
 | POST | `/api/v1/auth/logout` | cookie or body | Revoke the refresh token |
-| POST | `/api/v1/auth/verify` | bearer | Confirm the email or phone with the delivered code |
+| POST | `/api/v1/auth/verify` | bearer | Confirm the email address with the delivered code |
 | POST | `/api/v1/auth/verify/resend` | bearer | Send a fresh code (60 s cooldown) |
 | POST | `/api/v1/auth/password-reset/request` | none | Send a reset code; always 204 |
 | POST | `/api/v1/auth/password-reset/confirm` | none | Set a new auth key; ends all sessions. The keys then need the recovery code |

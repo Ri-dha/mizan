@@ -151,7 +151,7 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Find accounts by the start of an email or phone, or part of a name")
+    @Operation(summary = "Find accounts by the start of an email, or part of a name")
     @GetMapping("/accounts")
     public ResponseEntity<List<AccountSupportService.AccountSummary>> accounts(@AuthenticationPrincipal CurrentUser user, @RequestParam String query) {
         read(user);

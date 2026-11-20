@@ -1,6 +1,5 @@
 package iq.mizan.auth.service;
 
-import iq.mizan.auth.AuthProperties;
 import iq.mizan.auth.entity.AppUser;
 import iq.mizan.auth.repository.AppUserRepository;
 import iq.mizan.common.audit.AuditAction;
@@ -31,7 +30,6 @@ public class RegistrationService {
     private final VerificationService verificationService;
     private final TokenIssuer tokenIssuer;
     private final AuditService auditService;
-    private final AuthProperties authProperties;
     private final KeyService keyService;
 
     @Transactional
@@ -39,7 +37,7 @@ public class RegistrationService {
             String rawIdentifier, String authKey, AccountKeysRequest keys, String displayName, String locale,
             String userAgent, String ipAddress) {
 
-        Identifier identifier = Identifier.parse(rawIdentifier, authProperties.defaultCountryCode());
+        Identifier identifier = Identifier.parse(rawIdentifier);
         if (userLookup.byIdentifier(identifier).isPresent()) {
             throw identifierAlreadyRegistered();
         }
@@ -68,6 +66,6 @@ public class RegistrationService {
 
     private static ApiException identifierAlreadyRegistered() {
         return ApiException.of(ErrorCode.IDENTIFIER_ALREADY_REGISTERED,
-                "An account with this email or phone already exists");
+                "An account with this email already exists");
     }
 }

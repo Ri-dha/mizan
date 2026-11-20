@@ -54,12 +54,13 @@ class AuthFlowIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void phoneNumbersAreNormalisedToE164() {
-        var session = api.register("0770 000 0001", accounts.ownerPassword(), "Ridha");
+    void phoneNumbersAreRefused() {
+        var result = api.post("/api/v1/auth/register", null, Map.of(
+                "identifier", "0770 000 0001", "authKey", ApiClient.authKey(accounts.ownerPassword()), "displayName", "Ridha",
+                "keys", ApiClient.accountKeys("phone")));
 
-        JsonNode me = api.body(api.get("/api/v1/me", session.accessToken()));
-        assertThat(me.get("phone").asString()).isEqualTo(accounts.ownerPhone());
-        assertThat(me.get("email").isNull()).isTrue();
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(api.body(result).get("code").asString()).isEqualTo("INVALID_IDENTIFIER");
     }
 
     @Test

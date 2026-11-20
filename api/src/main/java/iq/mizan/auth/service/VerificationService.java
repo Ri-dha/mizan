@@ -19,6 +19,8 @@ import iq.mizan.common.security.HashingService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /** Issues and checks one-time codes for contact verification and password reset. */
 @Service
@@ -78,7 +80,18 @@ public class VerificationService {
         String code = codeGenerator.numeric(authProperties.verification().codeLength());
         codeRepository.save(VerificationCode.issue(
                 user.getId(), purpose, hashingService.hash(code), ttl));
-        codeSender.send(user.contact(), purpose, code);
+        Identifier contact = user.contact();
+        // After commit, so a slow mail server never holds the transaction and a rolled-back code is never mailed.
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    codeSender.send(contact, purpose, code);
+                }
+            });
+        } else {
+            codeSender.send(contact, purpose, code);
+        }
     }
 
     private void refuseIfResentTooSoon(UUID userId, CodePurpose purpose) {

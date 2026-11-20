@@ -80,8 +80,7 @@ public class AppUser {
             Identifier identifier, String displayName, String passwordHash, String locale) {
         AppUser user = new AppUser();
         user.id = UUID.randomUUID();
-        user.email = identifier.emailOrNull();
-        user.phone = identifier.phoneOrNull();
+        user.email = identifier.email();
         user.displayName = displayName;
         user.passwordHash = passwordHash;
         user.authScheme = AuthScheme.KEY;
@@ -93,7 +92,7 @@ public class AppUser {
     }
 
     public Identifier contact() {
-        return email != null ? Identifier.email(email) : Identifier.phone(phone);
+        return new Identifier(email);
     }
 
     public boolean isVerified() {

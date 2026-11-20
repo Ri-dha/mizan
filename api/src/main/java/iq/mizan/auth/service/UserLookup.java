@@ -15,9 +15,6 @@ public class UserLookup {
     private final AppUserRepository userRepository;
 
     public Optional<AppUser> byIdentifier(Identifier identifier) {
-        return switch (identifier.channel()) {
-            case EMAIL -> userRepository.findByEmailIgnoreCase(identifier.value());
-            case PHONE -> userRepository.findByPhone(identifier.value());
-        };
+        return userRepository.findByEmailIgnoreCase(identifier.email());
     }
 }

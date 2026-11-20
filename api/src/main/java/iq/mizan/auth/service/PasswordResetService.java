@@ -1,6 +1,5 @@
 package iq.mizan.auth.service;
 
-import iq.mizan.auth.AuthProperties;
 import iq.mizan.auth.entity.AppUser;
 import iq.mizan.common.audit.AuditAction;
 import iq.mizan.common.audit.AuditEntityType;
@@ -23,12 +22,11 @@ public class PasswordResetService {
     private final PasswordEncoder passwordEncoder;
     private final SessionRevoker sessionRevoker;
     private final AuditService auditService;
-    private final AuthProperties authProperties;
 
     /** Always succeeds from the caller's view, so it cannot be used to probe for accounts. */
     @Transactional
     public void request(String rawIdentifier) {
-        Identifier identifier = Identifier.parse(rawIdentifier, authProperties.defaultCountryCode());
+        Identifier identifier = Identifier.parse(rawIdentifier);
         userLookup.byIdentifier(identifier)
                 .filter(AppUser::isActive)
                 .ifPresent(verificationService::sendPasswordReset);
@@ -36,7 +34,7 @@ public class PasswordResetService {
 
     @Transactional
     public void confirm(String rawIdentifier, String code, String newAuthKey, String ipAddress) {
-        Identifier identifier = Identifier.parse(rawIdentifier, authProperties.defaultCountryCode());
+        Identifier identifier = Identifier.parse(rawIdentifier);
         AppUser user = userLookup.byIdentifier(identifier)
                 .filter(AppUser::isActive)
                 .orElseThrow(() -> ApiException.of(

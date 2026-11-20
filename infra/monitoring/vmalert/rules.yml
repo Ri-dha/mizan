@@ -77,3 +77,10 @@ groups:
         labels: { severity: warning }
         annotations:
           summary: "IQWealth's daily limit was reached; polling resumes after midnight Baghdad time"
+
+      - alert: MailFailing
+        expr: increase(mizan_mail_failed_total{job="api"}[15m]) > 0
+        for: 0m
+        labels: { severity: warning }
+        annotations:
+          summary: "Sign-in code emails are failing; check the SMTP settings and the provider"
