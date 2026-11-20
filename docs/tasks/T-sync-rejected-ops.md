@@ -1,6 +1,5 @@
 # T-sync-rejected-ops — One refused op must not stop a device's sync
-- Status: in-review (2026-11-20), branch `fix/sync-rejected-ops` (worktree `../.wt-sync-rejects`);
-  MizanApp branch `fix/sync-rejected-ops`
+- Status: done (2026-11-20): MizanApi bebc6d5, MizanApp 500d790, on develop and main
 - Context: found while taking the store screenshots: a demo loader wrote `fxRateMicros` to cash
   accounts and goals, the server refused the whole batch, and the phone retried it forever ("42
   changes waiting"). ADR sync-3.
