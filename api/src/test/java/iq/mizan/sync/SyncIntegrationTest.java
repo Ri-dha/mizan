@@ -147,6 +147,17 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
         assertThat(rejectedCode(unknownField)).isEqualTo("SYNC_FIELD_UNKNOWN");
     }
 
+    /** T-goal-opening: a goal's already-saved amount is a field added after encryption, so it exists only sealed. */
+    @Test
+    void aGoalAcceptsItsAlreadySavedAmount() {
+        UUID goalId = UUID.randomUUID();
+        JsonNode body = push(owner, phone, Map.of("opId", UUID.randomUUID(), "table", "goal", "rowId", goalId,
+                "fields", Map.of("visibility", "SHARED", "name", ApiClient.sealed("Car"), "openingAmount", ApiClient.sealed(500_000)),
+                "clocks", Map.of("visibility", clock(1), "name", clock(1), "openingAmount", clock(1))));
+
+        assertThat(body.get("rejected")).isEmpty();
+    }
+
     /** ADR e2e-1: a client that sends plain values, such as an old cached web app, is refused outright. */
     @Test
     void plainValuesAreRefused() {

@@ -1,5 +1,6 @@
 package iq.mizan.goal.sync;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import iq.mizan.sync.table.SyncColumnType;
@@ -12,7 +13,8 @@ public class GoalSyncTable implements SyncTable {
 
     public static final String NAME = "goal";
 
-    private static final Map<String, SyncColumnType> FIELDS = Map.ofEntries(
+    /** The plain table's columns from before ADR e2e-1; fields added since exist only sealed. */
+    private static final Map<String, SyncColumnType> LEGACY_FIELDS = Map.ofEntries(
             Map.entry("visibility", SyncColumnType.TEXT),
             Map.entry("name", SyncColumnType.TEXT),
             Map.entry("targetAmount", SyncColumnType.BIGINT),
@@ -28,6 +30,9 @@ public class GoalSyncTable implements SyncTable {
             Map.entry("sortOrder", SyncColumnType.INTEGER),
             Map.entry("deletedAt", SyncColumnType.TIMESTAMP));
 
+    /** T-goal-opening: money already set aside before the goal was added, in the goal's currency. */
+    private static final String OPENING_AMOUNT = "openingAmount";
+
     @Override
     public String name() {
         return NAME;
@@ -35,6 +40,13 @@ public class GoalSyncTable implements SyncTable {
 
     @Override
     public Map<String, SyncColumnType> fields() {
-        return FIELDS;
+        Map<String, SyncColumnType> fields = new HashMap<>(LEGACY_FIELDS);
+        fields.put(OPENING_AMOUNT, SyncColumnType.BIGINT);
+        return Map.copyOf(fields);
+    }
+
+    @Override
+    public Map<String, SyncColumnType> legacyFields() {
+        return LEGACY_FIELDS;
     }
 }
