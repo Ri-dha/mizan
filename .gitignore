@@ -27,3 +27,6 @@ api/.jqwik-database
 
 # API log file tailed by Filebeat in local development
 api/logs/
+
+# --- Local run output ---
+logs/
