@@ -12,6 +12,8 @@ import iq.mizan.household.dto.InvitationResponse;
 import iq.mizan.household.dto.MemberResponse;
 import iq.mizan.household.dto.MembershipResponse;
 import iq.mizan.household.dto.TransferOwnershipRequest;
+import iq.mizan.household.dto.ChangeBaseCurrencyRequest;
+import iq.mizan.household.dto.RebaseClaimResponse;
 import iq.mizan.household.dto.UpdateHouseholdRequest;
 import iq.mizan.household.service.HouseholdService;
 
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,6 +58,21 @@ public class HouseholdController {
     public ResponseEntity<HouseholdResponse> update(
             @AuthenticationPrincipal CurrentUser user, @Valid @RequestBody UpdateHouseholdRequest request) {
         return ResponseEntity.ok(householdService.updateSettings(user.userId(), request));
+    }
+
+    @Operation(summary = "Change the household's currency (owner); this device then converts the shared records by the factor")
+    @PutMapping("/current/base-currency")
+    @PreAuthorize("hasAuthority('PLAN_EDIT')")
+    public ResponseEntity<HouseholdResponse> changeBaseCurrency(
+            @AuthenticationPrincipal CurrentUser user, @Valid @RequestBody ChangeBaseCurrencyRequest request) {
+        return ResponseEntity.ok(householdService.changeBaseCurrency(user.userId(), request));
+    }
+
+    @Operation(summary = "Claim converting the caller's private records after a currency change; one device per member wins")
+    @PostMapping("/current/rebase-claims")
+    @PreAuthorize("hasAuthority('HOUSEHOLD_VIEW')")
+    public ResponseEntity<RebaseClaimResponse> claimRebase(@AuthenticationPrincipal CurrentUser user) {
+        return ResponseEntity.ok(householdService.claimRebase(user.userId()));
     }
 
     @Operation(summary = "Every household the caller belongs to")

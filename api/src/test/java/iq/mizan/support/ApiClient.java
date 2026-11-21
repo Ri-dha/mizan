@@ -67,6 +67,16 @@ public class ApiClient {
         return post("/api/v1/auth/login", null, Map.of("identifier", identifier, "authKey", authKey(password)));
     }
 
+    /** Registers with a country and a household currency, as the current apps do. */
+    public MvcTestResult registerIn(String identifier, String password, String displayName, String country, String baseCurrency) {
+        java.util.Map<String, Object> body = new java.util.HashMap<>(Map.of("identifier", identifier, "authKey", authKey(password),
+                "displayName", displayName, "keys", accountKeys(identifier), "country", country));
+        if (baseCurrency != null) {
+            body.put("baseCurrency", baseCurrency);
+        }
+        return post("/api/v1/auth/register", null, body);
+    }
+
     public Session register(String identifier, String password, String displayName) {
         MvcTestResult result = post("/api/v1/auth/register", null, Map.of("identifier", identifier, "authKey", authKey(password),
                 "displayName", displayName, "keys", accountKeys(identifier)));

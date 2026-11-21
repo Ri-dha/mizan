@@ -149,6 +149,9 @@ property tests prove aggregates reconcile.
   refreshes all feeds every 30 minutes in Baghdad hours. `/market/history` rolls up by day, week
   (from Saturday) or month and `/market/changes` pages the ticks; both are open to every signed-in
   role. The web Prices screen (`features/prices`) charts them, cached on the device.
+- World currencies (ADR rates-2): `WorldRatePoller` stores Frankfurter's daily rates per US dollar in
+  `world_rate` every six hours; `/market/world-rates` serves the latest and a currency's history.
+  Clients convert through the dollar and price the dinar with the household's own rate.
 - Valuation resolves: user override, else local quote (bid when valuing at buy-back) when the
   household's price source is LOCAL, else spot × the chosen dollar rate × purity × premium.
 

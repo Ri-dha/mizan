@@ -1,6 +1,7 @@
 package iq.mizan.auth.controller;
 
 import iq.mizan.auth.dto.CurrentUserResponse;
+import iq.mizan.auth.dto.UpdateProfileRequest;
 import iq.mizan.auth.service.AccountDeletionService;
 import iq.mizan.auth.service.CurrentUserService;
 import iq.mizan.common.security.CurrentUser;
@@ -14,6 +15,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +35,12 @@ public class MeController {
     @GetMapping
     public ResponseEntity<CurrentUserResponse> me(@AuthenticationPrincipal CurrentUser user) {
         return ResponseEntity.ok(currentUserService.describe(user.userId()));
+    }
+
+    @Operation(summary = "Change the account's country or the currencies followed on the Prices screen")
+    @PatchMapping
+    public ResponseEntity<CurrentUserResponse> update(@AuthenticationPrincipal CurrentUser user, @Valid @RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(currentUserService.update(user.userId(), request));
     }
 
     @Operation(summary = "Ask for the account and its household to be deleted after the grace period (FR-ACC-08)")

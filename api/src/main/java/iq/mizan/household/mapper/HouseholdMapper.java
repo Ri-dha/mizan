@@ -16,6 +16,8 @@ public interface HouseholdMapper {
     @Mapping(target = "name", source = "household.name")
     @Mapping(target = "baseCurrency", source = "household.baseCurrency")
     @Mapping(target = "monthStartDay", source = "household.monthStartDay")
+    @Mapping(target = "baseGeneration", source = "household.baseGeneration")
+    @Mapping(target = "rebasedGeneration", source = "membership.rebasedGeneration")
     @Mapping(target = "role", source = "membership.role")
     @Mapping(target = "permissions", expression = "java(membership.getRole().permissions())")
     @Mapping(target = "deletionRequestedAt", source = "household.deletionRequestedAt")

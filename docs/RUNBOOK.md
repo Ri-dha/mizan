@@ -67,6 +67,22 @@ admin-1); the environment values are the defaults. If every provider fails, the 
 stays and turns `stale` after 24 hours; the app labels it and users can enter today's price
 themselves, which wins over the feed. Every change of a price is kept (ADR prices-2).
 
+## World currencies (ADR rates-2)
+
+Frankfurter (`MIZAN_WORLD_RATES_URL`, keyless) gives about 160 currencies per US dollar, once
+a working day. The `world-rates` job fetches every six hours and on start-up; an empty
+`world_rate` table is filled with a year of history first. If Frankfurter is down, the last rates
+stay and the app shows their date; `WorldRatesFailing` fires after three failed fetches in a day.
+The dinar in the converter always comes from the dollar feeds above, never from Frankfurter.
+
+## Household currency changes (ADR currency-1)
+
+`household_rebase` lists every change with its factor and who made it; `household.base_generation`
+counts them and `membership.rebased_generation` shows how far each member's private records
+have been converted. A member stuck below the household's generation has a device that has not
+synced since; setting their generation back lets one device claim again, but only do that if
+none of their devices converted (it would convert twice).
+
 ## Local dealer price feed
 
 Any JSON endpoint can supply the local market's price. Set `MIZAN_LOCAL_DEALER_URL` and the
@@ -253,6 +269,7 @@ any deployment when the switch was made.
 | Metal price alerts | 09:00 Asia/Baghdad | Public gold and silver moves beyond each member's threshold |
 | Market poll | every 30 min, 07:00–22:00 Asia/Baghdad | Refreshes every feed; records a price change only when it moves |
 | IQWealth dollar | every 15 min 08:00–21:45, and 23:00, 02:00, 05:00 (59 a day) | One request each, never past the reserve |
+| World currencies | 00:20, 06:20, 12:20, 18:20 UTC, and on start-up | Frankfurter's rates for the last five days (a year when empty) |
 | Receipt photo expiry | 03:00 | Deletes receipt photos 30 days after upload (ADR storage-2) |
 | Attachment object purge | 03:15 | Removes storage objects (receipts, backups) whose rows left the recycle bin |
 | Household deletion purge | 04:15 | Deletes households seven days after the owner confirmed |

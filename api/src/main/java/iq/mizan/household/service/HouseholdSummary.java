@@ -12,6 +12,8 @@ public record HouseholdSummary(
         UUID id,
         String name,
         String baseCurrency,
+        int baseGeneration,
+        int rebasedGeneration,
         int monthStartDay,
         HouseholdRole role,
         Set<Permission> permissions,

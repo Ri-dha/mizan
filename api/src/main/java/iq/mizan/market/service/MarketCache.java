@@ -19,6 +19,9 @@ public class MarketCache {
     public static final String QUOTES = "market-quotes";
     public static final String HISTORY = "market-history";
     public static final String CHANGES = "market-changes";
+    public static final String WORLD_RATES = "world-rates";
+    public static final String WORLD_RATE_HISTORY = "world-rate-history";
+    public static final String CURRENCIES = "currencies";
 
     private final CacheManager caches;
 
@@ -36,7 +39,7 @@ public class MarketCache {
     }
 
     private void clear() {
-        for (String name : new String[] {QUOTES, HISTORY, CHANGES}) {
+        for (String name : new String[] {QUOTES, HISTORY, CHANGES, WORLD_RATES, WORLD_RATE_HISTORY, CURRENCIES}) {
             var cache = caches.getCache(name);
             if (cache != null) {
                 cache.clear();

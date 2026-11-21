@@ -12,6 +12,9 @@ public record CurrentUserResponse(
         @Nullable String phone,
         String displayName,
         String locale,
+        String country,
+        /** Codes followed on the Prices screen; empty means the app's defaults for the country. */
+        java.util.List<String> trackedCurrencies,
         boolean verified,
         java.time.@Nullable Instant deletionRequestedAt,
         /** Runs the service (ADR admin-1): the app shows the operator dashboard. */

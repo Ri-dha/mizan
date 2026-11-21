@@ -31,6 +31,10 @@ public class Household {
     @Column(name = "month_start_day", nullable = false)
     private int monthStartDay;
 
+    /** Counts base-currency changes; devices compare it with what they have converted. */
+    @Column(name = "base_generation", nullable = false)
+    private int baseGeneration;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -52,6 +56,11 @@ public class Household {
         household.createdAt = Instant.now();
         household.updatedAt = household.createdAt;
         return household;
+    }
+
+    public int changeBaseCurrency(String currency) {
+        this.baseCurrency = currency;
+        return ++baseGeneration;
     }
 
     public void rename(String name) {

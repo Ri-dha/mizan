@@ -46,6 +46,10 @@ public class Membership {
     @Column(name = "expires_at")
     private Instant expiresAt;
 
+    /** The last base-currency change whose conversion of this member's private records was claimed. */
+    @Column(name = "rebased_generation", nullable = false, insertable = false, updatable = false)
+    private int rebasedGeneration;
+
     public static Membership owner(UUID householdId, UUID userId) {
         Membership membership = new Membership();
         membership.id = UUID.randomUUID();

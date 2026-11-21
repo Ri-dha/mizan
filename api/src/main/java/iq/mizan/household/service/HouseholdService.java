@@ -1,5 +1,7 @@
 package iq.mizan.household.service;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
@@ -23,7 +25,10 @@ import iq.mizan.household.dto.InvitationPreviewResponse;
 import iq.mizan.household.dto.InvitationResponse;
 import iq.mizan.household.dto.MemberResponse;
 import iq.mizan.household.dto.MembershipResponse;
+import iq.mizan.household.dto.ChangeBaseCurrencyRequest;
+import iq.mizan.household.dto.RebaseClaimResponse;
 import iq.mizan.household.dto.UpdateHouseholdRequest;
+import iq.mizan.market.service.WorldRateService;
 import iq.mizan.household.entity.Household;
 import iq.mizan.household.entity.HouseholdInvitation;
 import iq.mizan.household.entity.HouseholdRole;
@@ -58,14 +63,16 @@ public class HouseholdService {
     private final PasswordVerifier passwordVerifier;
     private final InvitationSender invitationSender;
     private final JdbcClient jdbc;
+    private final CurrencyChoices currencyChoices;
+    private final WorldRateService worldRates;
     private final Clock clock;
     private final SecureRandom random = new SecureRandom();
 
     /** FR-ACC-04: every account starts as Owner of its own household. */
     @Transactional
-    public HouseholdSummary createForOwner(UUID userId, String ownerDisplayName) {
+    public HouseholdSummary createForOwner(UUID userId, String ownerDisplayName, String baseCurrency) {
         Household household = householdRepository.saveAndFlush(Household.create(
-                ownerDisplayName, properties.defaultCurrency(), properties.defaultMonthStartDay()));
+                ownerDisplayName, baseCurrency, properties.defaultMonthStartDay()));
         Membership membership = membershipRepository.save(Membership.owner(household.getId(), userId));
         events.publishEvent(new HouseholdCreated(household.getId(), userId, household.getMonthStartDay()));
         return householdMapper.toSummary(household, membership);
@@ -99,6 +106,66 @@ public class HouseholdService {
                 before, Map.of("name", household.getName(), "monthStartDay", household.getMonthStartDay()));
 
         return householdMapper.toResponse(householdMapper.toSummary(household, membership));
+    }
+
+    // --- Base currency (ADR currency-1) ---
+
+    /** A factor this far from today's rates is a mistake, not a choice. */
+    private static final BigDecimal FACTOR_TOLERANCE = new BigDecimal("2");
+
+    /**
+     * The owner's device converts the shared records and its owner's private ones right after this
+     * call, so the owner's claim is taken here; other members' devices claim their own.
+     */
+    @Transactional
+    public HouseholdResponse changeBaseCurrency(UUID userId, ChangeBaseCurrencyRequest request) {
+        Membership membership = currentMembership(userId);
+        if (membership.getRole() != HouseholdRole.OWNER) {
+            throw ApiException.of(ErrorCode.ACCESS_DENIED, "Only the owner can change the household currency");
+        }
+        Household household = household(membership.getHouseholdId());
+        String from = household.getBaseCurrency();
+        String to = currencyChoices.currency(request.currency());
+        if (to.equals(from)) {
+            throw ApiException.of(ErrorCode.VALIDATION_FAILED, "The household already counts in " + to);
+        }
+        worldRates.estimateFactor(from, to).ifPresent(expected -> {
+            BigDecimal ratio = request.factor().divide(expected, MathContext.DECIMAL64);
+            if (ratio.compareTo(FACTOR_TOLERANCE) > 0 || ratio.multiply(FACTOR_TOLERANCE).compareTo(BigDecimal.ONE) < 0) {
+                throw ApiException.of(ErrorCode.VALIDATION_FAILED, "The rate does not match today's rates; refresh and try again");
+            }
+        });
+        int generation = household.changeBaseCurrency(to);
+        jdbc.sql("insert into household_rebase (household_id, generation, from_currency, to_currency, factor, changed_by, created_at) values (?, ?, ?, ?, ?, ?, ?)")
+                .param(household.getId()).param(generation).param(from).param(to).param(request.factor()).param(userId)
+                .param(java.sql.Timestamp.from(clock.instant())).update();
+        jdbc.sql("update membership set rebased_generation = ? where id = ?").param(generation).param(membership.getId()).update();
+        audit(AuditAction.BASE_CURRENCY_CHANGED, AuditEntityType.HOUSEHOLD, userId, household.getId(), household.getId(),
+                Map.of("baseCurrency", from), Map.of("baseCurrency", to, "factor", request.factor().toPlainString()));
+        HouseholdSummary summary = householdMapper.toSummary(household, membership);
+        return householdMapper.toResponse(new HouseholdSummary(summary.id(), summary.name(), summary.baseCurrency(), generation, generation,
+                summary.monthStartDay(), summary.role(), summary.permissions(), summary.deletionRequestedAt()));
+    }
+
+    /** At most one device per member wins, so no private record is converted twice. */
+    @Transactional
+    public RebaseClaimResponse claimRebase(UUID userId) {
+        Membership membership = currentMembership(userId);
+        Household household = household(membership.getHouseholdId());
+        int target = household.getBaseGeneration();
+        int since = membership.getRebasedGeneration();
+        int won = jdbc.sql("update membership set rebased_generation = ? where id = ? and rebased_generation < ?")
+                .param(target).param(membership.getId()).param(target).update();
+        if (won == 0) {
+            return new RebaseClaimResponse(false, target, household.getBaseCurrency(), household.getBaseCurrency(), BigDecimal.ONE);
+        }
+        record Step(String from, BigDecimal factor) {
+        }
+        List<Step> steps = jdbc.sql("select from_currency, factor from household_rebase where household_id = ? and generation > ? and generation <= ? order by generation")
+                .param(household.getId()).param(since).param(target).query((rs, row) -> new Step(rs.getString(1), rs.getBigDecimal(2))).list();
+        BigDecimal factor = steps.stream().map(Step::factor).reduce(BigDecimal.ONE, (a, b) -> a.multiply(b, MathContext.DECIMAL128));
+        String from = steps.isEmpty() ? household.getBaseCurrency() : steps.getFirst().from();
+        return new RebaseClaimResponse(true, target, from, household.getBaseCurrency(), factor);
     }
 
     // --- Members (FR-ACC-05, FR-ACC-06) ---

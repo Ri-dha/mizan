@@ -84,3 +84,10 @@ groups:
         labels: { severity: warning }
         annotations:
           summary: "Sign-in code emails are failing; check the SMTP settings and the provider"
+
+      - alert: WorldRatesFailing
+        expr: increase(mizan_world_rates_polled_total{job="api",outcome="failed"}[1d]) >= 3
+        for: 0m
+        labels: { severity: warning }
+        annotations:
+          summary: "Frankfurter world currency rates have failed all day; the app shows the last ones with their date"

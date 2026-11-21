@@ -44,6 +44,14 @@ public class AppUser {
     @Column(nullable = false)
     private String locale;
 
+    /** ISO 3166 alpha-2; decides the Iraq-only market screens (ADR currency-1). */
+    @Column(nullable = false, length = 2)
+    private String country;
+
+    /** Comma-separated codes the person follows on the Prices screen; null means the defaults. */
+    @Column(name = "tracked_currencies")
+    private String trackedCurrencies;
+
     @Column(name = "verified_at")
     private Instant verifiedAt;
 
@@ -77,7 +85,7 @@ public class AppUser {
     private Instant updatedAt;
 
     public static AppUser register(
-            Identifier identifier, String displayName, String passwordHash, String locale) {
+            Identifier identifier, String displayName, String passwordHash, String locale, String country) {
         AppUser user = new AppUser();
         user.id = UUID.randomUUID();
         user.email = identifier.email();
@@ -85,10 +93,23 @@ public class AppUser {
         user.passwordHash = passwordHash;
         user.authScheme = AuthScheme.KEY;
         user.locale = locale;
+        user.country = country;
         user.accountStatus = AccountStatus.ACTIVE;
         user.createdAt = Instant.now();
         user.updatedAt = user.createdAt;
         return user;
+    }
+
+    public void changeCountry(String country) {
+        this.country = country;
+    }
+
+    public java.util.List<String> trackedCurrencyList() {
+        return trackedCurrencies == null || trackedCurrencies.isBlank() ? java.util.List.of() : java.util.List.of(trackedCurrencies.split(","));
+    }
+
+    public void trackCurrencies(java.util.List<String> codes) {
+        this.trackedCurrencies = String.join(",", codes);
     }
 
     public Identifier contact() {

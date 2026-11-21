@@ -24,7 +24,7 @@ spring:
   cache:
     type: caffeine
     # Shared price reads (MarketCache); cleared when a price is stored, expiring as a backstop.
-    cache-names: market-quotes,market-history,market-changes
+    cache-names: market-quotes,market-history,market-changes,world-rates,world-rate-history,currencies
     caffeine:
       spec: maximumSize=500,expireAfterWrite=60s
 
@@ -197,6 +197,12 @@ mizan:
     stale-after: 24h
     history-default-days: 365
     history-max-days: 1830
+    # T-world-rates: other currencies per dollar, published once a working day.
+    world-rates:
+      url: "${MIZAN_WORLD_RATES_URL:https://api.frankfurter.dev}"
+      cron: "${MIZAN_WORLD_RATES_CRON:0 20 */6 * * *}"
+      zone: UTC
+      history-days: 365
     feeds:
       metals-dev:
         url: "${MIZAN_METALS_DEV_URL:https://api.metals.dev/v1/latest}"

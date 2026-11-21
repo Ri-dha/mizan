@@ -52,7 +52,8 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
         TokenPair pair = registrationService.register(
                 request.identifier(), request.authKey(), request.keys(), request.displayName(),
-                request.localeOrDefault(), ClientRequest.userAgent(httpRequest), ClientRequest.ip(httpRequest));
+                request.localeOrDefault(), request.country(), request.baseCurrency(),
+                ClientRequest.userAgent(httpRequest), ClientRequest.ip(httpRequest));
         return withRefreshCookie(httpRequest, pair, HttpStatus.CREATED);
     }
 

@@ -18,6 +18,8 @@ public interface UserMapper {
     @Mapping(target = "phone", source = "user.phone")
     @Mapping(target = "displayName", source = "user.displayName")
     @Mapping(target = "locale", source = "user.locale")
+    @Mapping(target = "country", source = "user.country")
+    @Mapping(target = "trackedCurrencies", expression = "java(user.trackedCurrencyList())")
     @Mapping(target = "verified", source = "user.verified")
     @Mapping(target = "deletionRequestedAt", source = "user.deletionRequestedAt")
     @Mapping(target = "operator", source = "user.operator")

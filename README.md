@@ -151,6 +151,12 @@ from `MIZAN_PARALLEL_RATE_IQD_MICROS` (1470 IQD/USD = `1470000000`) or a price t
 | GET | `/api/v1/market/quotes` | bearer | Latest XAU, XAG and USD→IQD quotes with source, time and stale flag |
 | GET | `/api/v1/market/history?instrument&from&to&interval` | bearer | Open, high, low and close per day, week (from Saturday) or month |
 | GET | `/api/v1/market/changes?instrument&from&before&limit` | bearer | Every change of a price, newest first, with the price it replaced |
+| GET | `/api/v1/market/currencies` | none | Currencies a household may count in and the countries offered, for sign-up (ADR currency-1) |
+| PATCH | `/api/v1/me` | bearer | The account's country and followed currencies |
+| PUT | `/api/v1/households/current/base-currency` | bearer, owner | Change the household currency; the device then converts its records by the factor |
+| POST | `/api/v1/households/current/rebase-claims` | bearer | One device per member claims converting that member's private records |
+| GET | `/api/v1/market/world-rates` | bearer | Latest rate per US dollar of about 160 currencies (not the dinar), from Frankfurter |
+| GET | `/api/v1/market/world-rates/history?currency&from&to` | bearer | One currency's daily rate per US dollar; the last year by default |
 | GET | `/api/v1/households` | bearer | Every household the caller belongs to and which is current |
 | POST | `/api/v1/households/{id}/switch` | bearer | Make another household current; refresh the session afterwards |
 | GET | `/api/v1/households/current/members` | bearer, `HOUSEHOLD_VIEW` | Active members with roles |
