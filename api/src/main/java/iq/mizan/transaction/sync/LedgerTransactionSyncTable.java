@@ -1,5 +1,6 @@
 package iq.mizan.transaction.sync;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import iq.mizan.sync.table.SyncColumnType;
@@ -12,7 +13,8 @@ public class LedgerTransactionSyncTable implements SyncTable {
 
     public static final String NAME = "ledger_transaction";
 
-    private static final Map<String, SyncColumnType> FIELDS = Map.ofEntries(
+    /** The plain table's columns from before ADR e2e-1; fields added since exist only sealed. */
+    private static final Map<String, SyncColumnType> LEGACY_FIELDS = Map.ofEntries(
             Map.entry("visibility", SyncColumnType.TEXT),
             Map.entry("type", SyncColumnType.TEXT),
             Map.entry("occurredOn", SyncColumnType.DATE),
@@ -32,6 +34,12 @@ public class LedgerTransactionSyncTable implements SyncTable {
             Map.entry("assetId", SyncColumnType.UUID_VALUE),
             Map.entry("deletedAt", SyncColumnType.TIMESTAMP));
 
+    /** T-cash-movements: the cash account an expense was paid from or income went into. */
+    private static final String CASH_ACCOUNT_ID = "cashAccountId";
+
+    /** T-cash-movements: what reached the other account of a transfer, in its currency (an exchange). */
+    private static final String COUNTER_AMOUNT = "counterAmount";
+
     @Override
     public String name() {
         return NAME;
@@ -39,6 +47,14 @@ public class LedgerTransactionSyncTable implements SyncTable {
 
     @Override
     public Map<String, SyncColumnType> fields() {
-        return FIELDS;
+        Map<String, SyncColumnType> fields = new HashMap<>(LEGACY_FIELDS);
+        fields.put(CASH_ACCOUNT_ID, SyncColumnType.UUID_VALUE);
+        fields.put(COUNTER_AMOUNT, SyncColumnType.BIGINT);
+        return Map.copyOf(fields);
+    }
+
+    @Override
+    public Map<String, SyncColumnType> legacyFields() {
+        return LEGACY_FIELDS;
     }
 }

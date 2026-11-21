@@ -1,5 +1,6 @@
 package iq.mizan.income.sync;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import iq.mizan.sync.table.SyncColumnType;
@@ -13,7 +14,8 @@ public class IncomeReceiptSyncTable implements SyncTable {
 
     public static final String NAME = "income_receipt";
 
-    private static final Map<String, SyncColumnType> FIELDS = Map.ofEntries(
+    /** The plain table's columns from before ADR e2e-1; fields added since exist only sealed. */
+    private static final Map<String, SyncColumnType> LEGACY_FIELDS = Map.ofEntries(
             Map.entry("visibility", SyncColumnType.TEXT),
             Map.entry("incomeSourceId", SyncColumnType.UUID_VALUE),
             Map.entry("monthKey", SyncColumnType.TEXT),
@@ -25,6 +27,9 @@ public class IncomeReceiptSyncTable implements SyncTable {
             Map.entry("note", SyncColumnType.TEXT),
             Map.entry("deletedAt", SyncColumnType.TIMESTAMP));
 
+    /** T-cash-movements: which cash accounts the money went into, and how much each; a list, sealed. */
+    private static final String INTO_ACCOUNTS = "intoAccounts";
+
     @Override
     public String name() {
         return NAME;
@@ -32,6 +37,13 @@ public class IncomeReceiptSyncTable implements SyncTable {
 
     @Override
     public Map<String, SyncColumnType> fields() {
-        return FIELDS;
+        Map<String, SyncColumnType> fields = new HashMap<>(LEGACY_FIELDS);
+        fields.put(INTO_ACCOUNTS, SyncColumnType.TEXT);
+        return Map.copyOf(fields);
+    }
+
+    @Override
+    public Map<String, SyncColumnType> legacyFields() {
+        return LEGACY_FIELDS;
     }
 }

@@ -158,6 +158,26 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
         assertThat(body.get("rejected")).isEmpty();
     }
 
+    /** T-cash-movements: the account links are fields added after encryption, so they exist only sealed. */
+    @Test
+    void receiptsAndTransactionsAcceptTheirCashAccounts() {
+        UUID account = UUID.randomUUID();
+        JsonNode receipt = push(owner, phone, Map.of("opId", UUID.randomUUID(), "table", "income_receipt", "rowId", UUID.randomUUID(),
+                "fields", Map.of("visibility", "SHARED", "intoAccounts", ApiClient.sealed(List.of(Map.of("cashAccountId", account.toString(), "amount", 800_000)))),
+                "clocks", Map.of("visibility", clock(1), "intoAccounts", clock(1))));
+        JsonNode expense = push(owner, phone, Map.of("opId", UUID.randomUUID(), "table", "ledger_transaction", "rowId", UUID.randomUUID(),
+                "fields", Map.of("visibility", "SHARED", "cashAccountId", ApiClient.sealed(account.toString()), "counterAmount", ApiClient.sealed(147_000)),
+                "clocks", Map.of("visibility", clock(1), "cashAccountId", clock(1), "counterAmount", clock(1))));
+
+        JsonNode source = push(owner, phone, Map.of("opId", UUID.randomUUID(), "table", "income_source", "rowId", UUID.randomUUID(),
+                "fields", Map.of("visibility", "SHARED", "intoAccounts", ApiClient.sealed(List.of(Map.of("cashAccountId", account.toString(), "kind", "PERCENT", "value", 7000)))),
+                "clocks", Map.of("visibility", clock(1), "intoAccounts", clock(1))));
+
+        assertThat(source.get("rejected")).isEmpty();
+        assertThat(receipt.get("rejected")).isEmpty();
+        assertThat(expense.get("rejected")).isEmpty();
+    }
+
     /** ADR e2e-1: a client that sends plain values, such as an old cached web app, is refused outright. */
     @Test
     void plainValuesAreRefused() {
