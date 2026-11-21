@@ -91,7 +91,8 @@ class HouseholdSharingIntegrationTest extends PostgresIntegrationTest {
         String member = join(HouseholdRoleName.MEMBER);
         String memberDevice = device(member);
         String ownerTablet = device(owner);
-        push(owner, ownerDevice, op("home_layout", UUID.randomUUID(), fields("visibility", "PRIVATE", "widgets", "[]")));
+        push(owner, ownerDevice, op("home_layout", UUID.randomUUID(), fields("visibility", "PRIVATE", "widgets", "[]",
+                "digitStyle", "eastern", "showUsd", true, "showHijri", true, "valuationReminderMonths", 12)));
 
         assertThat(tablesPulled(owner, ownerTablet)).contains("home_layout");
         assertThat(tablesPulled(member, memberDevice)).doesNotContain("home_layout");
