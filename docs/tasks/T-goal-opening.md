@@ -1,5 +1,5 @@
 # T-goal-opening — Money already saved toward a goal
-- Status: in review
+- Status: done (2026-11-21, b4f2e14 on develop and main)
 - Context: user request 2026-11-21 ("where do we add savings we already have?"). Deposits come from a plan bucket, so
   savings from before the goal had no honest place.
 - Notes: optional `Goal.openingAmount` (goal currency, sealed like every field); `savedOf` starts from it; create and

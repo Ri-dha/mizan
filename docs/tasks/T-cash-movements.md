@@ -1,5 +1,5 @@
 # T-cash-movements — Income into accounts, spending from accounts
-- Status: in review
+- Status: done (2026-11-21, 4c81b35 on develop and main)
 - Context: user request 2026-11-21 (received income did not change net worth); income may be split across several
   accounts by fixed amount or percentage. ADR cash-1. Server: `intoAccounts` on income_source and income_receipt, `cashAccountId` and `counterAmount` on ledger_transaction (sealed-only fields). Clients in Ri-dha/MizanApp.
 - Notes: `AccountShare`, `IncomeSource.intoAccounts`, `IncomeReceipt.intoAccounts`, `LedgerTransaction.cashAccountId`;
