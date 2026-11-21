@@ -1,5 +1,5 @@
 # T-followups-2026-11-21 — Debt accounts, report image retention, instant sync (server)
-- Status: in review
+- Status: done (d475adf)
 - Context: user request 2026-11-21 (plan "five follow-ups"). Clients in Ri-dha/MizanApp.
 - Notes:
   - T-debt-accounts: `DebtSyncTable` accepts sealed `cashAccountId` (where a loan's money came from or went into).
