@@ -115,6 +115,9 @@ mizan:
     max-image-size: 5MB
     reports-per-day: 5
     messages-per-day: 30
+    # Photos of a resolved report are deleted this long after its last message; "-" stops the job.
+    image-retention: 180d
+    image-expiry-cron: "${MIZAN_SUPPORT_IMAGE_EXPIRY_CRON:0 50 3 * * *}"
 
   auth:
     lockout:
@@ -179,6 +182,8 @@ mizan:
     # Receipts only stop a device's retry being applied twice; a retry later than this is still
     # recognised by its clocks. Superseded sync log entries go at the same time (ADR sync-2).
     receipt-retention: 30d
+    # ADR sync-4: a device's open wait for changes; under the 100 s a Cloudflare Worker allows.
+    wait-timeout: 25s
     housekeeping-cron: "0 40 3 * * *"
 
   # --- Market data (FR-MKT-01..06) ---

@@ -211,10 +211,11 @@ public class SupportReportService {
 
     private ReportDetailResponse detail(UUID reportId, boolean forOperator) {
         Map<UUID, List<ReportDetailResponse.ReportAttachment>> attachments = new LinkedHashMap<>();
-        jdbc.sql("select id, message_id, content_type, size_bytes from support_attachment where report_id = ? order by created_at, position")
+        jdbc.sql("select id, message_id, content_type, size_bytes, removed_at from support_attachment where report_id = ? order by created_at, position")
                 .param(reportId).query(rs -> {
                     attachments.computeIfAbsent(rs.getObject("message_id", UUID.class), k -> new ArrayList<>())
-                            .add(new ReportDetailResponse.ReportAttachment(rs.getObject("id", UUID.class), rs.getString("content_type"), rs.getInt("size_bytes")));
+                            .add(new ReportDetailResponse.ReportAttachment(rs.getObject("id", UUID.class), rs.getString("content_type"), rs.getInt("size_bytes"),
+                                    rs.getTimestamp("removed_at") == null ? null : rs.getTimestamp("removed_at").toInstant()));
                 });
         List<ReportDetailResponse.ReportMessage> thread = jdbc.sql("""
                 select m.id, m.from_operator, m.body, m.created_at, u.display_name
@@ -242,9 +243,15 @@ public class SupportReportService {
     }
 
     private Image image(UUID reportId, UUID attachmentId) {
-        String contentType = jdbc.sql("select content_type from support_attachment where id = ? and report_id = ?")
-                .param(attachmentId).param(reportId).query(String.class).optional()
+        record Stored(String contentType, boolean removed) {
+        }
+        Stored stored = jdbc.sql("select content_type, removed_at is not null as removed from support_attachment where id = ? and report_id = ?")
+                .param(attachmentId).param(reportId).query((rs, n) -> new Stored(rs.getString(1), rs.getBoolean(2))).optional()
                 .orElseThrow(() -> ApiException.of(ErrorCode.RESOURCE_NOT_FOUND, "No such image"));
+        if (stored.removed()) {
+            throw ApiException.of(ErrorCode.IMAGE_REMOVED, "This photo was removed some months after the report was resolved");
+        }
+        String contentType = stored.contentType();
         byte[] bytes = s3.getObjectAsBytes(GetObjectRequest.builder().bucket(storage.bucket()).key(key(reportId, attachmentId)).build())
                 .asByteArray();
         return new Image(contentType, bytes);

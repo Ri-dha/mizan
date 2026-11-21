@@ -50,6 +50,9 @@ class SupportReportIntegrationTest extends PostgresIntegrationTest {
     @MockitoBean
     private S3Client s3;
 
+    @Autowired
+    private iq.mizan.helpdesk.job.ReportImageExpiry imageExpiry;
+
     private final Map<String, byte[]> stored = new ConcurrentHashMap<>();
     private String reporter;
     private String operator;
@@ -137,6 +140,33 @@ class SupportReportIntegrationTest extends PostgresIntegrationTest {
         JsonNode reopened = api.body(send(reporter, "/api/v1/support/reports/" + id + "/messages", Map.of("body", "Still broken")));
         assertThat(reopened.get("status").asString()).isEqualTo("OPEN");
         assertThat(jdbc.queryForObject("select count(*) from audit_entry where action like 'SUPPORT_%'", Long.class)).isEqualTo(2);
+    }
+
+    /** T-report-image-retention: photos of a long-resolved report go; the thread says they were there. */
+    @Test
+    void photosOfAReportResolvedLongAgoAreRemovedAndTheRestKept() throws IOException {
+        String old = createWithImage("Old problem");
+        String recent = createWithImage("Recent problem");
+        String open = createWithImage("Still open");
+        jdbc.update("update support_report set status = 'RESOLVED' where id in (?::uuid, ?::uuid)", old, recent);
+        jdbc.update("update support_report set last_message_at = now() - interval '200 days' where id in (?::uuid, ?::uuid)", old, open);
+        jdbc.update("update support_attachment set created_at = now() - interval '200 days' where report_id in (?::uuid, ?::uuid)", old, open);
+
+        assertThat(imageExpiry.expire()).isEqualTo(1);
+
+        JsonNode removed = api.body(api.get("/api/v1/support/reports/" + old, reporter)).get("messages").get(0).get("attachments").get(0);
+        assertThat(removed.get("removedAt").isNull()).isFalse();
+        assertThat(api.get("/api/v1/support/reports/" + old + "/images/" + removed.get("id").asString(), reporter)).hasStatus(HttpStatus.GONE);
+        assertThat(stored.keySet()).noneMatch(key -> key.startsWith("support/" + old));
+        assertThat(stored.keySet()).anyMatch(key -> key.startsWith("support/" + recent)).anyMatch(key -> key.startsWith("support/" + open));
+        assertThat(imageExpiry.expire()).isZero();
+    }
+
+    private String createWithImage(String subject) throws IOException {
+        MvcTestResult created = send(reporter, "/api/v1/support/reports", Map.of("category", "PROBLEM", "subject", subject, "body", "Details", "platform", "web"),
+                image("a.jpg", iq.mizan.helpdesk.service.ReportImagesTestAccess.jpegWithLocation()));
+        assertThat(created).hasStatus(HttpStatus.CREATED);
+        return api.body(created).get("id").asString();
     }
 
     @Test

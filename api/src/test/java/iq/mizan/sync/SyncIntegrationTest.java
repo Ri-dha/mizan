@@ -173,6 +173,11 @@ class SyncIntegrationTest extends PostgresIntegrationTest {
                 "fields", Map.of("visibility", "SHARED", "intoAccounts", ApiClient.sealed(List.of(Map.of("cashAccountId", account.toString(), "kind", "PERCENT", "value", 7000)))),
                 "clocks", Map.of("visibility", clock(1), "intoAccounts", clock(1))));
 
+        JsonNode debt = push(owner, phone, Map.of("opId", UUID.randomUUID(), "table", "debt", "rowId", UUID.randomUUID(),
+                "fields", Map.of("visibility", "SHARED", "cashAccountId", ApiClient.sealed(account.toString())),
+                "clocks", Map.of("visibility", clock(1), "cashAccountId", clock(1))));
+
+        assertThat(debt.get("rejected")).isEmpty();
         assertThat(source.get("rejected")).isEmpty();
         assertThat(receipt.get("rejected")).isEmpty();
         assertThat(expense.get("rejected")).isEmpty();

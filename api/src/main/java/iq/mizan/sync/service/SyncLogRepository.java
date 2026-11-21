@@ -16,6 +16,11 @@ public class SyncLogRepository {
 
     private final JdbcClient jdbcClient;
 
+    /** Row-level security limits the feed to the caller's household, so this asks about theirs only. */
+    public boolean hasAfter(long seq) {
+        return jdbcClient.sql("select exists (select 1 from sync_log where seq > ?)").param(seq).query(Boolean.class).single();
+    }
+
     public List<Entry> after(long seq, int limit) {
         return jdbcClient.sql("select seq, table_name, row_id from sync_log where seq > ? order by seq limit ?")
                 .param(seq)

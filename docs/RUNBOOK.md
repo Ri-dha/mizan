@@ -331,6 +331,17 @@ Limits are in `mizan.support.*` (five reports and thirty replies per person a da
 in front of the API must accept request bodies of at least 21 MB on `/api/v1/support/` and
 `/api/v1/admin/support/`.
 
+Photos of a report resolved more than 180 days ago (`mizan.support.image-retention`) are deleted
+by the `report-image-expiry` job (03:50, `MIZAN_SUPPORT_IMAGE_EXPIRY_CRON`, "-" stops it). The rows stay
+with `removed_at`, so the thread says a photo was removed; asking for one answers 410.
+
+## Waiting for changes (ADR sync-4)
+
+Open apps hold `GET /api/v1/sync/wait` for up to 25 s (`mizan.sync.wait-timeout`). A proxy in front of
+the API must allow requests of at least 30 s (Caddy's default does; the Cloudflare Worker allows
+100 s). With several API instances, a change pushed to another instance reaches waiting devices when
+their wait ends.
+
 ## Support without impersonation
 
 Support never signs in as a user, and since ADR e2e-1 nobody at the service can read a household's

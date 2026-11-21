@@ -41,6 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -73,6 +75,7 @@ public class SyncService {
     private final JsonMapper jsonMapper;
     private final SyncProperties properties;
     private final SharedKeyVersions sharedKeys;
+    private final SyncSignal signal;
 
     /**
      * Every op is acknowledged exactly once, however often it is sent. An op refused on its own
@@ -109,7 +112,26 @@ public class SyncService {
             }
         }
         device.recordPush();
+        if (!applied.isEmpty()) {
+            signalAfterCommit(user.householdId());
+        }
         return new SyncPushResponse(applied, conflicts, rejected);
+    }
+
+    /** ADR sync-4: whether the caller's household has changes after the device's sequence. */
+    @Transactional(readOnly = true)
+    public boolean hasChangesAfter(long since) {
+        return syncLog.hasAfter(since);
+    }
+
+    /** Woken only once the change is visible, or the device would pull before it is there. */
+    private void signalAfterCommit(UUID householdId) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                signal.changed(householdId);
+            }
+        });
     }
 
     @Transactional

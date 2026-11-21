@@ -28,6 +28,7 @@ public enum ErrorCode {
     HOUSEHOLD_NOT_FOUND(HttpStatus.NOT_FOUND, "Household Not Found"),
     INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "Invitation Not Found"),
     INVITATION_EXPIRED(HttpStatus.GONE, "Invitation Expired"),
+    IMAGE_REMOVED(HttpStatus.GONE, "Image Removed"),
     ALREADY_A_MEMBER(HttpStatus.CONFLICT, "Already A Member"),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "Member Not Found"),
     OWNER_CANNOT_LEAVE(HttpStatus.CONFLICT, "Owner Cannot Leave"),

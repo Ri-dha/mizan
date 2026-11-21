@@ -145,6 +145,7 @@ from `MIZAN_PARALLEL_RATE_IQD_MICROS` (1470 IQD/USD = `1470000000`) or a price t
 | POST | `/api/v1/sync/devices` | bearer | Register the calling device |
 | POST | `/api/v1/sync/push` | bearer, `RECORD_WRITE` | Push sealed changes; plain values are refused; per-field last-write-wins |
 | GET | `/api/v1/sync/pull?deviceId&since&limit` | bearer | Pull the change feed after a sequence number; `encrypted: false` marks rows from before encryption |
+| GET | `/api/v1/sync/wait?since` | bearer | Held open until the household's feed moves past `since` or 25 s pass (ADR sync-4) |
 | GET | `/api/v1/sync/conflicts?deviceId` | bearer | Edits from this device that lost to newer values |
 | POST | `/api/v1/attachments/{id}/upload-url` | bearer, `RECORD_WRITE` | Presigned PUT for the encrypted bytes of a synced attachment row |
 | GET | `/api/v1/attachments/{id}/download-url` | bearer | Presigned GET for the same |

@@ -14,6 +14,7 @@ public record ReportDetailResponse(UUID id, ReportCategory category, String subj
                                 List<ReportAttachment> attachments) {
     }
 
-    public record ReportAttachment(UUID id, String contentType, int sizeBytes) {
+    /** {@code removedAt}: the photo was deleted after the report had been resolved for a while. */
+    public record ReportAttachment(UUID id, String contentType, int sizeBytes, @Nullable Instant removedAt) {
     }
 }

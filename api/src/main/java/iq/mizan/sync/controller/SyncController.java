@@ -1,5 +1,9 @@
 package iq.mizan.sync.controller;
 
+import iq.mizan.sync.SyncProperties;
+import iq.mizan.sync.dto.SyncWaitResponse;
+import iq.mizan.sync.service.SyncSignal;
+import org.springframework.web.context.request.async.DeferredResult;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,6 +42,8 @@ public class SyncController {
 
     private final DeviceService deviceService;
     private final SyncService syncService;
+    private final SyncSignal signal;
+    private final SyncProperties properties;
 
     @Operation(summary = "Register the calling device")
     @PostMapping("/devices")
@@ -65,6 +71,19 @@ public class SyncController {
             @RequestParam(defaultValue = "0") long since,
             @RequestParam(required = false) Integer limit) {
         return ResponseEntity.ok(syncService.pull(user, deviceId, since, limit));
+    }
+
+    @Operation(operationId = "waitForChanges", summary = "Held open until the household's feed moves past `since`, or the wait times out",
+            description = "ADR sync-4: answers at once when there is already something to pull. Devices call it again after each answer.")
+    @GetMapping("/wait")
+    @PreAuthorize("hasAnyAuthority('HOUSEHOLD_VIEW', 'RECORD_WRITE', 'REPORTS_VIEW')")
+    public DeferredResult<SyncWaitResponse> waitForChanges(@AuthenticationPrincipal CurrentUser user, @RequestParam long since) {
+        // Opened before the check, so a change committed in between still wakes it.
+        DeferredResult<SyncWaitResponse> result = signal.open(user.householdId(), user.userId(), properties.waitTimeout().toMillis());
+        if (syncService.hasChangesAfter(since)) {
+            result.setResult(SyncWaitResponse.CHANGED);
+        }
+        return result;
     }
 
     @Operation(summary = "Conflicts recorded for a device")
