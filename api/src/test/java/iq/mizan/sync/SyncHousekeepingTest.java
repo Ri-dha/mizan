@@ -66,6 +66,20 @@ class SyncHousekeepingTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void aRecordThatLeftTheRecycleBinTakesItsLogEntryWithIt() {
+        UUID wallet = UUID.randomUUID();
+        UUID bank = UUID.randomUUID();
+        push(op(wallet, "Wallet", "1700000000001:0000:dev1"));
+        push(op(bank, "Bank", "1700000000002:0000:dev1"));
+        jdbc.update("delete from vault_record where id = ?", wallet);
+
+        assertThat(housekeeping.run().logEntries()).isEqualTo(1);
+
+        assertThat(logEntries(wallet)).isZero();
+        assertThat(logEntries(bank)).isEqualTo(1);
+    }
+
+    @Test
     void oldReceiptsGoAndARetryAfterThatChangesNothingAndRaisesNoConflict() {
         UUID wallet = UUID.randomUUID();
         Map<String, Object> first = op(wallet, "Wallet", "1700000000001:0000:dev1");

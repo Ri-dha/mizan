@@ -49,9 +49,8 @@ docs/manual/  one Markdown source → in-app /help and static /docs
   publishes a sealed `member_contribution` of their private holdings), the advisor's
   `annual_report` (report key), the default plan, and the reminder schedule. For reminders the
   server is told only a kind and a time, and sends generic text.
-- Rows from before encryption stay in their old plain tables and are pulled with
-  `encrypted: false`. Each device re-sends its rows sealed, then `/vault/migration/complete`
-  deletes the plain copies.
+- Every record lives in `vault_record`. The plain tables from before encryption are gone
+  (ADR sync-5); `/vault/status` and `/vault/migration/complete` remain and report no plain rows.
 - Someone without their recovery code can start over (ADR e2e-3, `/keys/me/reset`): new keys,
   and the server removes what only the old keys could open (their private records; a household's
   shared records too when they were its last key holder). Their other devices notice the new

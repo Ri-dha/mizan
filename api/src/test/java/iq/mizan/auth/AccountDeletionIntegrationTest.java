@@ -62,7 +62,7 @@ class AccountDeletionIntegrationTest extends PostgresIntegrationTest {
 
         assertThat(jdbc.queryForObject("select count(*) from app_user", Long.class)).isZero();
         assertThat(jdbc.queryForObject("select count(*) from household", Long.class)).isZero();
-        assertThat(jdbc.queryForObject("select count(*) from bucket", Long.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from vault_record", Long.class)).isZero();
         assertThat(api.get("/api/v1/me", token)).hasStatus(HttpStatus.NOT_FOUND);
     }
 }

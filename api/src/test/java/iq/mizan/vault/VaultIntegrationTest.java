@@ -58,7 +58,6 @@ class VaultIntegrationTest extends PostgresIntegrationTest {
 
         String stored = jdbc.queryForObject("select fields::text from vault_record where table_name = 'cash_account'", String.class);
         assertThat(stored).doesNotContain("Wallet").doesNotContain(String.valueOf(BALANCE));
-        assertThat(jdbc.queryForObject("select count(*) from cash_account", Long.class)).isZero();
     }
 
     @Test
@@ -115,18 +114,14 @@ class VaultIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void completingTheMigrationDropsThePlainCopies() {
-        UUID householdId = jdbc.queryForObject("select household_id from membership where user_id = ?", UUID.class, ownerId);
-        jdbc.update("insert into cash_account (id, household_id, owner_id, name, kind, balance, currency) values (?, ?, ?, 'Wallet', 'WALLET', ?, 'IQD')",
-                UUID.randomUUID(), householdId, ownerId, BALANCE);
+    void withNoPlainTablesLeftCompletingTheMigrationOnlyMarksTheHousehold() {
         JsonNode before = api.body(api.get("/api/v1/vault/status", owner));
-        assertThat(before.get("legacyRows").asLong()).isEqualTo(1);
-        assertThat(before.get("migrated").asBoolean()).isFalse();
+        assertThat(before.get("legacyRows").asLong()).isZero();
 
         JsonNode after = api.body(api.post("/api/v1/vault/migration/complete", owner, null));
         assertThat(after.get("legacyRows").asLong()).isZero();
         assertThat(after.get("migrated").asBoolean()).isTrue();
-        assertThat(jdbc.queryForObject("select count(*) from cash_account", Long.class)).isZero();
+        assertThat(jdbc.queryForObject("select to_regclass('public.cash_account') is null", Boolean.class)).isTrue();
     }
 
     private MvcTestResult grant(String token, UUID recipient, String kind, int version) {

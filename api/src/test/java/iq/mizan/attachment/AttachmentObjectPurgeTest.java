@@ -42,8 +42,8 @@ class AttachmentObjectPurgeTest extends PostgresIntegrationTest {
     }
 
     private void insert(Map<String, Object> ids, String ownerType, String deletedAt) {
-        jdbc.update("insert into attachment (id, household_id, owner_id, visibility, owner_type, owner_record_id, mime_type, byte_size, iv, deleted_at) "
-                        + "values (?, ?, ?, 'PRIVATE', ?, ?, 'application/octet-stream', 10, 'aXY=', " + (deletedAt == null ? "null" : deletedAt) + ")",
-                UUID.randomUUID(), ids.get("household_id"), ids.get("user_id"), ownerType, ids.get("user_id"));
+        jdbc.update("insert into vault_record (id, household_id, owner_id, visibility, table_name, fields, deleted_at) "
+                        + "values (?, ?, ?, 'PRIVATE', 'attachment', ?::jsonb, " + (deletedAt == null ? "null" : deletedAt) + ")",
+                UUID.randomUUID(), ids.get("household_id"), ids.get("user_id"), "{\"ownerType\": \"" + ownerType + "\"}");
     }
 }

@@ -18,7 +18,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * ADR sync-2: keeps the two sync tables that only grow at the size the protocol needs. A pull
  * returns each changed record once, as it is now, so only the newest log entry per record is ever
- * needed; a receipt only matters while its device might still retry the push.
+ * needed, and none once the recycle bin has purged the record (ADR sync-5); a receipt only
+ * matters while its device might still retry the push.
  */
 @Component
 @AllArgsConstructor
@@ -49,10 +50,12 @@ public class SyncHousekeeping {
                             delete from sync_log s using sync_log newer
                             where newer.table_name = s.table_name and newer.row_id = s.row_id and newer.seq > s.seq""")
                     .update();
+            int purged = jdbc.sql("delete from sync_log s where not exists (select 1 from vault_record v where v.id = s.row_id)")
+                    .update();
             int receipts = jdbc.sql("delete from sync_op_receipt where applied_at < ?")
                     .param(Timestamp.from(clock.instant().minus(properties.receiptRetention())))
                     .update();
-            return new Tidied(superseded, receipts);
+            return new Tidied(superseded + purged, receipts);
         });
         if (tidied.logEntries() > 0 || tidied.receipts() > 0) {
             log.info("Removed {} superseded sync log entries and {} old push receipts", tidied.logEntries(), tidied.receipts());

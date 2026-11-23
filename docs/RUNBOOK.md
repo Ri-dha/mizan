@@ -278,7 +278,7 @@ any deployment when the switch was made.
 |---|---|---|
 | Market refresh | off unless `MIZAN_MARKET_AUTO_REFRESH` | Timed refresh of every feed |
 | Recycle-bin purge | 03:30 daily | Hard-deletes rows soft-deleted more than 30 days ago |
-| Sync housekeeping | 03:40 daily | Keeps the newest `sync_log` entry per record; drops push receipts after `receipt-retention` (30 days) |
+| Sync housekeeping | 03:40 daily | Keeps the newest `sync_log` entry per record and none for records the recycle bin purged; drops push receipts after `receipt-retention` (30 days) |
 | Account purge | 03:45 daily | Deletes accounts and households whose deletion request is older than 30 days |
 
 Every instance schedules every job, and the `scheduled_job_lock` table lets one of them run it
@@ -293,6 +293,23 @@ update scheduled_job_lock set locked_until = now() where name = 'iqwealth-poll';
 The IQWealth rates live in the polling instance's memory; the others answer from the stored
 quote it wrote, so every instance shows the same dollar. The operator's "Fetch now" polls from
 whichever instance served it, outside the lock.
+
+## Dead rows in the record tables (ADR sync-5)
+
+Every edit rewrites a whole sealed record, so `vault_record` and `sync_log` collect dead rows.
+Autovacuum starts on them at 2% dead (plus 1,000 rows) instead of the default 20%, and
+`vault_record` keeps 15% of each page free so most edits skip the indexes. To check:
+
+```sql
+select relname, n_live_tup, n_dead_tup, last_autovacuum, n_tup_hot_upd, n_tup_upd
+from pg_stat_user_tables where relname in ('vault_record', 'sync_log');
+```
+
+Dead rows that stay above a few percent of live rows mean autovacuum is not keeping up: look for
+long-running transactions first (`pg_stat_activity`), then raise `autovacuum_vacuum_cost_limit`.
+A low share of `n_tup_hot_upd` in `n_tup_upd` means pages are too full for edits to stay put.
+Splitting `vault_record` by household (hash partitioning) waits until it nears 50–100 million
+rows or vacuum cannot keep up with these settings.
 
 ## Row-level security
 

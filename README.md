@@ -222,8 +222,8 @@ Integration tests run against a real Postgres in Testcontainers, so Docker must 
   `controller`, `dto`, `entity`, `mapper`, `repository`, `service`. `common` holds security, tenancy,
   audit, errors and storage. `vault` holds the key directory and migration. The server keeps no
   money maths: it cannot read the values (ADR e2e-1).
-- `api/src/main/resources/db/migration` — Flyway migrations. Every syncable table is created with
-  `call make_syncable('<table>')`, which adds the change-feed trigger and the row-level security policy.
+- `api/src/main/resources/db/migration` — Flyway migrations. Synced records have no table
+  of their own: each record type is a `SyncTable` bean and its rows live sealed in `vault_record` (ADR e2e-1, sync-5).
 
 Project knowledge: [AGENTS.md](AGENTS.md) (how to work here), [ARCHITECTURE.md](ARCHITECTURE.md),
 and `docs/` (ADRs, tasks, status, learnings, handovers, runbook).

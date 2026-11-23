@@ -57,9 +57,8 @@ public class AttachmentObjectPurge {
     public int purge() {
         jdbc.sql("select set_config('app.system', 'on', true)").query().singleRow();
         OffsetDateTime cutoff = OffsetDateTime.now(clock).minus(sync.recycleBinRetention()).withOffsetSameInstant(ZoneOffset.UTC);
-        List<Map<String, Object>> rows = jdbc.sql("select id, household_id from vault_record where table_name = 'attachment' and deleted_at < ? "
-                        + "union all select id, household_id from attachment where deleted_at < ? limit ?")
-                .param(cutoff).param(cutoff).param(BATCH).query().listOfRows();
+        List<Map<String, Object>> rows = jdbc.sql("select id, household_id from vault_record where table_name = 'attachment' and deleted_at < ? limit ?")
+                .param(cutoff).param(BATCH).query().listOfRows();
         if (rows.isEmpty()) {
             return 0;
         }

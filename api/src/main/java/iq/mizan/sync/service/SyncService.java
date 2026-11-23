@@ -62,10 +62,8 @@ public class SyncService {
             ErrorCode.SYNC_TABLE_UNKNOWN, ErrorCode.SYNC_FIELD_UNKNOWN, ErrorCode.SYNC_PLAIN_VALUE_REFUSED,
             ErrorCode.SYNC_TABLE_MISMATCH, ErrorCode.SYNC_RECORD_IMMUTABLE, ErrorCode.SYNC_SHARED_WRITE_REFUSED,
             ErrorCode.VALIDATION_FAILED);
-    private static final String VAULT_PREFIX = "vault:";
 
     private final SyncTableRegistry registry;
-    private final SyncRowRepository legacyRows;
     private final VaultRowRepository vault;
     private final SyncLogRepository syncLog;
     private final SyncConflictRepository conflictRepository;
@@ -147,23 +145,13 @@ public class SyncService {
         }
 
         Map<UUID, Long> vaultSeq = new LinkedHashMap<>();
-        Map<String, Map<UUID, Long>> legacySeq = new LinkedHashMap<>();
         for (SyncLogRepository.Entry entry : entries) {
-            if (entry.tableName().startsWith(VAULT_PREFIX)) {
-                vaultSeq.put(entry.rowId(), entry.seq());
-            } else {
-                legacySeq.computeIfAbsent(entry.tableName(), t -> new LinkedHashMap<>()).put(entry.rowId(), entry.seq());
-            }
+            vaultSeq.put(entry.rowId(), entry.seq());
         }
 
         List<SyncRecordResponse> records = new ArrayList<>();
         vault.fetch(vaultSeq.keySet()).forEach(row -> records.add(new SyncRecordResponse(
                 row.tableName(), row.id(), row.ownerId(), row.fields(), row.clocks(), vaultSeq.get(row.id()), true)));
-        legacySeq.forEach((tableName, seqByRow) -> {
-            SyncTable table = registry.require(tableName);
-            legacyRows.fetch(table, seqByRow.keySet()).forEach(row -> records.add(new SyncRecordResponse(
-                    tableName, row.id(), row.ownerId(), row.fields(), row.clocks(), seqByRow.get(row.id()), false)));
-        });
         records.sort(Comparator.comparingLong(SyncRecordResponse::seq));
 
         long nextSeq = entries.isEmpty() ? since : entries.getLast().seq();

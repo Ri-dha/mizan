@@ -1,7 +1,6 @@
 package iq.mizan.attachment.service;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 import iq.mizan.attachment.dto.AttachmentKind;
@@ -11,7 +10,6 @@ import iq.mizan.common.exception.ApiException;
 import iq.mizan.common.exception.ErrorCode;
 import iq.mizan.common.security.CurrentUser;
 import iq.mizan.common.storage.StorageProperties;
-import iq.mizan.sync.service.SyncRowRepository;
 import iq.mizan.sync.service.VaultFields;
 import iq.mizan.sync.service.VaultRowRepository;
 
@@ -37,8 +35,6 @@ public class AttachmentService {
     private static final String CIPHERTEXT_CONTENT_TYPE = "application/octet-stream";
 
     private final VaultRowRepository vault;
-    private final SyncRowRepository legacyRows;
-    private final AttachmentSyncTable table;
     private final S3Presigner presigner;
     private final StorageProperties storage;
 
@@ -64,14 +60,11 @@ public class AttachmentService {
         return new PresignedUrlResponse(presigned.url().toString(), "GET", Instant.now().plus(storage.urlTtl()));
     }
 
-    /** Encrypted rows first; a household that has not migrated yet still has the plain row. */
     private void requireVisible(UUID attachmentId) {
-        boolean encrypted = vault.find(attachmentId, AttachmentSyncTable.NAME)
+        boolean visible = vault.find(attachmentId, AttachmentSyncTable.NAME)
                 .filter(row -> row.fields().get(VaultFields.DELETED_AT) == null)
                 .isPresent();
-        boolean legacy = !encrypted && legacyRows.fetch(table, List.of(attachmentId)).stream()
-                .anyMatch(row -> row.fields().get(VaultFields.DELETED_AT) == null);
-        if (!encrypted && !legacy) {
+        if (!visible) {
             throw ApiException.of(ErrorCode.RESOURCE_NOT_FOUND, "No such attachment");
         }
     }

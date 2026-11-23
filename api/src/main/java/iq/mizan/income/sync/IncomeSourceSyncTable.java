@@ -14,8 +14,8 @@ public class IncomeSourceSyncTable implements SyncTable {
 
     public static final String NAME = "income_source";
 
-    /** The plain table's columns from before ADR e2e-1; fields added since exist only sealed. */
-    private static final Map<String, SyncColumnType> LEGACY_FIELDS = Map.ofEntries(
+    /** The fields from before ADR e2e-1; later additions are listed separately. */
+    private static final Map<String, SyncColumnType> BASE_FIELDS = Map.ofEntries(
             Map.entry("visibility", SyncColumnType.TEXT),
             Map.entry("name", SyncColumnType.TEXT),
             Map.entry("amount", SyncColumnType.BIGINT),
@@ -40,13 +40,9 @@ public class IncomeSourceSyncTable implements SyncTable {
 
     @Override
     public Map<String, SyncColumnType> fields() {
-        Map<String, SyncColumnType> fields = new HashMap<>(LEGACY_FIELDS);
+        Map<String, SyncColumnType> fields = new HashMap<>(BASE_FIELDS);
         fields.put(INTO_ACCOUNTS, SyncColumnType.TEXT);
         return Map.copyOf(fields);
     }
 
-    @Override
-    public Map<String, SyncColumnType> legacyFields() {
-        return LEGACY_FIELDS;
-    }
 }

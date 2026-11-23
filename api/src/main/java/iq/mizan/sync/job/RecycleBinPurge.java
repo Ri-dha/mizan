@@ -4,10 +4,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 
 import iq.mizan.sync.SyncProperties;
-import iq.mizan.sync.table.SyncTable;
 
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -30,7 +28,6 @@ public class RecycleBinPurge {
     private static final Logger log = LoggerFactory.getLogger(RecycleBinPurge.class);
 
     private final JdbcClient jdbcClient;
-    private final List<SyncTable> tables;
     private final SyncProperties properties;
     private final Clock clock;
     private final JobLock jobLock;
@@ -49,20 +46,9 @@ public class RecycleBinPurge {
         jdbcClient.sql("select set_config('app.system', 'on', true)").query().singleRow();
         OffsetDateTime cutoff = OffsetDateTime.now(clock).minus(retention()).withOffsetSameInstant(ZoneOffset.UTC);
         int total = jdbcClient.sql("delete from vault_record where deleted_at < ?").param(cutoff).update();
-        for (SyncTable table : tables) {
-            if (!table.fields().containsKey("deletedAt") || !plainTableExists(table)) {
-                continue;
-            }
-            total += jdbcClient.sql("delete from " + table.name() + " where deleted_at < ?").param(cutoff).update();
-        }
         if (total > 0) {
             log.info("Purged {} rows deleted before {}", total, cutoff);
         }
-    }
-
-    /** Record types added after ADR e2e-1 only ever lived in vault_record. */
-    private boolean plainTableExists(SyncTable table) {
-        return jdbcClient.sql("select to_regclass(?) is not null").param("public." + table.name()).query(Boolean.class).single();
     }
 
     private Duration retention() {
